@@ -1,0 +1,49 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const fs = require("fs");
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Middleware
+app.use(bodyParser.json());
+app.use(cors());
+mongoose
+  .connect(
+    "mongodb://0.0.0.0:27017/izyGlam",
+    // "mongodb+srv://fmotsch:Fr%40ncis2018%21@cluster0.dzdgnj3.mongodb.net/devfreelance",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => {
+    console.log("Connexion à la base de données réussie");
+  })
+  .catch((err: any) => {
+    console.error("Erreur de connexion à la base de données :", err.message);
+    process.exit(1);
+  });
+
+// Point d'entrée de l'API
+app.get("/", (req: any, res: any) => {
+  res.send("Bienvenue sur l'API de mon application.");
+});
+
+// Routes
+const userRoutes = require("./routes/userRoutes");
+const reservationRoutes = require("./routes/reservationRoutes");
+const serviceRoutes = require("./routes/serviceRoutes");
+const shopRoutes = require("./routes/shopRoutes");
+
+app.use("/api", userRoutes);
+app.use("/api", reservationRoutes);
+app.use("/api", serviceRoutes);
+app.use("/api", shopRoutes);
+
+// Démarrage du serveur
+app.listen(port, () => {
+  console.log(`Serveur démarré sur le port ${port}`);
+});
