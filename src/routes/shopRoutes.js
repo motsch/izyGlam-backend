@@ -6,7 +6,7 @@ const router = express.Router();
 router.post("/shop", authMiddleware, shopController.createShop);
 
 // Route to retrieve all shops
-router.get("/shop", authMiddleware, shopController.getAllShops);
+router.get("/shop", shopController.getAllShops);
 
 // Route to retrieve a specific shop by ID
 router.get("/shop/:id", authMiddleware, shopController.getShopById);
