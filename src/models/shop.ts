@@ -17,6 +17,7 @@ export interface iShop extends mongoose.Document {
   delayScale: string;
   type: string;
   price: number;
+  ville: string;
   reviews: iReview[];
   maxDistance: number;
   professionnel: mongoose.Types.ObjectId;
@@ -47,6 +48,7 @@ const shopSchema = new mongoose.Schema<iShop>({
   delayScale: { type: String, required: true },
   type: { type: String, required: true },
   price: { type: Number, required: true },
+  ville: { type: String, required: true },
   reviews: [
     {
       user: {
