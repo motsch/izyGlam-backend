@@ -22,6 +22,10 @@ export interface iShop extends mongoose.Document {
   maxDistance: number;
   professionnel: mongoose.Types.ObjectId;
   services: string[];
+  promo?: {
+    active: boolean;
+    type: string;
+  };
   location: {
     latitude: number;
     longitude: number;
@@ -67,6 +71,10 @@ const shopSchema = new mongoose.Schema<iShop>({
     required: true,
   },
   services: [{ type: String, required: true }],
+  promo: {
+    active: { type: Boolean, required: true },
+    type: { type: String, required: true },
+  },
   location: {
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
