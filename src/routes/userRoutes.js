@@ -23,7 +23,7 @@ router.post("/usersNoToken", usersController.createUser);
 router.get("/usersNoToken", usersController.getAllUsers);
 
 // Authenticated route to create a new user
-router.post("/users", authMiddleware, usersController.createUser);
+router.post("/users", usersController.createUser);
 
 // Authenticated route to get all users
 router.get("/users", authMiddleware, usersController.getAllUsers);

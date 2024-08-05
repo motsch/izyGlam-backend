@@ -24,15 +24,15 @@ const userSchema = new Schema<iUser>({
   password: { type: String, required: true },
   phone: { type: String, required: true },
   address: {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    code_postal: { type: String, required: true },
-    country: { type: String, required: true },
+    street: { type: String, required: false },
+    city: { type: String, required: false },
+    code_postal: { type: String, required: false },
+    country: { type: String, required: false },
   },
   role: {
     type: String,
     required: true,
-    enum: ["particulier", "entreprise", "professionnel"],
+    enum: ["user", "entreprise", "professionnel"],
   },
 });
 

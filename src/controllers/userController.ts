@@ -261,9 +261,10 @@ const loginUser = async (
 // Créer un nouvel utilisateur
 const createUser = async (req: express.Request, res: express.Response) => {
   try {
+    console.log("IN CREATE");
     const myUser = req.body;
     const newUser = new UserModel(myUser);
-    if (!myUser.type) {
+    console.log("newUser : " + JSON.stringify(newUser));
       // Récupérer le token d'authentification à partir de l'en-tête de la demande
       // const token = req.header("Authorization");
 
@@ -303,14 +304,6 @@ const createUser = async (req: express.Request, res: express.Response) => {
       await newUser.save();
       res.status(201);
       res.send(newUser);
-    } else if (
-      myUser.type ==
-      "clyh@sdf5421cwxchjkWII@O!mdjinitvf49Dh!sd<wdvfX2154bSDFJg!"
-    ) {
-      await newUser.save();
-      res.status(201);
-      res.send(newUser);
-    }
   } catch (error) {
     res.status(500).json({ message: "Impossible de créer l'utilisateur" });
   }
