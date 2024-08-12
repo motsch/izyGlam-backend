@@ -17,4 +17,6 @@ router.put("/shop/:id", authMiddleware, shopController.updateShopById);
 // Route to delete a shop
 router.delete("/shop/:id", authMiddleware, shopController.deleteShopById);
 
+// Route pour récupérer les services d'une boutique
+router.get('/shop/:id/services', shopController.getServicesByShop);
 module.exports = router;

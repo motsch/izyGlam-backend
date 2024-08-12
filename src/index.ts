@@ -33,15 +33,15 @@ app.get("/", (req: any, res: any) => {
 });
 
 // Routes
-const userRoutes = require("./routes/userRoutes");
-const reservationRoutes = require("./routes/reservationRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const shopRoutes = require("./routes/shopRoutes");
+const userRoutes = require("./routes/userRoutes");
 
-app.use("/api", userRoutes);
-app.use("/api", reservationRoutes);
+app.use("/api", bookingRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", shopRoutes);
+app.use("/api", userRoutes);
 
 // Démarrage du serveur
 app.listen(port, () => {

@@ -10,8 +10,8 @@ export interface iService extends mongoose.Document {
   delayScale: string;
   type: string;
   price: number;
-  duree: number;
-  shop: mongoose.Schema.Types.ObjectId;
+  duration: number; // En minutes
+  shopId: mongoose.Schema.Types.ObjectId; // Référence à la boutique où le service est proposé
 }
 
 const serviceSchema = new mongoose.Schema<iService>({
@@ -24,8 +24,12 @@ const serviceSchema = new mongoose.Schema<iService>({
   delayScale: { type: String, required: true },
   type: { type: String, required: true },
   price: { type: Number, required: true },
-  duree: { type: Number, required: true },
-  shop: { type: mongoose.Schema.Types.ObjectId, ref: "Shop", required: true },
+  duration: { type: Number, required: true }, // Durée de la prestation en minutes
+  shopId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "Shop", 
+    required: true 
+  },
 });
 
 const serviceModel = mongoose.model<iService>("Service", serviceSchema);

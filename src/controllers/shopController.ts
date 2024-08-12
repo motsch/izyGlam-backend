@@ -1,69 +1,95 @@
 import ShopModel from "../models/shop";
-import { Request, Response } from "express";
-const jwt = require("jsonwebtoken");
+import ServiceModel from "../models/service";
+import * as express from "express";
 
-// Create a new shop
-export const createShop = async (req: Request, res: Response) => {
+// Créer une nouvelle boutique (shop)
+const createShop = async (req: express.Request, res: express.Response) => {
   try {
-    const shop = new ShopModel(req.body);
-    await shop.save();
-    res.status(201).json(shop);
+    const newShop = new ShopModel(req.body);
+    await newShop.save();
+    res.status(201).json(newShop);
   } catch (error) {
-    res.status(500).json({ message: "Failed to create shop", error });
+    res.status(500).json({ message: "Impossible de créer la boutique" });
   }
 };
 
-// Get all shops
-export const getAllShops = async (req: Request, res: Response) => {
+// Récupérer toutes les boutiques
+const getAllShops = async (req: express.Request, res: express.Response) => {
   try {
-    const shops = await ShopModel.find().populate("professionnel", "email");
+    const shops = await ShopModel.find();
     res.json(shops);
   } catch (error) {
-    res.status(500).json({ message: "Failed to get shops", error });
+    res.status(500).json({ message: "Impossible de récupérer les boutiques" });
   }
 };
 
-// Get a single shop by ID
-export const getShopById = async (req: Request, res: Response) => {
+// Récupérer une boutique par son ID
+const getShopById = async (req: express.Request, res: express.Response) => {
   try {
-    const shop = await ShopModel.findById(req.params.id).populate(
-      "professionnel"
-    );
-    if (!shop) {
-      return res.status(404).json({ message: "Shop not found" });
+    const { id } = req.params;
+    const shop = await ShopModel.findById(id);
+    if (shop) {
+      res.json(shop);
+    } else {
+      res.status(404).json({ message: "Boutique non trouvée" });
     }
-    res.json(shop);
   } catch (error) {
-    res.status(500).json({ message: "Failed to get shop", error });
+    res.status(500).json({ message: "Impossible de récupérer la boutique" });
   }
 };
 
-// Update a shop
-export const updateShopById = async (req: Request, res: Response) => {
+// Mettre à jour une boutique par son ID
+const updateShopById = async (req: express.Request, res: express.Response) => {
   try {
-    const updatedShop = await ShopModel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    if (!updatedShop) {
-      return res.status(404).json({ message: "Shop not found" });
+    const { id } = req.params;
+    const updatedShop = await ShopModel.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+    if (updatedShop) {
+      res.json(updatedShop);
+    } else {
+      res.status(404).json({ message: "Boutique non trouvée" });
     }
-    res.json(updatedShop);
   } catch (error) {
-    res.status(500).json({ message: "Failed to update shop", error });
+    res.status(500).json({ message: "Impossible de mettre à jour la boutique" });
   }
 };
 
-// Delete a shop
-export const deleteShopById = async (req: Request, res: Response) => {
+// Supprimer une boutique par son ID
+const deleteShopById = async (req: express.Request, res: express.Response) => {
   try {
-    const deletedShop = await ShopModel.findByIdAndDelete(req.params.id);
-    if (!deletedShop) {
-      return res.status(404).json({ message: "Shop not found" });
+    const { id } = req.params;
+    const deletedShop = await ShopModel.findByIdAndDelete(id);
+    if (deletedShop) {
+      res.json({ message: "Boutique supprimée avec succès" });
+    } else {
+      res.status(404).json({ message: "Boutique non trouvée" });
     }
-    res.json({ message: "Shop deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete shop", error });
+    res.status(500).json({ message: "Impossible de supprimer la boutique" });
   }
+};
+
+// Récupérer tous les services proposés par une boutique
+const getServicesByShop = async (req: express.Request, res: express.Response) => {
+  try {
+    const { shopId } = req.params;
+    const services = await ServiceModel.find({ shop: shopId });
+    if (services.length > 0) {
+      res.json(services);
+    } else {
+      res.status(404).json({ message: "Aucun service trouvé pour cette boutique" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer les services pour cette boutique" });
+  }
+};
+
+module.exports = {
+  createShop,
+  getAllShops,
+  getShopById,
+  updateShopById,
+  deleteShopById,
+  getServicesByShop,
 };

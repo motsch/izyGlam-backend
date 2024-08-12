@@ -1,66 +1,94 @@
 import ServiceModel from "../models/service";
-import { Request, Response } from "express";
+import * as express from "express";
 
-// Create a new service
-export const createService = async (req: Request, res: Response) => {
+// Créer un nouveau service
+const createService = async (req: express.Request, res: express.Response) => {
   try {
-    const service = new ServiceModel(req.body);
-    await service.save();
-    res.status(201).json(service);
+    const newService = new ServiceModel(req.body);
+    await newService.save();
+    res.status(201).json(newService);
   } catch (error) {
-    res.status(500).json({ message: "Failed to create service", error });
+    res.status(500).json({ message: "Impossible de créer le service" });
   }
 };
 
-// Get all services
-export const getAllServices = async (req: Request, res: Response) => {
+// Récupérer tous les services
+const getAllServices = async (req: express.Request, res: express.Response) => {
   try {
-    const services = await ServiceModel.find().populate("shop");
+    const services = await ServiceModel.find();
     res.json(services);
   } catch (error) {
-    res.status(500).json({ message: "Failed to get services", error });
+    res.status(500).json({ message: "Impossible de récupérer les services" });
   }
 };
 
-// Get a single service by ID
-export const getServiceById = async (req: Request, res: Response) => {
+// Récupérer un service par son ID
+const getServiceById = async (req: express.Request, res: express.Response) => {
   try {
-    const service = await ServiceModel.findById(req.params.id).populate("shop");
-    if (!service) {
-      return res.status(404).json({ message: "Service not found" });
+    const { id } = req.params;
+    const service = await ServiceModel.findById(id);
+    if (service) {
+      res.json(service);
+    } else {
+      res.status(404).json({ message: "Service non trouvé" });
     }
-    res.json(service);
   } catch (error) {
-    res.status(500).json({ message: "Failed to get service", error });
+    res.status(500).json({ message: "Impossible de récupérer le service" });
   }
 };
 
-// Update a service
-export const updateServiceById = async (req: Request, res: Response) => {
+// Mettre à jour un service par son ID
+const updateServiceById = async (req: express.Request, res: express.Response) => {
   try {
-    const updatedService = await ServiceModel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    if (!updatedService) {
-      return res.status(404).json({ message: "Service not found" });
+    const { id } = req.params;
+    const updatedService = await ServiceModel.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+    if (updatedService) {
+      res.json(updatedService);
+    } else {
+      res.status(404).json({ message: "Service non trouvé" });
     }
-    res.json(updatedService);
   } catch (error) {
-    res.status(500).json({ message: "Failed to update service", error });
+    res.status(500).json({ message: "Impossible de mettre à jour le service" });
   }
 };
 
-// Delete a service
-export const deleteServiceById = async (req: Request, res: Response) => {
+// Supprimer un service par son ID
+const deleteServiceById = async (req: express.Request, res: express.Response) => {
   try {
-    const deletedService = await ServiceModel.findByIdAndDelete(req.params.id);
-    if (!deletedService) {
-      return res.status(404).json({ message: "Service not found" });
+    const { id } = req.params;
+    const deletedService = await ServiceModel.findByIdAndDelete(id);
+    if (deletedService) {
+      res.json({ message: "Service supprimé avec succès" });
+    } else {
+      res.status(404).json({ message: "Service non trouvé" });
     }
-    res.json({ message: "Service deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete service", error });
+    res.status(500).json({ message: "Impossible de supprimer le service" });
   }
+};
+
+// Récupérer tous les services proposés par un shop
+const getServicesByShop = async (req: express.Request, res: express.Response) => {
+  try {
+    const { shopId } = req.params;
+    const services = await ServiceModel.find({ shop: shopId });
+    if (services.length > 0) {
+      res.json(services);
+    } else {
+      res.status(404).json({ message: "Aucun service trouvé pour cette boutique" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer les services pour cette boutique" });
+  }
+};
+
+module.exports = {
+  createService,
+  getAllServices,
+  getServiceById,
+  updateServiceById,
+  deleteServiceById,
+  getServicesByShop,
 };

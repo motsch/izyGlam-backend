@@ -21,4 +21,7 @@ router.delete(
   serviceController.deleteServiceById
 );
 
+// Route to get all services of a shop
+router.get("/shop/:id/services", serviceController.getServicesByShop);
+
 module.exports = router;
