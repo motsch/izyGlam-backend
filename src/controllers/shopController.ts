@@ -73,9 +73,13 @@ const deleteShopById = async (req: express.Request, res: express.Response) => {
 // Récupérer tous les services proposés par une boutique
 const getServicesByShop = async (req: express.Request, res: express.Response) => {
   try {
-    const { shopId } = req.params;
-    const services = await ServiceModel.find({ shop: shopId });
+    const { id } = req.params;
+    // const services = await ServiceModel.find({ shopId: id });
+    const services = await ServiceModel.find({ shopId: id });
+    // const services = await ServiceModel.find();
+    console.log("shopId shopController : " + id)
     if (services.length > 0) {
+      console.log("Service length > 0")
       res.json(services);
     } else {
       res.status(404).json({ message: "Aucun service trouvé pour cette boutique" });
