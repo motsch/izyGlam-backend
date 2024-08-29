@@ -20,6 +20,7 @@ const getUserInfo = async (
     };
     json: (arg0: {
       companyId: string;
+      shopId: string;
       lastname: string;
       email: string;
       firstname: string;
@@ -34,6 +35,7 @@ const getUserInfo = async (
     // Définissez un type pour l'objet que vous renvoyez
     type UserInfo = {
       companyId: string;
+      shopId: string;
       lastname: string;
       email: string;
       firstname: string;
@@ -67,7 +69,7 @@ const getUserInfo = async (
         const user = await UserModel.findById(userId);
         if (user) {
           // Le user a été trouvé, renvoyer ses informations (sans le mot de passe)
-          const { lastname, email, firstname, role, address, proches, phone, companyId, _id } =
+          const { lastname, email, firstname, role, address, proches, phone, companyId, shopId, _id } =
             user;
           res.json({
             lastname,
@@ -78,6 +80,7 @@ const getUserInfo = async (
             proches,
             phone,
             companyId,
+            shopId,
             _id
           } as UserInfo);
         } else {

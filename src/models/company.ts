@@ -7,6 +7,7 @@ export interface iCompany extends mongoose.Document {
   siret: string; // Numéro SIRET de l'entreprise
   address: string; // Adresse de l'entreprise
   phone: string; // Numéro de téléphone de l'entreprise
+  defaultPassword: string; // Numéro de téléphone de l'entreprise
   email: string; // Adresse e-mail de l'entreprise
   website?: string; // Site web de l'entreprise (optionnel)
   industry: string; // Secteur d'activité de l'entreprise
@@ -21,6 +22,7 @@ const companySchema = new mongoose.Schema<iCompany>({
   siret: { type: String, required: true, unique: true },
   address: { type: String, required: true },
   phone: { type: String, required: true },
+  defaultPassword: { type: String, required: false, default: "izyGl@m"+new Date().getFullYear()+"!" },
   email: { type: String, required: true },
   website: { type: String },
   industry: { type: String, required: true },

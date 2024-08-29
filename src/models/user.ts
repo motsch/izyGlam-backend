@@ -8,6 +8,7 @@ export interface iUser extends Document {
   password: string;
   phone: string;
   companyId: string;
+  shopId: string;
   credit: number;
   proches: Array<{
     lastname: string;
@@ -33,6 +34,7 @@ const userSchema = new Schema<iUser>({
   password: { type: String, required: true },
   phone: { type: String, required: true },
   companyId: { type: String, required: false },
+  shopId: { type: String, required: false },
   credit: { type: Number, required: false, default: 0 },
   proches: [
     {
