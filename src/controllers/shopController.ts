@@ -27,6 +27,7 @@ const getAllShops = async (req: express.Request, res: express.Response) => {
 const getShopById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    console.log("ID : "+ id)
     const shop = await ShopModel.findById(id);
     if (shop) {
       res.json(shop);

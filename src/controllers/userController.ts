@@ -19,20 +19,29 @@ const getUserInfo = async (
       json: { (arg0: { message?: string; error?: string }): void; new (): any };
     };
     json: (arg0: {
-      lastname: any;
-      email: any;
-      firstname: any;
-      role: any;
+      companyId: string;
+      lastname: string;
+      email: string;
+      firstname: string;
+      role: string;
+      phone: string;
+      address: any[];
+      proches: any[];
     }) => void;
   }
 ) => {
   try {
     // Définissez un type pour l'objet que vous renvoyez
     type UserInfo = {
+      companyId: string;
       lastname: string;
       email: string;
       firstname: string;
       role: string; // Ajoutez la propriété "role" au type
+      phone: string;
+      address: any[];
+      proches: any[];
+      _id: string;
     };
     const token = req.header("Authorization");
 
@@ -58,8 +67,19 @@ const getUserInfo = async (
         const user = await UserModel.findById(userId);
         if (user) {
           // Le user a été trouvé, renvoyer ses informations (sans le mot de passe)
-          const { lastname, email, firstname, role } = user;
-          res.json({ lastname, email, firstname, role } as UserInfo);
+          const { lastname, email, firstname, role, address, proches, phone, companyId, _id } =
+            user;
+          res.json({
+            lastname,
+            email,
+            firstname,
+            role,
+            address,
+            proches,
+            phone,
+            companyId,
+            _id
+          } as UserInfo);
         } else {
           // Le user n'a pas été trouvé (ceci ne devrait pas se produire si le token est valide)
           res.status(404).json({ message: "User non trouvé" });
@@ -265,17 +285,17 @@ const createUser = async (req: express.Request, res: express.Response) => {
     const myUser = req.body;
     const newUser = new UserModel(myUser);
     console.log("newUser : " + JSON.stringify(newUser));
-      // Récupérer le token d'authentification à partir de l'en-tête de la demande
-      // const token = req.header("Authorization");
+    // Récupérer le token d'authentification à partir de l'en-tête de la demande
+    // const token = req.header("Authorization");
 
-      /*if (!token) {
+    /*if (!token) {
         return res
           .status(401)
           .json({ message: "Token d'authentification manquant 2" });
       }*/
 
-      // Vérifier et décoder le token JWT pour obtenir le rôle de l'utilisateur
-      /*jwt.verify(
+    // Vérifier et décoder le token JWT pour obtenir le rôle de l'utilisateur
+    /*jwt.verify(
         token,
         process.env.SECRET_KEY,
         async (err: any, decodedToken: { userId: any; role: string }) => {
@@ -301,9 +321,9 @@ const createUser = async (req: express.Request, res: express.Response) => {
         }
       );*/
 
-      await newUser.save();
-      res.status(201);
-      res.send(newUser);
+    await newUser.save();
+    res.status(201);
+    res.send(newUser);
   } catch (error) {
     res.status(500).json({ message: "Impossible de créer l'utilisateur" });
   }
@@ -322,9 +342,9 @@ const getAllUsers = async (
   }
 ) => {
   try {
-    const users = await UserModel.find().select(
+    const users = await UserModel.find()/*.select(
       "firstname email lastname role"
-    );
+    );*/
     res.json(users);
   } catch (error) {
     res
@@ -345,6 +365,22 @@ const getUserById = async (req: any, res: express.Response) => {
     }
   } catch (error) {
     res.status(500).json({ message: "Impossible de récupérer l'utilisateur" });
+  }
+};
+
+// Récupérer un utilisateur par son ID
+const getUsersByCompanyId = async (req: any, res: express.Response) => {
+  try {
+    const { companyId } = req.params;
+    // console.log("companyId : "+companyId)
+    const user = await UserModel.find({ companyId: companyId });
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ message: "Utilisateurs non trouvé" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer les utilisateurs" });
   }
 };
 
@@ -398,7 +434,7 @@ const updateUserById = async (req: any, res: express.Response) => {
 
         const userRole = decodedToken.role;
         // Vérifier le rôle de l'utilisateur avant de permettre la suppression
-        if (userRole !== "admin" && userRole !== "DeveloppeurFreelance") {
+        if (userRole !== "admin" && userRole !== "entreprise") {
           return res.status(403).json({
             message:
               "Accès refusé : seuls les administrateurs peuvent modifier des utilisateurs",
@@ -459,7 +495,7 @@ const deleteUserById = async (
 
         const userRole = decodedToken.role;
         // Vérifier le rôle de l'utilisateur avant de permettre la suppression
-        if (userRole !== "admin" && userRole !== "DeveloppeurFreelance") {
+        if (userRole !== "admin" && userRole !== "entreprise") {
           return res.status(403).json({
             message:
               "Accès refusé : seuls les administrateurs peuvent supprimer des utilisateurs",
@@ -480,6 +516,7 @@ const deleteUserById = async (
 };
 
 module.exports = {
+  getUsersByCompanyId,
   getUserInfo,
   registerUserNoToken,
   loginUserSMS,

@@ -6,6 +6,7 @@ export interface iBooking extends mongoose.Document {
   shopId: mongoose.Schema.Types.ObjectId; // Référence à la boutique où le service est réservé
   date: Date; // Date et heure du créneau réservé
   status: "pending" | "confirmed" | "cancelled"; // Statut de la réservation
+  price: string;
 }
 
 const bookingSchema = new mongoose.Schema<iBooking>({
@@ -18,6 +19,9 @@ const bookingSchema = new mongoose.Schema<iBooking>({
     enum: ["pending", "confirmed", "cancelled", "completed", "no-show"],
     default: "pending",
   },
+  price: {
+    type: String, required: true
+  }
 });
 
 const bookingModel = mongoose.model<iBooking>("Booking", bookingSchema);

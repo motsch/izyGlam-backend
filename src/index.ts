@@ -37,11 +37,13 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const userRoutes = require("./routes/userRoutes");
+const scheduleRoutes = require("./routes/scheduleRoutes");
 
 app.use("/api", bookingRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", shopRoutes);
 app.use("/api", userRoutes);
+app.use("/api", scheduleRoutes);
 
 // Démarrage du serveur
 app.listen(port, () => {

@@ -9,7 +9,7 @@ router.post("/shop", authMiddleware, shopController.createShop);
 router.get("/shop", shopController.getAllShops);
 
 // Route to retrieve a specific shop by ID
-router.get("/shop/:id", authMiddleware, shopController.getShopById);
+router.get("/shop/:id", shopController.getShopById);
 
 // Route to update a shop
 router.put("/shop/:id", authMiddleware, shopController.updateShopById);

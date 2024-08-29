@@ -18,7 +18,7 @@ const createBooking = async (req: express.Request, res: express.Response) => {
 // Récupérer toutes les réservations
 const getAllBookings = async (req: express.Request, res: express.Response) => {
   try {
-    const bookings = await BookingModel.find().populate("user service shop");
+    const bookings = await BookingModel.find();
     res.json(bookings);
   } catch (error) {
     res.status(500).json({ message: "Impossible de récupérer les réservations" });
@@ -29,7 +29,7 @@ const getAllBookings = async (req: express.Request, res: express.Response) => {
 const getBookingById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    const booking = await BookingModel.findById(id).populate("user service shop");
+    const booking = await BookingModel.findById(id);
     if (booking) {
       res.json(booking);
     } else {
@@ -76,7 +76,7 @@ const deleteBookingById = async (req: express.Request, res: express.Response) =>
 const getBookingsByShop = async (req: express.Request, res: express.Response) => {
   try {
     const { shopId } = req.params;
-    const bookings = await BookingModel.find({ shop: shopId }).populate("user service shop");
+    const bookings = await BookingModel.find({ shop: shopId });
     if (bookings.length > 0) {
       res.json(bookings);
     } else {
@@ -90,8 +90,9 @@ const getBookingsByShop = async (req: express.Request, res: express.Response) =>
 // Récupérer toutes les réservations d'un utilisateur
 const getBookingsByUser = async (req: express.Request, res: express.Response) => {
   try {
+    console.log("in by user");
     const { userId } = req.params;
-    const bookings = await BookingModel.find({ user: userId }).populate("service shop");
+    const bookings = await BookingModel.find({ user: userId });
     if (bookings.length > 0) {
       res.json(bookings);
     } else {

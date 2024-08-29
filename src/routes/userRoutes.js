@@ -7,6 +7,9 @@ const router = express.Router();
 // Route to handle user login with standard credentials
 router.post("/login", usersController.loginUser);
 
+// Get users by companyId
+router.get("/users-by-companyId/:companyId", usersController.getUsersByCompanyId);
+
 // Route to initiate SMS login process
 router.post("/login-sms", usersController.loginUserSMS);
 

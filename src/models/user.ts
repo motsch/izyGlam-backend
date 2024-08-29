@@ -7,12 +7,21 @@ export interface iUser extends Document {
   email: string;
   password: string;
   phone: string;
-  address: {
+  companyId: string;
+  credit: number;
+  proches: Array<{
+    lastname: string;
+    firstname: string;
+    email: string;
+    phone: string;
+  }>;
+  address: Array<{
     street: string;
     city: string;
     code_postal: string;
     country: string;
-  };
+    main: boolean;
+  }>;
   role: "particulier" | "entreprise" | "professionnel";
   comparePassword(password: string): Promise<boolean>;
 }
@@ -23,12 +32,25 @@ const userSchema = new Schema<iUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String, required: true },
-  address: {
-    street: { type: String, required: false },
-    city: { type: String, required: false },
-    code_postal: { type: String, required: false },
-    country: { type: String, required: false },
-  },
+  companyId: { type: String, required: false },
+  credit: { type: Number, required: false, default: 0 },
+  proches: [
+    {
+      lastname: { type: String, required: false },
+      firstname: { type: String, required: false },
+      email: { type: String, required: false },
+      phone: { type: String, required: false },
+    },
+  ],
+  address: [
+    {
+      street: { type: String, required: false },
+      city: { type: String, required: false },
+      code_postal: { type: String, required: false },
+      country: { type: String, required: false },
+      main: { type: Boolean, required: true, default: false },
+    },
+  ],
   role: {
     type: String,
     required: true,
