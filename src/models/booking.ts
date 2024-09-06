@@ -7,6 +7,7 @@ export interface iBooking extends mongoose.Document {
   date: Date; // Date et heure du créneau réservé
   status: "pending" | "confirmed" | "cancelled"; // Statut de la réservation
   price: string;
+  commission: string;
 }
 
 const bookingSchema = new mongoose.Schema<iBooking>({
@@ -20,6 +21,9 @@ const bookingSchema = new mongoose.Schema<iBooking>({
     default: "pending",
   },
   price: {
+    type: String, required: true
+  },
+  commission: {
     type: String, required: true
   }
 });

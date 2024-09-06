@@ -9,7 +9,6 @@ const client = new twilio(
   "158c48da620e1e262a3229eed40fc517"
 );
 
-// Récupérer les informations du user connecté
 const getUserInfo = async (
   req: { header: (arg0: string) => any },
   res: {
@@ -20,7 +19,7 @@ const getUserInfo = async (
     };
     json: (arg0: {
       companyId: string;
-      shopId: string;
+      shopIds: string[];
       lastname: string;
       email: string;
       firstname: string;
@@ -35,7 +34,7 @@ const getUserInfo = async (
     // Définissez un type pour l'objet que vous renvoyez
     type UserInfo = {
       companyId: string;
-      shopId: string;
+      shopIds: string[]; // Modifier ici pour refléter le tableau
       lastname: string;
       email: string;
       firstname: string;
@@ -50,7 +49,7 @@ const getUserInfo = async (
     if (!token) {
       return res
         .status(401)
-        .json({ message: "Token d'authentification manquant 1" });
+        .json({ message: "Token d'authentification manquant" });
     }
 
     jwt.verify(
@@ -64,12 +63,11 @@ const getUserInfo = async (
         }
 
         const userId = decodedToken.userId;
-        // return res.status(500).json({ message: 'ID ??? :' + userId });
 
         const user = await UserModel.findById(userId);
         if (user) {
           // Le user a été trouvé, renvoyer ses informations (sans le mot de passe)
-          const { lastname, email, firstname, role, address, proches, phone, companyId, shopId, _id } =
+          const { lastname, email, firstname, role, address, proches, phone, companyId, shopIds, _id } =
             user;
           res.json({
             lastname,
@@ -80,7 +78,7 @@ const getUserInfo = async (
             proches,
             phone,
             companyId,
-            shopId,
+            shopIds, // Assurez-vous que la réponse utilise "shopIds"
             _id
           } as UserInfo);
         } else {
@@ -96,6 +94,7 @@ const getUserInfo = async (
     });
   }
 };
+
 
 // Fonction de refresh du token
 const refreshToken = async (

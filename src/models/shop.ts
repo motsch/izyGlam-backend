@@ -20,8 +20,8 @@ export interface iShop extends mongoose.Document {
   ville: string;
   reviews: iReview[];
   maxDistance: number;
-  idUser: mongoose.Types.ObjectId;
-  services: mongoose.Types.ObjectId[];
+  idUser: string;
+  services: string[];
   promo?: {
     active: boolean;
     type: string;
@@ -66,12 +66,11 @@ const shopSchema = new mongoose.Schema<iShop>({
   ],
   maxDistance: { type: Number, required: true },
   idUser: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    type: String,
     required: true,
   },
   services: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Service", required: true },
+    { type: String, required: true },
   ],
   promo: {
     active: { type: Boolean, required: true },

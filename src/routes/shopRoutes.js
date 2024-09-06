@@ -2,6 +2,7 @@ const shopController = require("../controllers/shopController");
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const router = express.Router();
+
 // Route to create a new shop
 router.post("/shop", authMiddleware, shopController.createShop);
 
@@ -19,4 +20,8 @@ router.delete("/shop/:id", authMiddleware, shopController.deleteShopById);
 
 // Route pour récupérer les services d'une boutique
 router.get('/shop/:id/services', shopController.getServicesByShop);
+
+// Route to retrieve all shops by userId
+router.get('/shops/user/:userId', shopController.getShopsByUserId);
+
 module.exports = router;

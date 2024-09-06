@@ -90,6 +90,24 @@ const getServicesByShop = async (req: express.Request, res: express.Response) =>
   }
 };
 
+// Récupérer toutes les boutiques associées à un userId
+const getShopsByUserId = async (req: express.Request, res: express.Response) => {
+  try {
+    const { userId } = req.params;
+    console.log("id user to find : ")
+    console.log(userId)
+    const shops = await ShopModel.find({ idUser: userId });
+
+    if (shops.length > 0) {
+      res.json(shops);
+    } else {
+      res.status(404).json({ message: "Aucune boutique trouvée pour cet utilisateur" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer les boutiques pour cet utilisateur" });
+  }
+};
+
 module.exports = {
   createShop,
   getAllShops,
@@ -97,4 +115,5 @@ module.exports = {
   updateShopById,
   deleteShopById,
   getServicesByShop,
+  getShopsByUserId,
 };

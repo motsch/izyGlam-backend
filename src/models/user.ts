@@ -8,7 +8,7 @@ export interface iUser extends Document {
   password: string;
   phone: string;
   companyId: string;
-  shopId: string;
+  shopIds: string[]; // Modifié pour un tableau de strings
   credit: number;
   proches: Array<{
     lastname: string;
@@ -34,7 +34,16 @@ const userSchema = new Schema<iUser>({
   password: { type: String, required: true },
   phone: { type: String, required: true },
   companyId: { type: String, required: false },
-  shopId: { type: String, required: false },
+  shopIds: {
+    type: [String], // Tableau de chaînes de caractères
+    validate: {
+      validator: function (v: string[]) {
+        return v.length <= 5; // Validation pour un maximum de 5 boutiques
+      },
+      message: (props) =>
+        `Un utilisateur ne peut posséder plus de 5 boutiques.`,
+    },
+  },
   credit: { type: Number, required: false, default: 0 },
   proches: [
     {
@@ -56,7 +65,7 @@ const userSchema = new Schema<iUser>({
   role: {
     type: String,
     required: true,
-    enum: ["user", "entreprise", "professionnel"],
+    enum: ["particulier", "entreprise", "professionnel"],
   },
 });
 

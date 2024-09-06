@@ -4,6 +4,7 @@ import * as express from "express";
 // Créer un nouveau service
 const createService = async (req: express.Request, res: express.Response) => {
   try {
+    console.log(req.body)
     const newService = new ServiceModel(req.body);
     await newService.save();
     res.status(201).json(newService);

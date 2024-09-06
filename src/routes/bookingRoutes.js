@@ -4,7 +4,7 @@ const bookingController = require('../controllers/bookingController');
 const authMiddleware = require("../middlewares/authMiddleware");
 
 // Route pour récupérer les réservations d'une boutique
-router.get('/booking/:shopId', bookingController.getBookingsByShop);
+router.get('/booking-by-shop/:shopId', bookingController.getBookingsByShop);
 // Route pour récupérer les créneaux disponibles
 router.get('/booking/:shopId/services/:serviceId/available-slots/:date', bookingController.getAvailableSlots);
 // Autres routes pour Booking

@@ -35,6 +35,7 @@ app.get("/", (req: any, res: any) => {
 // Routes
 const bookingRoutes = require("./routes/bookingRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
+const serviceTemplateRoutes = require("./routes/serviceTemplateRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const userRoutes = require("./routes/userRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
@@ -42,6 +43,7 @@ const companyRoutes = require("./routes/companyRoutes");
 
 app.use("/api", bookingRoutes);
 app.use("/api", serviceRoutes);
+app.use("/api", serviceTemplateRoutes);
 app.use("/api", shopRoutes);
 app.use("/api", userRoutes);
 app.use("/api", scheduleRoutes);
