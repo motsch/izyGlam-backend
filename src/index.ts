@@ -7,15 +7,9 @@ const fs = require("fs");
 const app = express();
 const port = process.env.PORT || 3000;
 
-const path = require("path");
-const https = require("https");
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
-const httpsOptions = {
-  key: fs.readFileSync(path.join(__dirname, "cert", "server.key")),
-  cert: fs.readFileSync(path.join(__dirname, "cert", "server.cert")),
-}
 mongoose
   .connect(
     // "mongodb://0.0.0.0:27017/izyGlam",
@@ -57,12 +51,6 @@ app.use("/api", scheduleRoutes);
 app.use("/api", companyRoutes);
 
 // Démarrage du serveur
-/*
 app.listen(port, () => {
   console.log(`Serveur démarré sur le port ${port}`);
-});
-*/
-
-https.createServer(httpsOptions, app).listen(port, () => {
-  console.log(`Serveur sécurisé démarré sur le port ${port}`);
 });
