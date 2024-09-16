@@ -12,7 +12,8 @@ app.use(bodyParser.json());
 app.use(cors());
 mongoose
   .connect(
-    "mongodb://0.0.0.0:27017/izyGlam",
+    // "mongodb://0.0.0.0:27017/izyGlam",
+    "autorack.proxy.rlwy.net:44196/izyglam",
     // "mongodb+srv://fmotsch:Fr%40ncis2018%21@cluster0.dzdgnj3.mongodb.net/devfreelance",
     {
       useNewUrlParser: true,
