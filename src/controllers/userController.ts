@@ -328,7 +328,7 @@ const createUser = async (req: express.Request, res: express.Response) => {
     res.status(201);
     res.send(newUser);
   } catch (error) {
-    res.status(500).json({ message: "Impossible de créer l'utilisateur" });
+    res.status(500).json({ message: "Impossible de créer l'utilisateur => " + JSON.stringify(error) });
   }
 };
 
