@@ -257,7 +257,7 @@ const loginUser = async (
     console.log("IN LOG");
     const { email, password } = req.body;
     const user = await UserModel.findOne({ email });
-    const test = await UserModel.find();
+    const test = await UserModel.find({});
     if (!user) {
       return res.status(401).json({ message: "Email invalide", test: test });
     }
