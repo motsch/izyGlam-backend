@@ -59,7 +59,7 @@ const userSchema = new Schema<iUser>({
       city: { type: String, required: false },
       code_postal: { type: String, required: false },
       country: { type: String, required: false },
-      main: { type: Boolean, required: true, default: false },
+      main: { type: Boolean, required: false, default: false },
     },
   ],
   role: {
