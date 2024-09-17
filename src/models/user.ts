@@ -65,7 +65,7 @@ const userSchema = new Schema<iUser>({
   role: {
     type: String,
     required: true,
-    enum: ["particulier", "entreprise", "professionnel"],
+    enum: ["user", "entreprise", "professionnel"],
   },
 });
 
