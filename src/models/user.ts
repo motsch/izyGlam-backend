@@ -21,10 +21,23 @@ export interface iUser extends Document {
     city: string;
     code_postal: string;
     country: string;
+    floor: string;
     main: boolean;
   }>;
   role: "particulier" | "entreprise" | "professionnel";
   comparePassword(password: string): Promise<boolean>;
+  shopCompany: {
+    name: string;
+    adresse: string;
+    etage: number;
+    companyType: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    countryIndication: string;
+    phone: string;
+    ccvaccepted: boolean;
+  };
 }
 
 const userSchema = new Schema<iUser>({
@@ -33,6 +46,7 @@ const userSchema = new Schema<iUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String, required: true },
+  shopCompany: { type: Object, required: false },
   companyId: { type: String, required: false },
   shopIds: {
     type: [String], // Tableau de chaînes de caractères
@@ -59,13 +73,14 @@ const userSchema = new Schema<iUser>({
       city: { type: String, required: false },
       code_postal: { type: String, required: false },
       country: { type: String, required: false },
+      floor: { type: String, required: false },
       main: { type: Boolean, required: false, default: false },
     },
   ],
   role: {
     type: String,
     required: true,
-    enum: ["user", "entreprise", "professionnel"],
+    enum: ["user", "entreprise", "professionnel", "admin"],
   },
 });
 

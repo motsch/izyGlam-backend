@@ -43,7 +43,7 @@ const shopRoutes = require("./routes/shopRoutes");
 const userRoutes = require("./routes/userRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const companyRoutes = require("./routes/companyRoutes");
-
+const categoryRoutes = require('./routes/categoryRoutes');
 app.use("/api", bookingRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", serviceTemplateRoutes);
@@ -51,6 +51,7 @@ app.use("/api", shopRoutes);
 app.use("/api", userRoutes);
 app.use("/api", scheduleRoutes);
 app.use("/api", companyRoutes);
+app.use('/api', categoryRoutes);
 
 // Démarrage du serveur
 app.listen(port, () => {

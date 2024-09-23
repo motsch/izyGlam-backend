@@ -14,9 +14,7 @@ export interface iShop extends mongoose.Document {
   note: string;
   averagePrice: string;
   minimumDelay: string;
-  delayScale: string;
   type: string;
-  price: number;
   ville: string;
   reviews: iReview[];
   maxDistance: number;
@@ -47,11 +45,9 @@ const shopSchema = new mongoose.Schema<iShop>({
   description: { type: String, required: true },
   image: { type: String, required: true },
   note: { type: String, required: true },
-  averagePrice: { type: String, required: true },
-  minimumDelay: { type: String, required: true },
-  delayScale: { type: String, required: true },
+  averagePrice: { type: String, required: false },
+  minimumDelay: { type: String, required: false },
   type: { type: String, required: true },
-  price: { type: Number, required: true },
   ville: { type: String, required: true },
   reviews: [
     {
@@ -60,8 +56,8 @@ const shopSchema = new mongoose.Schema<iShop>({
         ref: "User",
         required: true,
       },
-      rating: { type: Number, required: true },
-      comment: { type: String, required: true },
+      rating: { type: Number, required: false },
+      comment: { type: String, required: false },
     },
   ],
   maxDistance: { type: Number, required: true },
@@ -77,8 +73,8 @@ const shopSchema = new mongoose.Schema<iShop>({
     type: { type: String, required: true },
   },
   location: {
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
+    latitude: { type: Number, required: false },
+    longitude: { type: Number, required: false },
   },
   hours: {
     morning: {
