@@ -15,8 +15,8 @@ mongoose
   
     // "mongodb://0.0.0.0:27017/izyGlam",
     // process.env.BDDPRIVATE,
-    "mongodb://mongo:IaHkRHRswXpmXOViZjZIJlUFrEOuqpqO@autorack.proxy.rlwy.net:44196/izyglam?authSource=admin&retryWrites=true&w=majority",
-   // "mongodb+srv://fmotsch:Fr%40ncis2018%21@cluster0.dzdgnj3.mongodb.net/devfreelance",
+    // "mongodb://mongo:IaHkRHRswXpmXOViZjZIJlUFrEOuqpqO@autorack.proxy.rlwy.net:44196/izyglam?authSource=admin&retryWrites=true&w=majority",
+   "mongodb+srv://fmotsch:Fr%40ncis2018%21@cluster0.dzdgnj3.mongodb.net/devfreelance",
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,

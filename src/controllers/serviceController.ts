@@ -89,6 +89,22 @@ const getServicesByShop = async (req: express.Request, res: express.Response) =>
   }
 };
 
+// Créer plusieurs services en une seule requête
+const createMultipleServices = async (req: express.Request, res: express.Response) => {
+  try {
+    const servicesArray = req.body; // Attends un tableau d'objets de services
+    if (!Array.isArray(servicesArray)) {
+      return res.status(400).json({ message: "Veuillez fournir un tableau de services." });
+    }
+
+    const newServices = await ServiceModel.insertMany(servicesArray);
+    res.status(201).json(newServices);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de créer les services" });
+  }
+};
+
+
 module.exports = {
   createService,
   getAllServices,
@@ -96,4 +112,5 @@ module.exports = {
   updateServiceById,
   deleteServiceById,
   getServicesByShop,
+  createMultipleServices,
 };

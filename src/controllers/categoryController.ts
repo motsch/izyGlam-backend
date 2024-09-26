@@ -16,6 +16,7 @@ const createCategory = async (req: Request, res: Response) => {
 const getAllCategories = async (req: Request, res: Response) => {
   try {
     const categories = await CategoryModel.find();
+    // console.log(categories);
     res.json(categories);
   } catch (error) {
     res.status(500).json({ message: "Impossible de récupérer les catégories" });

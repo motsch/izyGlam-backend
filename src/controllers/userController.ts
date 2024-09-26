@@ -19,7 +19,6 @@ const getUserInfo = async (
     };
     json: (arg0: {
       companyId: string;
-      shopIds: string[];
       lastname: string;
       email: string;
       firstname: string;
@@ -34,7 +33,6 @@ const getUserInfo = async (
     // Définissez un type pour l'objet que vous renvoyez
     type UserInfo = {
       companyId: string;
-      shopIds: string[]; // Modifier ici pour refléter le tableau
       lastname: string;
       email: string;
       firstname: string;
@@ -67,7 +65,7 @@ const getUserInfo = async (
         const user = await UserModel.findById(userId);
         if (user) {
           // Le user a été trouvé, renvoyer ses informations (sans le mot de passe)
-          const { lastname, email, firstname, role, address, proches, phone, companyId, shopIds, _id } =
+          const { lastname, email, firstname, role, address, proches, phone, companyId, _id } =
             user;
           res.json({
             lastname,
@@ -78,7 +76,6 @@ const getUserInfo = async (
             proches,
             phone,
             companyId,
-            shopIds, // Assurez-vous que la réponse utilise "shopIds"
             _id
           } as UserInfo);
         } else {
@@ -437,10 +434,10 @@ const updateUserById = async (req: any, res: express.Response) => {
 
         const userRole = decodedToken.role;
         // Vérifier le rôle de l'utilisateur avant de permettre la suppression
-        if (userRole !== "admin" && userRole !== "entreprise") {
+        if (userRole === "professionnel") {
           return res.status(403).json({
             message:
-              "Accès refusé : seuls les administrateurs peuvent modifier des utilisateurs",
+              "Accès refusé : Un compte professionnel ne peut pas modifier un utilisateur",
           });
         }
         const updatedUser = await UserModel.findByIdAndUpdate(

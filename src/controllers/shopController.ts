@@ -5,6 +5,8 @@ import * as express from "express";
 // Créer une nouvelle boutique (shop)
 const createShop = async (req: express.Request, res: express.Response) => {
   try {
+    console.log("IN CREATE");
+    console.log(req.body);
     const newShop = new ShopModel(req.body);
     await newShop.save();
     res.status(201).json(newShop);
