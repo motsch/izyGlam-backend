@@ -88,11 +88,27 @@ const getBookingsByShop = async (req: express.Request, res: express.Response) =>
 };
 
 // Récupérer toutes les réservations d'un utilisateur
-const getBookingsByUser = async (req: express.Request, res: express.Response) => {
+const getBookingsByUserPro = async (req: express.Request, res: express.Response) => {
+  try {
+    console.log("in by userPro");
+    const { userId } = req.params;
+    const bookings = await BookingModel.find({ userProId: userId });
+    if (bookings.length > 0) {
+      res.json(bookings);
+    } else {
+      res.status(404).json({ message: "Aucune réservation trouvée pour cet utilisateur" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer les réservations pour cet utilisateur" });
+  }
+};
+
+// Récupérer toutes les réservations d'un utilisateur
+const getBookingsByClient = async (req: express.Request, res: express.Response) => {
   try {
     console.log("in by user");
     const { userId } = req.params;
-    const bookings = await BookingModel.find({ user: userId });
+    const bookings = await BookingModel.find({ clientId: userId });
     if (bookings.length > 0) {
       res.json(bookings);
     } else {
@@ -198,6 +214,7 @@ module.exports = {
   updateBookingById,
   deleteBookingById,
   getBookingsByShop,
-  getBookingsByUser,
+  getBookingsByUserPro,
+  getBookingsByClient,
   getAvailableSlots,
 };

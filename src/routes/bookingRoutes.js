@@ -13,5 +13,6 @@ router.get('/booking', bookingController.getAllBookings);
 router.get('/booking/:id', bookingController.getBookingById);
 router.put('/booking/:id', bookingController.updateBookingById);
 router.delete('/booking/:id', bookingController.deleteBookingById);
-// router.get('/booking/user/:id', bookingController.getBookingByUser);
+router.get('/booking-by-userPro/:id', bookingController.getBookingsByUserPro);
+router.get('/booking-by-client/:id', bookingController.getBookingsByClient);
 module.exports = router;
