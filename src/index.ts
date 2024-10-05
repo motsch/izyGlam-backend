@@ -44,6 +44,9 @@ const userRoutes = require("./routes/userRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const companyRoutes = require("./routes/companyRoutes");
 const categoryRoutes = require('./routes/categoryRoutes');
+const colorRoutes = require('./routes/colorRoutes');
+const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
+const imageRoutes = require('./routes/imageRoutes');
 app.use("/api", bookingRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", serviceTemplateRoutes);
@@ -52,6 +55,9 @@ app.use("/api", userRoutes);
 app.use("/api", scheduleRoutes);
 app.use("/api", companyRoutes);
 app.use('/api', categoryRoutes);
+app.use('/api', colorRoutes);
+app.use('/api', adminSettingsRoutes);
+app.use('/api', imageRoutes);
 
 // Démarrage du serveur
 app.listen(port, () => {

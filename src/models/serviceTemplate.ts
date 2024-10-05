@@ -7,6 +7,7 @@ export interface iServiceTemplate extends mongoose.Document {
   type: string;
   price: number;
   duration: number; // En minutes
+  color: string;
 }
 
 const serviceTemplateSchema = new mongoose.Schema<iServiceTemplate>({
@@ -16,6 +17,7 @@ const serviceTemplateSchema = new mongoose.Schema<iServiceTemplate>({
   type: { type: String, required: true },
   price: { type: Number, required: true },
   duration: { type: Number, required: true }, // Durée de la prestation en minutes
+  color: { type: String, required: true },
 });
 
 const serviceTemplateModel = mongoose.model<iServiceTemplate>("ServiceTemplate", serviceTemplateSchema);

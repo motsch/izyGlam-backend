@@ -3,6 +3,7 @@ import * as express from "express";
 import moment from "moment"; // moment.js pour faciliter les calculs de temps
 import shopModel from "../models/shop";
 import serviceModel from "../models/service";
+import userModel from "../models/user";
 
 // Créer une nouvelle réservation
 const createBooking = async (req: express.Request, res: express.Response) => {
@@ -119,93 +120,111 @@ const getBookingsByClient = async (req: express.Request, res: express.Response) 
   }
 };
 
-// Récupérer les créneaux disponibles pour un service dans une boutique
 const getAvailableSlots = async (req: express.Request, res: express.Response) => {
   try {
-    const { serviceId } = req.params;
+    const { serviceId, shopId } = req.params;
+
+    // Obtenir les détails du service
     let service = await serviceModel.findById(serviceId);
     if (!service) {
       return res.status(404).json({ message: "Service non trouvé" });
     }
     const duration = service.duration; // Durée du service en minutes
 
-    const { shopId } = req.params;
+    // Obtenir les détails de la boutique
     let shop = await shopModel.findById(shopId);
     if (!shop) {
       return res.status(404).json({ message: "Boutique non trouvée" });
     }
 
-    const { date } = req.params;
-    const dateMoment = moment(date);
-    if (!dateMoment.isValid()) {
-      return res.status(400).json({ message: "Date invalide" });
+    const margin = 30; // Marge de sécurité entre les rendez-vous
+
+    // Récupérer le professionnel
+    const professional = await userModel.findById(shop.idUser); // Supposant que le modèle shop contient une référence au professionnel
+    if (!professional) {
+      return res.status(404).json({ message: "Professionnel non trouvé" });
     }
-    const margin = 30; // Marge de sécurité en minutes
 
-    // Récupérer les horaires d'ouverture du shop
-    const openingHours = shop.hours;
+    // Récupérer les réservations existantes pour le professionnel sur la période
+    const startDate = moment().startOf("day");
+    const endDate = moment().add(6, "weeks").endOf("day");
 
-    const morningStart = moment(date)
-      .hours(Number(openingHours.morning.start.split(":")[0]))
-      .minutes(Number(openingHours.morning.start.split(":")[1]));
-    const morningEnd = moment(date)
-      .hours(Number(openingHours.morning.end.split(":")[0]))
-      .minutes(Number(openingHours.morning.end.split(":")[1]));
-
-    const afternoonStart = moment(date)
-      .hours(Number(openingHours.afternoon.start.split(":")[0]))
-      .minutes(Number(openingHours.afternoon.start.split(":")[1]));
-    const afternoonEnd = moment(date)
-      .hours(Number(openingHours.afternoon.end.split(":")[0]))
-      .minutes(Number(openingHours.afternoon.end.split(":")[1]));
-
-    // Récupérer les réservations existantes pour cette boutique et cette date
     const bookings = await BookingModel.find({
-      shop: shop._id,
-      date: {
-        $gte: moment(date).startOf("day").toDate(),
-        $lt: moment(date).endOf("day").toDate(),
-      },
+      userProId: professional._id,
+      start: { $gte: startDate.toDate(), $lte: endDate.toDate() },
     });
 
-    // Fonction pour calculer les créneaux disponibles dans une plage horaire
-    const calculateSlots = (startTime: moment.Moment, endTime: moment.Moment) => {
-      const slots = [];
-      let currentTime = startTime.clone();
+    // Vérifier si le professionnel a des disponibilités
+    if (!professional.availability || professional.availability.length === 0) {
+      return res.status(200).json([]); // Pas de disponibilités
+    }
 
-      while (currentTime.add(duration, "minutes").isSameOrBefore(endTime)) {
-        const slotEnd = currentTime.clone();
-        const slotStart = slotEnd.clone().subtract(duration, "minutes");
+    const allAvailableSlots = [];
 
-        // Vérifier si ce créneau chevauche une réservation existante
-        const overlap = bookings.some((booking) => {
-          const bookingStart = moment(booking.date);
-          const bookingEnd = bookingStart.clone().add(service!.duration + margin, "minutes");
-          return slotStart.isBefore(bookingEnd) && slotEnd.isAfter(bookingStart);
-        });
+    // Boucle sur chaque jour de la période
+    for (let date = startDate.clone(); date.isBefore(endDate); date.add(1, 'days')) {
+      const dayOfWeek = date.format('dddd');
 
-        if (!overlap) {
-          slots.push({
-            start: slotStart.format("HH:mm"),
-            end: slotEnd.format("HH:mm"),
-          });
-        }
-
-        currentTime.add(margin, "minutes"); // Ajouter la marge de sécurité
+      // Vérifier si le professionnel est disponible ce jour-là
+      const availablePeriods = professional.availability.find(avail => avail.day === dayOfWeek);
+      if (!availablePeriods) {
+        continue; // Passer au jour suivant
       }
 
-      return slots;
-    };
+      // Vérifier les indisponibilités
+      const isUnavailable = professional.unavailability?.some(unavail => {
+        const unavailableStart = moment(unavail.start);
+        const unavailableEnd = moment(unavail.end);
+        return date.isBetween(unavailableStart, unavailableEnd, 'day', '[]');
+      });
+      if (isUnavailable) {
+        continue; // Passer au jour suivant
+      }
 
-    // Calculer les créneaux pour le matin et l'après-midi
-    const morningSlots = calculateSlots(morningStart, morningEnd);
-    const afternoonSlots = calculateSlots(afternoonStart, afternoonEnd);
+      // Calculer les créneaux disponibles pour la journée
+      const availableSlotsForDay = [];
 
-    res.json([...morningSlots, ...afternoonSlots]);
+      for (let period of availablePeriods.periods) {
+        let periodStart = date.clone().hour(Number(period.start.split(":")[0])).minute(Number(period.start.split(":")[1]));
+        let periodEnd = date.clone().hour(Number(period.end.split(":")[0])).minute(Number(period.end.split(":")[1]));
+
+        // Initialiser currentTime pour le calcul des créneaux
+        let currentTime = periodStart.clone();
+
+        while (currentTime.add(duration, 'minutes').isSameOrBefore(periodEnd)) {
+          const slotStart = currentTime.clone().subtract(duration, 'minutes');
+          const slotEnd = currentTime.clone();
+
+          // Vérifier les chevauchements avec les réservations existantes
+          const isOverlapping = bookings.some(booking => {
+            const bookingStart = moment(booking.start);
+            const bookingEnd = moment(booking.end);
+
+            return slotStart.isBefore(bookingEnd) && slotEnd.isAfter(bookingStart);
+          });
+
+          if (!isOverlapping) {
+            availableSlotsForDay.push({
+              date: date.format('YYYY-MM-DD'),
+              start: slotStart.format('HH:mm'),
+              end: slotEnd.format('HH:mm'),
+            });
+          }
+
+          currentTime.add(professional.breaks?.duration || "00:20", 'minutes'); // Ajouter la marge de sécurité
+        }
+      }
+
+      allAvailableSlots.push(...availableSlotsForDay);
+    }
+
+    res.json(allAvailableSlots);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Impossible de calculer les créneaux disponibles" });
   }
 };
+
 
 module.exports = {
   createBooking,

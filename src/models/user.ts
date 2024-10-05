@@ -9,6 +9,7 @@ export interface iUser extends Document {
   phone: string;
   companyId: string;
   credit: number;
+  sex: "male" | "female";
   proches: Array<{
     lastname: string;
     firstname: string;
@@ -23,9 +24,8 @@ export interface iUser extends Document {
     floor: string;
     main: boolean;
   }>;
-  role: "particulier" | "entreprise" | "professionnel";
-  comparePassword(password: string): Promise<boolean>;
-  shopCompany: {
+  role: "user" | "entreprise" | "professionnel" | "admin";
+  shopCompany?: {
     name: string;
     adresse: string;
     etage: number;
@@ -37,11 +37,31 @@ export interface iUser extends Document {
     phone: string;
     ccvaccepted: boolean;
   };
+  availability?: Array<{
+    day: string;  // e.g., "Monday"
+    periods: Array<{
+      start: string;  // e.g., "09:00"
+      end: string;    // e.g., "18:00"
+    }>;
+  }>;
+  unavailability?: Array<{
+    start: Date;
+    end: Date;
+  }>;
+  breaks?: {
+    duration: string;  // e.g., "00:20" for 20-minute buffer
+  };
+  comparePassword(password: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<iUser>({
   lastname: { type: String, required: true },
   firstname: { type: String, required: true },
+  sex: {
+    type: String,
+    required: true,
+    enum: ["male", "female"],
+  },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String, required: true },
@@ -71,9 +91,29 @@ const userSchema = new Schema<iUser>({
     required: true,
     enum: ["user", "entreprise", "professionnel", "admin"],
   },
+  availability: [
+    {
+      day: { type: String, required: false },  // e.g., "Monday"
+      periods: [
+        {
+          start: { type: String, required: false },  // e.g., "09:00"
+          end: { type: String, required: false },    // e.g., "18:00"
+        },
+      ],
+    },
+  ],
+  unavailability: [
+    {
+      start: { type: Date, required: false },
+      end: { type: Date, required: false },
+    },
+  ],
+  breaks: {
+    duration: { type: String, required: false },  // e.g., "00:20" for 20-minute buffer
+  },
 });
 
-// Fonction de hachage du mot de passe avant de le sauvegarder en base de données
+// Hashing password before saving it to the database
 userSchema.pre<iUser>("save", async function (next) {
   try {
     if (!this.isModified("password")) return next();
@@ -85,7 +125,7 @@ userSchema.pre<iUser>("save", async function (next) {
   }
 });
 
-// Méthode pour vérifier le mot de passe saisi lors de la connexion
+// Method for comparing entered password during login
 userSchema.methods.comparePassword = async function (password: string) {
   try {
     return await bcrypt.compare(password, this.password);

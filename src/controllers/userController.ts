@@ -24,6 +24,7 @@ const getUserInfo = async (
       firstname: string;
       role: string;
       phone: string;
+      sex: string;
       address: any[];
       proches: any[];
     }) => void;
@@ -38,6 +39,7 @@ const getUserInfo = async (
       firstname: string;
       role: string; // Ajoutez la propriété "role" au type
       phone: string;
+      sex: string;
       address: any[];
       proches: any[];
       _id: string;
@@ -65,7 +67,7 @@ const getUserInfo = async (
         const user = await UserModel.findById(userId);
         if (user) {
           // Le user a été trouvé, renvoyer ses informations (sans le mot de passe)
-          const { lastname, email, firstname, role, address, proches, phone, companyId, _id } =
+          const { lastname, email, firstname, role, address, proches, phone, sex, companyId, _id } =
             user;
           res.json({
             lastname,
@@ -75,6 +77,7 @@ const getUserInfo = async (
             address,
             proches,
             phone,
+            sex,
             companyId,
             _id
           } as UserInfo);
@@ -110,7 +113,7 @@ const refreshToken = async (
 
     // Créez un nouveau token avec une nouvelle expiration
     const token = jwt.sign({ userId }, process.env.SECRET_KEY, {
-      expiresIn: "5h",
+      expiresIn: "72h",
     });
 
     res.json({ message: "Token rafraîchi avec succès", token });
@@ -267,7 +270,7 @@ const loginUser = async (
       { userId: user._id, role: user.role },
       process.env.SECRET_KEY,
       {
-        expiresIn: "5h",
+        expiresIn: "72h",
       }
     );
     res.json({ message: user._id + " : Connexion réussie", token });
