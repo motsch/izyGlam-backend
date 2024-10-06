@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const fs = require("fs");
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -58,6 +59,9 @@ app.use('/api', categoryRoutes);
 app.use('/api', colorRoutes);
 app.use('/api', adminSettingsRoutes);
 app.use('/api', imageRoutes);
+
+// Middleware pour servir les fichiers statiques dans le dossier 'uploads'
+app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));
 
 // Démarrage du serveur
 app.listen(port, () => {

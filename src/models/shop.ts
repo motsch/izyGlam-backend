@@ -16,6 +16,7 @@ export interface iShop extends mongoose.Document {
   minimumDelay: string;
   type: string;
   ville: string;
+  district: string;
   reviews: iReview[];
   maxDistance: number;
   idUser: string;
@@ -50,6 +51,7 @@ const shopSchema = new mongoose.Schema<iShop>({
   minimumDelay: { type: String, required: false },
   type: { type: String, required: true },
   ville: { type: String, required: true },
+  district: { type: String, required: false },
   trad: { type: String, required: true },
   reviews: [
     {
