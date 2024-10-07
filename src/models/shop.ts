@@ -22,6 +22,7 @@ export interface iShop extends mongoose.Document {
   idUser: string;
   services: string[];
   trad: string;
+  galleryImages: string[];
   promo?: {
     active: boolean;
     type: string;
@@ -53,6 +54,7 @@ const shopSchema = new mongoose.Schema<iShop>({
   ville: { type: String, required: true },
   district: { type: String, required: false },
   trad: { type: String, required: true },
+  galleryImages: { type: [String], required: false },
   reviews: [
     {
       user: {

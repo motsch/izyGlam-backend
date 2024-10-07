@@ -1,6 +1,12 @@
 import ShopModel from "../models/shop";
 import ServiceModel from "../models/service";
 import * as express from "express";
+import { Request, Response } from 'express';
+
+// Étendre l'interface Request pour inclure la propriété 'files'
+interface MulterRequest extends Request {
+  files: Express.Multer.File[]; // Correctement typé
+}
 
 // Créer une nouvelle boutique (shop)
 const createShop = async (req: express.Request, res: express.Response) => {
@@ -110,6 +116,61 @@ const getShopsByUserId = async (req: express.Request, res: express.Response) => 
   }
 };
 
+// Upload images to a shop's gallery
+const uploadGalleryImages = async (req: MulterRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const files = req.files;  // Récupérer les fichiers uploadés via Multer
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: "Aucune image uploadée" });
+    }
+
+    const shop = await ShopModel.findById(id);
+    if (!shop) {
+      return res.status(404).json({ message: "Boutique non trouvée" });
+    }
+
+    // Extraire les noms des fichiers
+    const imagePaths = files.map(file => `/uploads/images/gallery/${file.filename}`);
+    console.log("imagePaths : " + imagePaths);
+
+    // Ajouter les chemins des fichiers à la galerie
+    if (!shop.galleryImages) {
+      shop.galleryImages = [];
+    }
+    shop.galleryImages.push(...imagePaths);
+    console.log("shop.galleryImages : " + shop.galleryImages);
+    // Sauvegarder les chemins des fichiers dans la base de données
+    await shop.updateOne({ galleryImages: shop.galleryImages });
+
+    res.status(200).json({ message: "Images uploadées avec succès", galleryImages: shop.galleryImages });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors de l'upload des images" });
+  }
+};
+
+
+// Get all gallery images for a specific shop
+const getGalleryImages = async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params;
+    console.log("id ShopGallery : " + id);
+    // Trouver le shop par son ID
+    const shop = await ShopModel.findById(id);
+    if (!shop || !shop.galleryImages) {
+      return res.status(404).json({ message: "Boutique ou galerie non trouvée" });
+    }
+
+    // Retourner les images de la galerie
+    res.status(200).json({ galleryImages: shop.galleryImages });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors de la récupération des images de la galerie" });
+  }
+};
+
+
+
 module.exports = {
   createShop,
   getAllShops,
@@ -118,4 +179,6 @@ module.exports = {
   deleteShopById,
   getServicesByShop,
   getShopsByUserId,
+  uploadGalleryImages,
+  getGalleryImages,
 };

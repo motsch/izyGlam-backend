@@ -3,6 +3,20 @@ const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const router = express.Router();
 
+const multer = require('multer'); // Importer Multer pour gérer les fichiers
+
+// Configurer Multer pour stocker les images dans le dossier "uploads/images/gallery"
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/images/gallery'); // Dossier de stockage
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname); // Nom unique pour chaque fichier
+    }
+  });
+
+const upload = multer({ storage: storage });
+
 // Route to create a new shop
 router.post("/shop", authMiddleware, shopController.createShop);
 
@@ -23,5 +37,10 @@ router.get('/shop/:id/services', shopController.getServicesByShop);
 
 // Route to retrieve all shops by userId
 router.get('/shops/user/:userId', shopController.getShopsByUserId);
+// Route to upload images to a shop's gallery
+router.post('/shop-gallery/:id/gallery/upload', authMiddleware, upload.array('gallery', 10), shopController.uploadGalleryImages);
+
+// Route to get all gallery images for a shop
+router.get('/shop-gallery/:id/gallery', shopController.getGalleryImages);
 
 module.exports = router;
