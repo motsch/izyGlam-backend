@@ -21,4 +21,6 @@ router.delete("/serviceTemplate/:id", authMiddleware, serviceTemplateController.
 // Route to get all serviceTemplates of a shop
 router.get("/shop/:type/serviceTemplates", serviceTemplateController.getServiceTemplatesByCategory);
 
+router.get("/serviceTemplateUniqueByType", serviceTemplateController.getUniqueServiceTemplatesByType);
+
 module.exports = router;

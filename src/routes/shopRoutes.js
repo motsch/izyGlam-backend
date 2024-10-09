@@ -37,6 +37,7 @@ router.get('/shop/:id/services', shopController.getServicesByShop);
 
 // Route to retrieve all shops by userId
 router.get('/shops/user/:userId', shopController.getShopsByUserId);
+
 // Route to upload images to a shop's gallery
 router.post('/shop-gallery/:id/gallery/upload', authMiddleware, upload.array('gallery', 10), shopController.uploadGalleryImages);
 

@@ -5,12 +5,17 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require('path');
 
+// Charger les variables d'environnement
+require('dotenv').config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
+
+// Connexion à la base de données
 mongoose
   .connect(
   
@@ -48,6 +53,9 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const colorRoutes = require('./routes/colorRoutes');
 const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
 const imageRoutes = require('./routes/imageRoutes');
+const openAIRoutes = require('./routes/openAIRoutes');
+
+// Utilisation des routes OpenAI dans l'application
 app.use("/api", bookingRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", serviceTemplateRoutes);
@@ -59,6 +67,7 @@ app.use('/api', categoryRoutes);
 app.use('/api', colorRoutes);
 app.use('/api', adminSettingsRoutes);
 app.use('/api', imageRoutes);
+app.use('/api', openAIRoutes);
 
 // Middleware pour servir les fichiers statiques dans le dossier 'uploads'
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));

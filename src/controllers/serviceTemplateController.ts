@@ -1,6 +1,32 @@
 import ServiceTemplateModel from "../models/serviceTemplate";
 import * as express from "express";
 
+// Récupérer tous les serviceTemplates avec un seul par type
+const getUniqueServiceTemplatesByType = async (req: express.Request, res: express.Response) => {
+  try {
+    let uniqueTemplateArray:any[] = [];
+    const serviceTemplates = await ServiceTemplateModel.find();
+    serviceTemplates.forEach(template => {
+      if (!uniqueTemplateArray.includes(template.type)) {
+        uniqueTemplateArray.push(template.type);
+      }
+    });
+    let finalArray:any[] = [];
+    for (let elem of uniqueTemplateArray) {
+      console.log(elem);
+      const elemToKeep = serviceTemplates.find(template => template.type === elem);
+      if (elemToKeep) {
+        finalArray.push(elemToKeep);
+      }
+    }
+    //const serviceTemplates = await ServiceTemplateModel.find();
+
+    res.json(finalArray);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer les serviceTemplates par type" });
+  }
+};
+
 // Créer un nouveau serviceTemplate
 const createServiceTemplate = async (req: express.Request, res: express.Response) => {
   try {
@@ -31,7 +57,7 @@ const getServiceTemplateById = async (req: express.Request, res: express.Respons
     if (serviceTemplate) {
       res.json(serviceTemplate);
     } else {
-      res.status(404).json({ message: "ServiceTemplate non trouvé" });
+      res.status(404).json({ message: "ServiceTemplate non trouvé 1" });
     }
   } catch (error) {
     res.status(500).json({ message: "Impossible de récupérer le serviceTemplate" });
@@ -48,7 +74,7 @@ const updateServiceTemplateById = async (req: express.Request, res: express.Resp
     if (updatedServiceTemplate) {
       res.json(updatedServiceTemplate);
     } else {
-      res.status(404).json({ message: "ServiceTemplate non trouvé" });
+      res.status(404).json({ message: "ServiceTemplate non trouvé 2" });
     }
   } catch (error) {
     res.status(500).json({ message: "Impossible de mettre à jour le serviceTemplate" });
@@ -63,7 +89,7 @@ const deleteServiceTemplateById = async (req: express.Request, res: express.Resp
     if (deletedServiceTemplate) {
       res.json({ message: "ServiceTemplate supprimé avec succès" });
     } else {
-      res.status(404).json({ message: "ServiceTemplate non trouvé" });
+      res.status(404).json({ message: "ServiceTemplate non trouvé 3" });
     }
   } catch (error) {
     res.status(500).json({ message: "Impossible de supprimer le serviceTemplate" });
@@ -96,4 +122,5 @@ module.exports = {
   updateServiceTemplateById,
   deleteServiceTemplateById,
   getServiceTemplatesByCategory,
+  getUniqueServiceTemplatesByType,
 };

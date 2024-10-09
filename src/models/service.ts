@@ -14,7 +14,7 @@ export interface iService extends mongoose.Document {
 const serviceSchema = new mongoose.Schema<iService>({
   name: { type: String, required: true },
   description: { type: String, required: true },
-  image: { type: String, required: true },
+  image: { type: String, required: false },
   type: { type: String, required: true },
   price: { type: Number, required: true },
   duration: { type: Number, required: true }, // Durée de la prestation en minutes
