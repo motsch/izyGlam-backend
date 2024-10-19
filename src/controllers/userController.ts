@@ -518,6 +518,32 @@ const deleteUserById = async (
   }
 };
 
+// Fonction pour mettre à jour les favoris de l'utilisateur
+export const updateUserFavorites = async (req: any, res: express.Response) => {
+  try {
+    const { id } = req.params; // Récupérer l'ID de l'utilisateur à partir des paramètres
+    const { favoriteShops } = req.body; // Récupérer le tableau de favoris du corps de la requête
+
+    // Vérifier si l'utilisateur existe
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+
+    // Mettre à jour les favoris de l'utilisateur
+    user.favoriteShops = favoriteShops;
+
+    // Sauvegarder les modifications dans la base de données
+    await user.save();
+
+    // Répondre avec un message de succès et les données utilisateur mises à jour
+    res.status(200).json({ message: "Favoris mis à jour avec succès", user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur lors de la mise à jour des favoris" });
+  }
+};
+
 module.exports = {
   getUsersByCompanyId,
   getUserInfo,
@@ -532,4 +558,5 @@ module.exports = {
   updateUserById,
   deleteUserById,
   refreshToken,
+  updateUserFavorites,
 };

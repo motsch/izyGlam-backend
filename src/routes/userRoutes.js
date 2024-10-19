@@ -53,4 +53,8 @@ router.delete("/users/:id", authMiddleware, usersController.deleteUserById);
 // Route to refresh JWT token using existing session token
 router.post("/refresh-token", authMiddleware, usersController.refreshToken);
 
+// Route pour mettre à jour les favoris de l'utilisateur
+router.put("/update-user-favs/:id", authMiddleware, usersController.updateUserFavorites);
+
+
 module.exports = router;

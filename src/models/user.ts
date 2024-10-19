@@ -9,6 +9,7 @@ export interface iUser extends Document {
   phone: string;
   companyId: string;
   credit: number;
+  favoriteShops: Array<string>;  // Modification pour que ce soit un array de strings
   sex: "male" | "female";
   proches: Array<{
     lastname: string;
@@ -38,10 +39,10 @@ export interface iUser extends Document {
     ccvaccepted: boolean;
   };
   availability?: Array<{
-    day: string;  // e.g., "Monday"
+    day: string;
     periods: Array<{
-      start: string;  // e.g., "09:00"
-      end: string;    // e.g., "18:00"
+      start: string;
+      end: string;
     }>;
   }>;
   unavailability?: Array<{
@@ -49,7 +50,7 @@ export interface iUser extends Document {
     end: Date;
   }>;
   breaks?: {
-    duration: string;  // e.g., "00:20" for 20-minute buffer
+    duration: string;
   };
   comparePassword(password: string): Promise<boolean>;
 }
@@ -57,6 +58,7 @@ export interface iUser extends Document {
 const userSchema = new Schema<iUser>({
   lastname: { type: String, required: true },
   firstname: { type: String, required: true },
+  favoriteShops: { type: [String], default: [] },  // Modification ici pour stocker des strings
   sex: {
     type: String,
     required: true,
@@ -93,11 +95,11 @@ const userSchema = new Schema<iUser>({
   },
   availability: [
     {
-      day: { type: String, required: false },  // e.g., "Monday"
+      day: { type: String, required: false },
       periods: [
         {
-          start: { type: String, required: false },  // e.g., "09:00"
-          end: { type: String, required: false },    // e.g., "18:00"
+          start: { type: String, required: false },
+          end: { type: String, required: false },
         },
       ],
     },
@@ -109,7 +111,7 @@ const userSchema = new Schema<iUser>({
     },
   ],
   breaks: {
-    duration: { type: String, required: false },  // e.g., "00:20" for 20-minute buffer
+    duration: { type: String, required: false },
   },
 });
 
