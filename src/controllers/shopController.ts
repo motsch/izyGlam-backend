@@ -8,6 +8,19 @@ interface MulterRequest extends Request {
   files: Express.Multer.File[]; // Correctement typé
 }
 
+const getShopsByIds = async (req: any, res: express.Response) => {
+  try {
+    // const { shopIds } = req.params;
+    
+    const shopIds = req.body.shopIds;
+    console.log("shopIds : " + shopIds);
+    const shops = await ShopModel.find({ _id: { $in: shopIds } });
+    res.json(shops);
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la récupération des shops favoris' });
+  }
+}
+
 // Créer une nouvelle boutique (shop)
 const createShop = async (req: express.Request, res: express.Response) => {
   try {
@@ -181,4 +194,5 @@ module.exports = {
   getShopsByUserId,
   uploadGalleryImages,
   getGalleryImages,
+  getShopsByIds,
 };

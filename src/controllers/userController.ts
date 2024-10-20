@@ -27,6 +27,7 @@ const getUserInfo = async (
       sex: string;
       address: any[];
       proches: any[];
+      favoriteShops: any[];
     }) => void;
   }
 ) => {
@@ -42,6 +43,7 @@ const getUserInfo = async (
       sex: string;
       address: any[];
       proches: any[];
+      favoriteShops: any[];
       _id: string;
     };
     const token = req.header("Authorization");
@@ -67,7 +69,7 @@ const getUserInfo = async (
         const user = await UserModel.findById(userId);
         if (user) {
           // Le user a été trouvé, renvoyer ses informations (sans le mot de passe)
-          const { lastname, email, firstname, role, address, proches, phone, sex, companyId, _id } =
+          const { lastname, email, firstname, role, address, proches, phone, sex, companyId, _id, favoriteShops } =
             user;
           res.json({
             lastname,
@@ -79,6 +81,7 @@ const getUserInfo = async (
             phone,
             sex,
             companyId,
+            favoriteShops,
             _id
           } as UserInfo);
         } else {
@@ -535,7 +538,8 @@ export const updateUserFavorites = async (req: any, res: express.Response) => {
 
     // Sauvegarder les modifications dans la base de données
     await user.save();
-
+    // console.log("SUCCESS : ")
+    // console.log(user);
     // Répondre avec un message de succès et les données utilisateur mises à jour
     res.status(200).json({ message: "Favoris mis à jour avec succès", user });
   } catch (error) {

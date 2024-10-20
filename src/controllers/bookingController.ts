@@ -108,8 +108,9 @@ const getBookingsByUserPro = async (req: express.Request, res: express.Response)
 const getBookingsByClient = async (req: express.Request, res: express.Response) => {
   try {
     console.log("in by user");
-    const { userId } = req.params;
-    const bookings = await BookingModel.find({ clientId: userId });
+    const { id } = req.params;
+    console.log("userId : " + id);
+    const bookings = await BookingModel.find({ clientId: id });
     if (bookings.length > 0) {
       res.json(bookings);
     } else {

@@ -44,4 +44,8 @@ router.post('/shop-gallery/:id/gallery/upload', authMiddleware, upload.array('ga
 // Route to get all gallery images for a shop
 router.get('/shop-gallery/:id/gallery', shopController.getGalleryImages);
 
+
+// Route to get all gallery images for a shop
+router.post('/shops-by-ids', shopController.getShopsByIds);
+
 module.exports = router;

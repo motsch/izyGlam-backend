@@ -2,13 +2,15 @@ import mongoose from "mongoose";
 
 export interface iBooking extends mongoose.Document {
   title: string;
+  establishmentName: string;
+  productName: string;
   address: string;
   phoneNumber: string;
   clientId: string;
   userProId: string; // Référence à l'utilisateur qui fait la réservation
   serviceId: string; // Référence au service réservé
   shopId: string; // Référence à la boutique où le service est réservé
-  status: "pending" | "confirmed" | "cancelled"; // Statut de la réservation
+  status: "pending" | "confirmed" | "cancelled" | "completed" | "no-show-client" | "no-show-pro"; // Statut de la réservation
   price: string;
   commission: string;
   date: Date; // Date et heure du passage de la commande
@@ -21,6 +23,8 @@ export interface iBooking extends mongoose.Document {
 
 const bookingSchema = new mongoose.Schema<iBooking>({
   title: { type: String, required: true },
+  establishmentName: { type: String, required: true },
+  productName: { type: String, required: true },
   address: { type: String, required: true },
   phoneNumber: { type: String, required: true },
   tva: { type: String, required: true },
