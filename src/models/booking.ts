@@ -19,9 +19,11 @@ export interface iBooking extends mongoose.Document {
   color: string;
   tva: string;
   shopEarnings: string;
+  reviewAdded: boolean;
 }
 
 const bookingSchema = new mongoose.Schema<iBooking>({
+  reviewAdded: { type: Boolean, default: false, required: false },
   title: { type: String, required: true },
   establishmentName: { type: String, required: true },
   productName: { type: String, required: true },
