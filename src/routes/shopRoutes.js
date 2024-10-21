@@ -48,4 +48,8 @@ router.get('/shop-gallery/:id/gallery', shopController.getGalleryImages);
 // Route to get all gallery images for a shop
 router.post('/shops-by-ids', shopController.getShopsByIds);
 
+
+// Route to add a review to a shop
+router.patch('/shop-add-review/:id', shopController.addShopReview);
+
 module.exports = router;

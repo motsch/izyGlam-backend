@@ -183,6 +183,32 @@ const getGalleryImages = async (req: express.Request, res: express.Response) => 
 };
 
 
+// Annuler une réservation en mettant à jour son statut à "cancelled"
+const addShopReview = async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params; // Shop ID from the request parameters
+    const review = req.body; // Review details (rating, comment, user) from the request body
+    //console.log("req.body : " + JSON.stringify(req.body));
+    console.log("review : " + JSON.stringify(req.body));
+    // Add the review to the shop's reviews array
+    const updatedShop = await ShopModel.findByIdAndUpdate(
+      id,
+      { $push: { reviews: review } }, // Use $push to add the review to the reviews array
+      { new: true } // Return the updated document
+    );
+    // console.log("updatedShop : " + updatedShop);
+    if (updatedShop) {
+      res.json({ message: "Avis ajouté avec succès", shop: updatedShop });
+    } else {
+      res.status(404).json({ message: "Shop non trouvée" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Impossible d'ajouter votre avis" });
+  }
+};
+
+
 
 module.exports = {
   createShop,
@@ -195,4 +221,5 @@ module.exports = {
   uploadGalleryImages,
   getGalleryImages,
   getShopsByIds,
+  addShopReview,
 };

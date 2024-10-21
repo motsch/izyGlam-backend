@@ -15,4 +15,7 @@ router.put('/booking/:id', bookingController.updateBookingById);
 router.delete('/booking/:id', bookingController.deleteBookingById);
 router.get('/booking-by-userPro/:userId', bookingController.getBookingsByUserPro);
 router.get('/booking-by-client/:id', bookingController.getBookingsByClient);
+// Route pour annuler une réservation
+router.patch('/booking-update-status/:id', bookingController.updateBookingStatusById);
+
 module.exports = router;

@@ -226,6 +226,29 @@ const getAvailableSlots = async (req: express.Request, res: express.Response) =>
   }
 };
 
+// Annuler une réservation en mettant à jour son statut à "cancelled"
+const updateBookingStatusById = async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params;
+    const status = req.body.status;
+    // Mettre à jour la réservation avec le statut "cancelled"
+    const updatedBooking = await BookingModel.findByIdAndUpdate(
+      id,
+      { status: status },
+      { new: true }
+    );
+
+    if (updatedBooking) {
+      res.json({ message: "Réservation annulée avec succès", booking: updatedBooking });
+    } else {
+      res.status(404).json({ message: "Réservation non trouvée" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Impossible d'annuler la réservation" });
+  }
+};
+
+
 
 module.exports = {
   createBooking,
@@ -237,4 +260,5 @@ module.exports = {
   getBookingsByUserPro,
   getBookingsByClient,
   getAvailableSlots,
+  updateBookingStatusById,
 };

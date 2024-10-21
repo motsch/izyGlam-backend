@@ -1,12 +1,6 @@
 import mongoose from "mongoose";
 import { iUser } from "./user";
 
-interface iReview {
-  user: mongoose.Types.ObjectId;
-  rating: number;
-  comment: string;
-}
-
 export interface iShop extends mongoose.Document {
   name: string;
   description: string;
@@ -17,7 +11,17 @@ export interface iShop extends mongoose.Document {
   type: string;
   ville: string;
   district: string;
-  reviews: iReview[];
+  // Ajout de reviews ici
+  reviews: [
+    {
+      user: {
+        type: string;
+        required: true,
+      },
+      rating: { type: Number, required: true },
+      comment: { type: String, required: true },
+    },
+  ],
   maxDistance: number;
   idUser: string;
   services: string[];
