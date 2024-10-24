@@ -29,11 +29,11 @@ const bookingSchema = new mongoose.Schema<iBooking>({
   productName: { type: String, required: true },
   address: { type: String, required: true },
   phoneNumber: { type: String, required: true },
-  tva: { type: String, required: true },
-  shopEarnings: { type: String, required: true },
+  tva: { type: String, required: false },
+  shopEarnings: { type: String, required: false },
   clientId: { type: String, required: true },
   userProId: { type: String, required: true },
-  serviceId: { type: String, required: true },
+  serviceId: { type: String, required: false },
   shopId: { type: String, required: true },
   status: {
     type: String,
@@ -43,11 +43,11 @@ const bookingSchema = new mongoose.Schema<iBooking>({
   },
   price: {
     type: String,
-    required: true,
+    required: false,
   },
   commission: {
     type: String,
-    required: true,
+    required: false,
   },
   date: { type: Date, required: true },
   start: { type: Date, required: true },

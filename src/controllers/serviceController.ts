@@ -167,6 +167,23 @@ const getGalleryImages = async (req: express.Request, res: express.Response) => 
   }
 };
 
+// Delete all services by shop ID
+const deleteAllServicesByShop = async (req: express.Request, res: express.Response) => {
+  try {
+    const { shopId } = req.params;
+    const deletedServices = await ServiceModel.deleteMany({ shopId: shopId });
+
+    if (deletedServices.deletedCount > 0) {
+      res.status(200).json({ message: `${deletedServices.deletedCount} services supprimés avec succès pour la boutique ${shopId}` });
+    } else {
+      res.status(404).json({ message: "Aucun service trouvé pour cette boutique" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors de la suppression des services de la boutique" });
+  }
+};
+
+
 module.exports = {
   createService,
   getAllServices,
@@ -177,4 +194,5 @@ module.exports = {
   createMultipleServices,
   uploadGalleryImages,
   getGalleryImages,
+  deleteAllServicesByShop,
 };

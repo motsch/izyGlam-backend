@@ -57,4 +57,11 @@ router.post(
 // Route to get all gallery images for a service
 router.get("/service-gallery/:id/gallery", serviceController.getGalleryImages);
 
+// Route to delete all services by shop ID
+router.delete(
+  "/service-delete-all-by-shop/:shopId",
+  authMiddleware,
+  serviceController.deleteAllServicesByShop
+);
+
 module.exports = router;
