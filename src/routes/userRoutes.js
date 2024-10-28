@@ -37,6 +37,9 @@ router.get("/me", authMiddleware, usersController.getUserInfo);
 // Authenticated route to retrieve a user by ID
 router.get("/users/:id", authMiddleware, usersController.getUserById);
 
+// get number of users on the platform
+router.get("/users-count-all", authMiddleware, usersController.getUsersAllCount);
+
 // Authenticated route to update a user by ID
 router.put("/users/:id", authMiddleware, usersController.updateUserById);
 

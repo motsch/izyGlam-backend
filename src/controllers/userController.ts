@@ -348,6 +348,7 @@ const getAllUsers = async (
   }
 ) => {
   try {
+    console.log("get users");
     const users = await UserModel.find()/*.select(
       "firstname email lastname role"
     );*/
@@ -465,6 +466,18 @@ const updateUserById = async (req: any, res: express.Response) => {
   }
 };
 
+const getUsersAllCount = async (
+  req: express.Request,
+  res: express.Response) => {
+  try {
+    const users = await UserModel.find()
+    const usersCount = users.length;
+    res.status(200).json(usersCount);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer le nombre d'utilisateurs" });
+  }
+};
+
 // Supprimer un utilisateur par son ID
 const deleteUserById = async (
   req: any,
@@ -549,6 +562,7 @@ export const updateUserFavorites = async (req: any, res: express.Response) => {
 };
 
 module.exports = {
+  getUsersAllCount,
   getUsersByCompanyId,
   getUserInfo,
   registerUserNoToken,

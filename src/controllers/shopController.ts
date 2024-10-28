@@ -8,6 +8,18 @@ interface MulterRequest extends Request {
   files: Express.Multer.File[]; // Correctement typé
 }
 
+const getShopsAllCount = async (
+  req: express.Request,
+  res: express.Response) => {
+  try {
+    const shops = await ShopModel.find()
+    const shopsCount = shops.length;
+    res.status(200).json(shopsCount);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer le nombre d'utilisateurs" });
+  }
+};
+
 const getShopsByIds = async (req: any, res: express.Response) => {
   try {
     // const { shopIds } = req.params;
@@ -211,6 +223,7 @@ const addShopReview = async (req: express.Request, res: express.Response) => {
 
 
 module.exports = {
+  getShopsAllCount,
   createShop,
   getAllShops,
   getShopById,

@@ -18,4 +18,7 @@ router.get('/booking-by-client/:id', bookingController.getBookingsByClient);
 // Route pour annuler une réservation
 router.patch('/booking-update-status/:id', bookingController.updateBookingStatusById);
 
+// get number of CA on the platform
+router.get("/ca-count-all", authMiddleware, bookingController.getAllCACount);
+
 module.exports = router;

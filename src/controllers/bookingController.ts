@@ -5,6 +5,27 @@ import shopModel from "../models/shop";
 import serviceModel from "../models/service";
 import userModel from "../models/user";
 
+
+const getAllCACount = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    // Filtrer les réservations avec le statut "completed" et récupérer seulement le champ price
+    const bookings = await BookingModel.find({ status: "completed" }, "price");
+
+    // Calculer le chiffre d'affaires en additionnant toutes les valeurs de price
+    const CA = bookings.reduce((total, booking) => {
+      return total + parseFloat(booking.price);
+    }, 0);
+
+    res.status(200).json(CA);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer le chiffre d'affaires" });
+  }
+};
+
+
 // Créer une nouvelle réservation
 const createBooking = async (req: express.Request, res: express.Response) => {
   try {
@@ -251,6 +272,7 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
 
 
 module.exports = {
+  getAllCACount,
   createBooking,
   getAllBookings,
   getBookingById,
