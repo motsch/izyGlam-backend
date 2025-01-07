@@ -1,5 +1,11 @@
 import UserModel from "../models/user";
 import * as express from "express";
+import axios from 'axios';
+import path from "path"; // Pour manipuler les chemins locaux
+
+import crypto from "crypto";
+import nodemailer from "nodemailer";
+require("dotenv").config();
 // controllers/usersController.js
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
@@ -14,8 +20,8 @@ const getUserInfo = async (
   res: {
     status: (arg0: number) => {
       (): any;
-      new (): any;
-      json: { (arg0: { message?: string; error?: string }): void; new (): any };
+      new(): any;
+      json: { (arg0: { message?: string; error?: string }): void; new(): any };
     };
     json: (arg0: {
       companyId: string;
@@ -24,6 +30,7 @@ const getUserInfo = async (
       firstname: string;
       role: string;
       phone: string;
+      conversationId: string;
       sex: string;
       address: any[];
       proches: any[];
@@ -40,6 +47,7 @@ const getUserInfo = async (
       firstname: string;
       role: string; // Ajoutez la propriété "role" au type
       phone: string;
+      conversationId: string;
       sex: string;
       address: any[];
       proches: any[];
@@ -69,9 +77,7 @@ const getUserInfo = async (
         const user = await UserModel.findById(userId);
         if (user) {
           // Le user a été trouvé, renvoyer ses informations (sans le mot de passe)
-          const { lastname, email, firstname, role, address, proches, phone, sex, companyId, _id, favoriteShops } =
-            user;
-          res.json({
+          const {
             lastname,
             email,
             firstname,
@@ -81,8 +87,23 @@ const getUserInfo = async (
             phone,
             sex,
             companyId,
+            _id,
             favoriteShops,
-            _id
+            conversationId,
+          } = user;
+          res.json({
+            lastname,
+            email,
+            firstname,
+            role,
+            address,
+            proches,
+            phone,
+            conversationId,
+            sex,
+            companyId,
+            favoriteShops,
+            _id,
           } as UserInfo);
         } else {
           // Le user n'a pas été trouvé (ceci ne devrait pas se produire si le token est valide)
@@ -106,8 +127,8 @@ const refreshToken = async (
     json: (arg0: { message: string; token: any }) => void;
     status: (arg0: number) => {
       (): any;
-      new (): any;
-      json: { (arg0: { message: string }): void; new (): any };
+      new(): any;
+      json: { (arg0: { message: string }): void; new(): any };
     };
   }
 ) => {
@@ -205,6 +226,7 @@ const loginVerifSMS = async (
   }
 };
 
+
 // Fonction de login pour vérifier les informations d'identification de l'utilisateur
 const loginUserSMS = async (
   req: { body: { email: any; phone: any } },
@@ -262,6 +284,7 @@ const loginUser = async (
     const user = await UserModel.findOne({ email });
     const test = await UserModel.find({});
     if (!user) {
+      console.log("user not found ???")
       return res.status(401).json({ message: "Email invalide", test: test });
     }
     const isPasswordValid = await user.comparePassword(password);
@@ -281,6 +304,188 @@ const loginUser = async (
     res
       .status(500)
       .json({ message: "Une erreur est survenue lors de la connexion" });
+  }
+};
+
+// Forgot password: Send reset link
+export const forgotPassword = async (req: express.Request, res: express.Response) => {
+  const { email } = req.body;
+  try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 heure
+
+    await user.save();
+
+    const resetLink = `${req.protocol}://localhost:4200/reset-password?token=${token}`;
+
+    const transporter = nodemailer.createTransport({
+      host: 'ssl0.ovh.net',
+      port: 465,
+      secure: true, // Utilisation de SSL
+      auth: {
+        user: process.env.EMAIL_ID,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    const logoPath = path.join(__dirname, "../../uploads/images/logo/fr.png"); // Chemin absolu du logo
+    const currentYear = new Date().getFullYear(); // Récupère l'année actuelle
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Réinitialisation de mot de passe</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+          }
+          .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+          }
+          .header {
+            background: linear-gradient(90deg, #36d1dc, #5b86e5);
+            padding: 20px;
+            text-align: center;
+          }
+          .header img {
+            max-width: 150px;
+          }
+          .content {
+            padding: 20px;
+            color: #333333;
+            text-align: left;
+          }
+          .content h1 {
+            color: #0072ff;
+            font-size: 24px;
+            margin-bottom: 10px;
+          }
+          .content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+          }
+          .button-container {
+            text-align: center;
+            margin: 20px 0;
+          }
+          .button {
+            display: inline-block;
+            padding: 15px 20px;
+            font-size: 16px;
+            color: #ffffff !important;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+          }
+          .button:hover {
+            opacity: 0.9;
+          }
+          .footer {
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 10px;
+            color: #888888;
+            font-size: 14px;
+          }
+          .footer a {
+            color: #0072ff;
+            text-decoration: none;
+          }
+          .footer a:hover {
+            text-decoration: underline;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="email-container">
+          <div class="header">
+            <img src="cid:logo" alt="IzyGlow Logo">
+          </div>
+          <div class="content">
+            <h1>Réinitialisation de votre mot de passe</h1>
+            <p>Bonjour,</p>
+            <p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte IzyGlow. Cliquez sur le bouton ci-dessous pour continuer.</p>
+            <div class="button-container">
+              <a class="button" href="${resetLink}" target="_blank">Réinitialiser mon mot de passe</a>
+            </div>
+            <p>Ce lien est valable pendant 1 heure. Si vous n'avez pas fait cette demande, veuillez ignorer cet email.</p>
+            <p>Merci,<br>L'équipe IzyGlow</p>
+          </div>
+          <div class="footer">
+            <p>Besoin d'aide ? <a href="mailto:support@izyglow.com">support@izyglow.com</a></p>
+            <p>&copy; ${currentYear} IzyGlow. Tous droits réservés.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const info = await transporter.sendMail({
+      from: 'contact@izyglow.com',
+      to: email,
+      subject: 'Réinitialisation de votre mot de passe - IzyGlow',
+      html: htmlContent,
+      attachments: [
+        {
+          filename: 'fr.png',
+          path: logoPath, // Chemin vers le logo
+          cid: 'logo', // Content-ID pour l'inclusion dans le HTML
+        },
+      ],
+    });
+
+    console.log('Message sent: %s', info.messageId);
+
+    res.status(200).json({ message: `Password reset email sent to ${email}` });
+  } catch (error) {
+    console.error('Error sending reset email:', error);
+    res.status(500).json({ message: "Error sending reset email", error });
+  }
+};
+
+
+
+
+// Reset password
+export const resetPassword = async (req: express.Request, res: express.Response) => {
+  const { token, newPassword } = req.body;
+  try {
+    const user = await UserModel.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.password = newPassword; // Ensure password hashing is implemented in UserModel
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password successfully reset" });
+  } catch (error) {
+    res.status(500).json({ message: "Error resetting password", error });
   }
 };
 
@@ -331,8 +536,49 @@ const createUser = async (req: express.Request, res: express.Response) => {
     res.status(201);
     res.send(newUser);
   } catch (error) {
-    res.status(500).json({ message: "Impossible de créer l'utilisateur => " + JSON.stringify(error) });
+    res
+      .status(500)
+      .json({
+        message:
+          "Impossible de créer l'utilisateur => " + JSON.stringify(error),
+      });
   }
+};
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const geolocation = async (req: any, res: any) => {
+  const userIP = getUserIP(req);
+
+  if (userIP === '8.8.8.8') {
+    console.log('IP locale détectée, utilisation d\'une localisation par défaut.');
+    res.json({
+      city: 'Paris',
+      country: 'France',
+      latitude: 48.8566,
+      longitude: 2.3522,
+    });
+    return;
+  }
+
+  try {
+    const response = await axios.get(`https://ipapi.co/${userIP}/json/`);
+    res.json(response.data);
+  } catch (error:any) {
+    console.error('Erreur lors de la récupération de la localisation :', error.message);
+    res.status(500).json({ message: 'Erreur lors de la récupération de la localisation.' });
+  }
+};
+
+const getUserIP = (req: any) => {
+  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  
+  // Si l'application tourne en local, utiliser une IP fictive
+  if (ip === '::1' || ip === '127.0.0.1') {
+    ip = '8.8.8.8'; // Exemple : IP publique de test (Google DNS)
+  }
+  
+  return Array.isArray(ip) ? ip[0] : ip; // Récupérer uniquement l'adresse IP
 };
 
 // Récupérer tous les utilisateurs
@@ -342,14 +588,14 @@ const getAllUsers = async (
     json: (arg0: any) => void;
     status: (arg0: number) => {
       (): any;
-      new (): any;
-      json: { (arg0: { message: string }): void; new (): any };
+      new(): any;
+      json: { (arg0: { message: string }): void; new(): any };
     };
   }
 ) => {
   try {
     console.log("get users");
-    const users = await UserModel.find()/*.select(
+    const users = await UserModel.find(); /*.select(
       "firstname email lastname role"
     );*/
     res.json(users);
@@ -375,6 +621,67 @@ const getUserById = async (req: any, res: express.Response) => {
   }
 };
 
+export const handleFacebookLogin = async (req: any, res: express.Response) => {
+  try {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+      return res.status(400).json({ message: "Access token manquant." });
+    }
+
+    // Étape 1 : Récupérer les informations utilisateur depuis l'API Graph
+    const userProfileResponse = await axios.get(
+      `https://graph.facebook.com/me?fields=id,email,first_name,last_name&access_token=${accessToken}`
+    );
+
+    const { id: facebookId, email, first_name, last_name } = userProfileResponse.data;
+
+    // Étape 2 : Vérifier si l'utilisateur existe déjà dans la base
+    let user = await UserModel.findOne({ email });
+
+    if (!user) {
+      console.log("IN CREATE");
+      // Si l'utilisateur n'existe pas, le créer
+      user = await UserModel.create({
+        firstname: first_name,
+        lastname: last_name,
+        email,
+        password: '', // Laisse le champ vide pour les connexions Facebook
+        role: "user",
+        facebook: {
+          id: facebookId,
+          accessToken,
+          tokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 heure
+        },
+      });
+    } else {
+      console.log("IN SAVE");
+      // Si l'utilisateur existe, mettre à jour le token Facebook
+      user.facebook.accessToken = accessToken;
+      user.facebook.tokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 heure
+      await user.save();
+    }
+
+    // Générer un token JWT pour la session
+    const jwtToken = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.SECRET_KEY,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({
+      message: "Connexion réussie.",
+      token: jwtToken,
+      user,
+    });
+  } catch (error:any) {
+    console.error("Erreur lors de la connexion Facebook :", error);
+    res.status(500).json({
+      message: "Erreur lors de la connexion via Facebook.",
+      error: error.message,
+    });
+  }
+};
 // Récupérer un utilisateur par son ID
 const getUsersByCompanyId = async (req: any, res: express.Response) => {
   try {
@@ -387,7 +694,9 @@ const getUsersByCompanyId = async (req: any, res: express.Response) => {
       res.status(404).json({ message: "Utilisateurs non trouvé" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Impossible de récupérer les utilisateurs" });
+    res
+      .status(500)
+      .json({ message: "Impossible de récupérer les utilisateurs" });
   }
 };
 
@@ -468,13 +777,16 @@ const updateUserById = async (req: any, res: express.Response) => {
 
 const getUsersAllCount = async (
   req: express.Request,
-  res: express.Response) => {
+  res: express.Response
+) => {
   try {
-    const users = await UserModel.find()
+    const users = await UserModel.find();
     const usersCount = users.length;
     res.status(200).json(usersCount);
   } catch (error) {
-    res.status(500).json({ message: "Impossible de récupérer le nombre d'utilisateurs" });
+    res
+      .status(500)
+      .json({ message: "Impossible de récupérer le nombre d'utilisateurs" });
   }
 };
 
@@ -485,8 +797,8 @@ const deleteUserById = async (
     json: (arg0: { message: string }) => void;
     status: (arg0: number) => {
       (): any;
-      new (): any;
-      json: { (arg0: { message?: string; error?: string }): void; new (): any };
+      new(): any;
+      json: { (arg0: { message?: string; error?: string }): void; new(): any };
     };
   }
 ) => {
@@ -534,6 +846,29 @@ const deleteUserById = async (
   }
 };
 
+// Fonction pour mettre à jour l'abonnement de l'utilisateur
+export const updateAbonnement = async (req: any, res: express.Response) => {
+  const { userId, abonnement, abonnement_end } = req.body;
+
+  try {
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.abonnement = abonnement;
+    user.abonnement_end = abonnement_end ? new Date(abonnement_end) : null;
+    await user.save();
+
+    res.status(200).json({ message: "Abonnement updated successfully." });
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ message: "Error updating abonnement.", error: error.message });
+  }
+};
+
 // Fonction pour mettre à jour les favoris de l'utilisateur
 export const updateUserFavorites = async (req: any, res: express.Response) => {
   try {
@@ -557,11 +892,96 @@ export const updateUserFavorites = async (req: any, res: express.Response) => {
     res.status(200).json({ message: "Favoris mis à jour avec succès", user });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Erreur lors de la mise à jour des favoris" });
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la mise à jour des favoris" });
+  }
+};
+
+const connectToBluesky = async (req: express.Request, res: express.Response) => {
+  const { handle, password } = req.body;
+  const userId = req.params.userId;
+
+  try {
+      // URL correcte pour se connecter via ATProto
+      const response = await axios.post('https://bsky.social/xrpc/com.atproto.server.createSession', {
+          identifier: handle,
+          password: password,
+      });
+
+      const accessToken = response.data.accessJwt; // Jeton d'accès
+      const refreshToken = response.data.refreshJwt || null; // Jeton de rafraîchissement
+
+      // Mettre à jour l'utilisateur avec le token obtenu
+      await UserModel.findByIdAndUpdate(userId, {
+          'bluesky.accessToken': accessToken,
+          'bluesky.tokenExpiresAt': new Date(Date.now() + 3600 * 1000), // Exemple : expiration dans 1h
+          ...(refreshToken && { 'bluesky.refreshToken': refreshToken }),
+      });
+
+      return res.status(200).json({
+          message: 'Connexion réussie et jeton sauvegardé.',
+          accessToken,
+          tokenExpiresAt: new Date(Date.now() + 3600 * 1000),
+      });
+  } catch (error) {
+      console.error('Erreur lors de la connexion à Bluesky :', error);
+      return res.status(500).json({ error: 'Connexion échouée.' });
+  }
+};
+
+const postToBluesky = async (req: express.Request, res: express.Response) => {
+  const { content } = req.body;
+  const userId = req.params.userId;
+
+  try {
+      // Récupérer l'utilisateur et son token
+      const user = await UserModel.findById(userId);
+      if (!user || !user.bluesky || !user.bluesky.accessToken) {
+          return res.status(401).json({ error: 'Utilisateur non connecté à Bluesky.' });
+      }
+
+      // Publier un post via ATProto
+      const response = await axios.post(
+          'https://bsky.social/xrpc/com.atproto.repo.createRecord',
+          {
+              repo: user.bluesky.userId,
+              collection: 'app.bsky.feed.post',
+              record: {
+                  text: content,
+                  createdAt: new Date().toISOString(),
+              },
+          },
+          {
+              headers: { Authorization: `Bearer ${user.bluesky.accessToken}` },
+          }
+      );
+
+      return res.status(200).json({ message: 'Post publié avec succès.', data: response.data });
+  } catch (error) {
+      console.error('Erreur lors de la publication sur Bluesky :', error);
+      return res.status(500).json({ error: 'Impossible de publier le post.' });
+  }
+};
+
+const revokeBlueskyAccess = async (req: express.Request, res: express.Response) => {
+  const userId = req.params.userId;
+
+  try {
+      await UserModel.findByIdAndUpdate(userId, {
+          $unset: { bluesky: '' },
+      });
+      return res.status(200).json({ message: 'Accès Bluesky révoqué.' });
+  } catch (error) {
+      console.error('Erreur lors de la révocation :', error);
+      return res.status(500).json({ error: 'Impossible de révoquer l\'accès.' });
   }
 };
 
 module.exports = {
+  revokeBlueskyAccess,
+  connectToBluesky,
+  postToBluesky,
   getUsersAllCount,
   getUsersByCompanyId,
   getUserInfo,
@@ -577,4 +997,9 @@ module.exports = {
   deleteUserById,
   refreshToken,
   updateUserFavorites,
+  updateAbonnement,
+  geolocation,
+  handleFacebookLogin,
+  forgotPassword,
+  resetPassword
 };

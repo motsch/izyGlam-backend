@@ -4,6 +4,13 @@ const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
+// Forgot password functionality
+router.post("/forgot-password", usersController.forgotPassword);
+router.post("/reset-password", usersController.resetPassword);
+
+// Route to update the user's abonnement
+router.post("/update-abonnement", usersController.updateAbonnement);
+
 // Route to handle user login with standard credentials
 router.post("/login", usersController.loginUser);
 
@@ -49,7 +56,7 @@ router.put(
   authMiddleware,
   usersController.updateUserPassword
 );
-
+router.post('/facebook-login', usersController.handleFacebookLogin);
 // Authenticated route to delete a user by ID
 router.delete("/users/:id", authMiddleware, usersController.deleteUserById);
 
@@ -58,6 +65,14 @@ router.post("/refresh-token", authMiddleware, usersController.refreshToken);
 
 // Route pour mettre à jour les favoris de l'utilisateur
 router.put("/update-user-favs/:id", authMiddleware, usersController.updateUserFavorites);
+
+// Route pour mettre à jour les favoris de l'utilisateur
+router.get("/geolocation", usersController.geolocation);
+
+// Routes pour Bluesky
+router.post('/bluesky/connect/:userId', usersController.connectToBluesky); // Connexion à Bluesky
+router.post('/bluesky/post/:userId', authMiddleware, usersController.postToBluesky); // Publier un post sur Bluesky
+router.delete('/bluesky/revoke/:userId', authMiddleware, usersController.revokeBlueskyAccess); // Révoquer l'accès à Bluesky
 
 
 module.exports = router;

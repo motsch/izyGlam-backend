@@ -55,6 +55,16 @@ const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 const openAIRoutes = require('./routes/openAIRoutes');
 
+const profileRoutes = require('./routes/profileRoutes');
+const socialMediaRoutes = require('./routes/socialMediaRoutes');
+const postRoutes = require('./routes/postRoutes');
+const suggestionRoutes = require('./routes/suggestionRoutes');
+const conversationRoutes = require('./routes/conversationRoutes');
+const planRoutes = require('./routes/planRoutes');
+const tipsRoutes = require("./routes/tipsRoutes");
+const vpnCheckerRoutes = require('./routes/vpnCheckerRoutes');
+const metaRoutes = require('./routes/metaRoutes');
+
 // Utilisation des routes OpenAI dans l'application
 app.use("/api", bookingRoutes);
 app.use("/api", serviceRoutes);
@@ -68,6 +78,16 @@ app.use('/api', colorRoutes);
 app.use('/api', adminSettingsRoutes);
 app.use('/api', imageRoutes);
 app.use('/api', openAIRoutes);
+
+app.use('/api', profileRoutes);
+app.use('/api', socialMediaRoutes);
+app.use('/api', postRoutes);
+app.use('/api', suggestionRoutes);
+app.use('/api', conversationRoutes);
+app.use('/api', planRoutes);
+app.use("/api", tipsRoutes);
+app.use('/api', vpnCheckerRoutes);
+app.use('/api', metaRoutes);
 
 // Middleware pour servir les fichiers statiques dans le dossier 'uploads'
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));
