@@ -64,6 +64,7 @@ const planRoutes = require('./routes/planRoutes');
 const tipsRoutes = require("./routes/tipsRoutes");
 const vpnCheckerRoutes = require('./routes/vpnCheckerRoutes');
 const metaRoutes = require('./routes/metaRoutes');
+const stripeRoutes = require('./routes/stripeRoutes');
 
 // Utilisation des routes OpenAI dans l'application
 app.use("/api", bookingRoutes);
@@ -88,6 +89,8 @@ app.use('/api', planRoutes);
 app.use("/api", tipsRoutes);
 app.use('/api', vpnCheckerRoutes);
 app.use('/api', metaRoutes);
+
+app.use('/api', stripeRoutes);
 
 // Middleware pour servir les fichiers statiques dans le dossier 'uploads'
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));

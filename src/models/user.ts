@@ -64,6 +64,7 @@ export interface iUser extends Document {
   };
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  customerId?: string;
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -156,6 +157,7 @@ const userSchema = new Schema<iUser>({
       ],
     },
   ],
+  customerId: { type: String, required: false },
   unavailability: [
     {
       start: { type: Date, required: false },

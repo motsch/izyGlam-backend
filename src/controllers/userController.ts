@@ -32,6 +32,7 @@ const getUserInfo = async (
       phone: string;
       conversationId: string;
       sex: string;
+      customerId: string;
       address: any[];
       proches: any[];
       favoriteShops: any[];
@@ -49,6 +50,7 @@ const getUserInfo = async (
       phone: string;
       conversationId: string;
       sex: string;
+      customerId: string;
       address: any[];
       proches: any[];
       favoriteShops: any[];
@@ -86,6 +88,7 @@ const getUserInfo = async (
             proches,
             phone,
             sex,
+            customerId,
             companyId,
             _id,
             favoriteShops,
@@ -101,6 +104,7 @@ const getUserInfo = async (
             phone,
             conversationId,
             sex,
+            customerId,
             companyId,
             favoriteShops,
             _id,
