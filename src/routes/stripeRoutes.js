@@ -15,4 +15,5 @@ router.post("/stripe/set-primary-card", stripeController.setPrimaryCard);
 // Nouvelle route pour créer une méthode de paiement à partir des détails de la carte
 router.post("/stripe/create-payment-method-from-details", stripeController.createPaymentMethodFromDetails);
 
+router.post("/stripe/create-payment-intent", stripeController.createPaymentIntent);
 module.exports = router;

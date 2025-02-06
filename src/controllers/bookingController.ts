@@ -30,6 +30,7 @@ const getAllCACount = async (
 const createBooking = async (req: express.Request, res: express.Response) => {
   try {
     const newBooking = new BookingModel(req.body);
+    console.log(req.body)
     await newBooking.save();
     res.status(201).json(newBooking);
   } catch (error) {
