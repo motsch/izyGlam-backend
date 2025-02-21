@@ -23,6 +23,14 @@ router.post("/shop", authMiddleware, shopController.createShop);
 // Route to retrieve all shops
 router.get("/shop", shopController.getAllShops);
 
+// Nouvelle route pour récupérer les shops à proximité
+// Exemple d'appel : /shop/nearby?lat=48.8566&lon=2.3522
+router.get("/shop/nearby", shopController.getShopsNearby);
+
+// Nouvelle route pour récupérer les shops en fonction des codes postaux
+// Exemple d'appel : /shop/delivery?codes=75001,75002
+router.get("/shop/delivery", shopController.getShopsByPostalCodes);
+
 // Route to retrieve a specific shop by ID
 router.get("/shop/:id", shopController.getShopById);
 

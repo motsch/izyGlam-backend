@@ -9,6 +9,9 @@ router.post("/category", authMiddleware, categoryController.createCategory);
 // Route to retrieve all categories
 router.get("/category", categoryController.getAllCategories);
 
+// Route pour récupérer les catégories disponibles selon les boutiques filtrées
+router.get("/category/available", categoryController.getCategoriesWithAvailableShops);
+
 // Route to retrieve a specific category by ID
 router.get("/category/:id", categoryController.getCategoryById);
 

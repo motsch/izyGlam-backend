@@ -127,12 +127,16 @@ const getBookingsByUserPro = async (req: express.Request, res: express.Response)
 };
 
 // Récupérer toutes les réservations d'un utilisateur
+// Récupérer toutes les réservations d'un utilisateur en excluant celles supprimées
 const getBookingsByClient = async (req: express.Request, res: express.Response) => {
   try {
     console.log("in by user");
     const { id } = req.params;
     console.log("userId : " + id);
-    const bookings = await BookingModel.find({ clientId: id });
+
+    // On ajoute { status: { $ne: "deleted" } } à la condition de recherche
+    const bookings = await BookingModel.find({ clientId: id, status: { $ne: "deleted" } });
+    
     if (bookings.length > 0) {
       res.json(bookings);
     } else {
@@ -142,6 +146,7 @@ const getBookingsByClient = async (req: express.Request, res: express.Response) 
     res.status(500).json({ message: "Impossible de récupérer les réservations pour cet utilisateur" });
   }
 };
+
 
 const getAvailableSlots = async (req: express.Request, res: express.Response) => {
   try {

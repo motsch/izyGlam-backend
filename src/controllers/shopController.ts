@@ -43,7 +43,7 @@ const createShop = async (req: express.Request, res: express.Response) => {
     res.status(201).json(newShop);
   } catch (error) {
     res.status(500).json({ message: "Impossible de créer la boutique" });
-  }
+  145}
 };
 
 // Récupérer toutes les boutiques
@@ -55,6 +55,112 @@ const getAllShops = async (req: express.Request, res: express.Response) => {
     res.status(500).json({ message: "Impossible de récupérer les boutiques" });
   }
 };
+
+
+// Fonction de calcul de distance (formule de Haversine)
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371; // Rayon de la Terre en km
+  const radLat1 = (lat1 * Math.PI) / 180;
+  const radLat2 = (lat2 * Math.PI) / 180;
+  const deltaLat = radLat2 - radLat1;
+  const deltaLon = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(radLat1) *
+      Math.cos(radLat2) *
+      Math.sin(deltaLon / 2) *
+      Math.sin(deltaLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const getShopsNearby = async (req: express.Request, res: express.Response) => {
+  const { lat, lon } = req.query;
+  if (!lat || !lon) {
+    return res.status(400).json({ message: "Les coordonnées 'lat' et 'lon' sont requises" });
+  }
+  try {
+    const clientLatitude = parseFloat(lat as string);
+    const clientLongitude = parseFloat(lon as string);
+
+    // On récupère toutes les boutiques
+    const shops = await ShopModel.find();
+
+    // On filtre les boutiques selon la distance
+    const shopsNearby = shops.filter((shop:any) => {
+      if (
+        !shop.location ||
+        shop.location.latitude === undefined ||
+        shop.location.longitude === undefined
+      ) {
+        return false;
+      }
+      const distance = calculateDistance(
+        clientLatitude,
+        clientLongitude,
+        shop.location.latitude,
+        shop.location.longitude
+      );
+      return distance <= shop.maxDistance;
+    });
+
+    res.json(shopsNearby);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors de la récupération des boutiques à proximité" });
+  }
+}
+
+const getShopsByPostalCodes = async (req: Request, res: Response) => {
+  try {
+    // On récupère `codes` depuis la query
+    const { codes } = req.query;
+
+    // On déclare un tableau final de codes postaux (string[])
+    let postalCodes: string[] = [];
+
+    // Si rien n'est fourni
+    if (!codes) {
+      return res.status(400).json({ message: "Les codes postaux sont requis" });
+    }
+
+    // 1) Si `codes` est une simple string (ex: "?codes=75001,75002")
+    if (typeof codes === "string") {
+      postalCodes = codes.split(",").map((code) => code.trim());
+    }
+    // 2) Si `codes` est déjà un tableau (ex: "?codes=75001&codes=75002")
+    else if (Array.isArray(codes)) {
+      // Attention : codes peut être (string | ParsedQs)[], donc on transforme en string[]
+      postalCodes = codes.map((code) => String(code).trim());
+    }
+
+    // À ce stade, postalCodes est un tableau de chaînes
+    const shops = await ShopModel.find();
+
+    // On filtre par rapport à un champ deliveryPostalCodes
+    // (assure-toi d'avoir ce champ dans le modèle ou de l'ajouter si besoin)
+    const shopsByPostalCodes = shops.filter((shop) => {
+      if (!shop.deliveryPostalCodes || !Array.isArray(shop.deliveryPostalCodes)) {
+        return false;
+      }
+      return shop.deliveryPostalCodes.some((deliveryCode: string) =>
+        postalCodes.includes(deliveryCode)
+      );
+    });
+
+    res.json(shopsByPostalCodes);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la récupération des boutiques par codes postaux" });
+  }
+};
+
 
 // Récupérer une boutique par son ID
 const getShopById = async (req: express.Request, res: express.Response) => {
@@ -226,6 +332,8 @@ module.exports = {
   getShopsAllCount,
   createShop,
   getAllShops,
+  getShopsNearby,
+  getShopsByPostalCodes,
   getShopById,
   updateShopById,
   deleteShopById,

@@ -25,6 +25,7 @@ export interface iShop extends mongoose.Document {
   maxDistance: number;
   idUser: string;
   services: string[];
+  deliveryPostalCodes: string[];
   trad: string;
   galleryImages: string[];
   promo?: {
@@ -52,6 +53,7 @@ const shopSchema = new mongoose.Schema<iShop>({
   description: { type: String, required: true },
   image: { type: String, required: true },
   note: { type: String, required: true },
+  deliveryPostalCodes: { type: [String], required: false },
   averagePrice: { type: String, required: false },
   minimumDelay: { type: String, required: false },
   type: { type: String, required: true },
