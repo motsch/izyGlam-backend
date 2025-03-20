@@ -1,25 +1,52 @@
+// src/routes/conversationRoutes.ts
+
 const express = require("express");
 const router = express.Router();
 const conversationController = require("../controllers/conversationController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
-// Route pour créer une nouvelle conversation
-router.post("/conversation", conversationController.createConversation);
+// Création d'une nouvelle conversation
+router.post("/conversation", authMiddleware, conversationController.createConversation);
 
-// Route pour récupérer toutes les conversations
-router.get("/conversation", conversationController.getAllConversations);
+// Récupérer toutes les conversations
+router.get("/conversation", authMiddleware, conversationController.getAllConversations);
 
-// Route pour récupérer une conversation par ID
-router.get("/conversation/:id", conversationController.getConversationById);
+// Récupérer une conversation par ID
+router.get("/conversation/:id", authMiddleware, conversationController.getConversationById);
 
-// Route pour ajouter un message à une conversation
-router.post("/conversation/:id/message", conversationController.addMessage);
+// Ajouter un message (texte ou photo) à une conversation
+router.post("/conversation/:id/message", authMiddleware, conversationController.addMessage);
 
-// Route pour supprimer une conversation par ID
+// Supprimer une conversation par ID (action restreinte)
 router.delete("/conversation/:id", authMiddleware, conversationController.deleteConversationById);
 
-// Route pour récupérer les messages d'un user par ID
-router.get("/conversation-user/:userId", conversationController.getOrCreateConversationByUserId);
+// Route pour récupérer ou créer la conversation Support
+router.get("/support", authMiddleware, conversationController.getOrCreateSupportConversation);
+
+// Route pour envoyer un message au support
+router.post("/support/message", authMiddleware, conversationController.addSupportMessage);
+
+// Supprimer (soft) un message d'une conversation (action admin)
+router.delete(
+  "/conversation/:conversationId/message/:messageId",
+  authMiddleware,
+  conversationController.deleteMessage
+);
+
+// Inviter un utilisateur dans une conversation existante (action restreinte)
+router.post(
+  "/conversation/:conversationId/invite",
+  authMiddleware,
+  conversationController.inviteUser
+);
+
+// Récupérer ou créer une conversation pour un utilisateur donné (exemple pour conversation privée)
+router.get("/conversation-user/:userId", authMiddleware, conversationController.getOrCreateConversationByUserId);
+
+// Nouvelle route pour créer une conversation à partir d'un email
+router.put("/conversation-email/:email", authMiddleware, conversationController.createConversationByEmail);
 
 
+// Récupérer toutes les conversations
+router.get("/support-conversation", authMiddleware, conversationController.getSupportMessages);
 module.exports = router;

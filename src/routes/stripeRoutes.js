@@ -16,4 +16,11 @@ router.post("/stripe/set-primary-card", stripeController.setPrimaryCard);
 router.post("/stripe/create-payment-method-from-details", stripeController.createPaymentMethodFromDetails);
 
 router.post("/stripe/create-payment-intent", stripeController.createPaymentIntent);
+
+
+
+// Nouvelle route pour le remboursement
+router.post("/stripe/refund", stripeController.refundPayment);
+
+
 module.exports = router;

@@ -1,8 +1,10 @@
 import UserModel from "../models/user";
 import * as express from "express";
+import { Request } from "express";
 import axios from 'axios';
 import path from "path"; // Pour manipuler les chemins locaux
 
+import ConversationModel from "../models/conversation";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 require("dotenv").config();
@@ -36,6 +38,7 @@ const getUserInfo = async (
       address: any[];
       proches: any[];
       favoriteShops: any[];
+      fidelity: any[];
     }) => void;
   }
 ) => {
@@ -54,6 +57,7 @@ const getUserInfo = async (
       address: any[];
       proches: any[];
       favoriteShops: any[];
+      fidelity: any;
       _id: string;
     };
     const token = req.header("Authorization");
@@ -92,6 +96,7 @@ const getUserInfo = async (
             companyId,
             _id,
             favoriteShops,
+            fidelity,
             conversationId,
           } = user;
           res.json({
@@ -107,6 +112,7 @@ const getUserInfo = async (
             customerId,
             companyId,
             favoriteShops,
+            fidelity,
             _id,
           } as UserInfo);
         } else {
@@ -229,6 +235,7 @@ const loginVerifSMS = async (
       .json({ message: "Une erreur est survenue lors de la connexion" });
   }
 };
+
 
 
 // Fonction de login pour vérifier les informations d'identification de l'utilisateur
@@ -586,22 +593,28 @@ const getUserIP = (req: any) => {
 };
 
 // Récupérer tous les utilisateurs
-const getAllUsers = async (
-  req: any,
-  res: {
-    json: (arg0: any) => void;
-    status: (arg0: number) => {
-      (): any;
-      new(): any;
-      json: { (arg0: { message: string }): void; new(): any };
-    };
-  }
-) => {
+const getAllUsers = async (req: any, res: express.Response) => {
   try {
     console.log("get users");
     const users = await UserModel.find(); /*.select(
       "firstname email lastname role"
     );*/
+    res.json(users);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Impossible de récupérer les utilisateurs" });
+  }
+};
+
+// Récupérer tous les utilisateurs
+const getAllByAdminOptions = async (req: any, res: express.Response) => {
+  try {
+    // Récupération depuis req.query car les paramètres sont dans l'URL
+    const { pays, type } = req.body;
+    console.log("get users");
+    const users = await UserModel.find({ role: type });
+
     res.json(users);
   } catch (error) {
     res
@@ -701,6 +714,30 @@ const getUsersByCompanyId = async (req: any, res: express.Response) => {
     res
       .status(500)
       .json({ message: "Impossible de récupérer les utilisateurs" });
+  }
+};
+// Ajoute une nouvelle adresse à l'utilisateur identifié par son id
+const addUserAddress = async (
+  req: express.Request,
+  res: express.Response) => {
+  try {
+    const userId = req.params.id; // On attend l'id dans l'URL (ex: /users/:id/address)
+    const newAddress = req.body.address; // On attend l'adresse dans le body sous { address: { ... } }
+
+    // Utilise $push pour ajouter la nouvelle adresse à l'array address
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { $push: { address: newAddress } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors de l'ajout de l'adresse", error });
   }
 };
 
@@ -982,7 +1019,22 @@ const revokeBlueskyAccess = async (req: express.Request, res: express.Response) 
   }
 };
 
+async function incrementStars(userId: string) {
+  const user = await UserModel.findById(userId);
+  user!.fidelity.stars += 1;
+  if (user!.fidelity.stars >= 10) {
+    user!.fidelity.rewards_history.push({
+      reward_name: "Prestation gratuite 🎁",
+      reward_date: new Date(),
+      type: "win"
+    });
+    user!.fidelity.stars = 0; // remise à zéro après récompense
+  }
+  await user!.save();
+}
+
 module.exports = {
+  getAllByAdminOptions,
   revokeBlueskyAccess,
   connectToBluesky,
   postToBluesky,
@@ -1005,5 +1057,6 @@ module.exports = {
   geolocation,
   handleFacebookLogin,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  addUserAddress,
 };

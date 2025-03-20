@@ -233,11 +233,11 @@ const getServicesByShop = async (req: express.Request, res: express.Response) =>
 const getShopsByUserId = async (req: express.Request, res: express.Response) => {
   try {
     const { userId } = req.params;
-    console.log("id user to find : ")
     console.log(userId)
     const shops = await ShopModel.find({ idUser: userId });
 
     if (shops.length > 0) {
+      console.log("shops to find 66666666666666      :::::::: "+shops)
       res.json(shops);
     } else {
       res.status(404).json({ message: "Aucune boutique trouvée pour cet utilisateur" });
@@ -326,6 +326,82 @@ const addShopReview = async (req: express.Request, res: express.Response) => {
   }
 };
 
+const bulkUpdateShopStats = async (req: express.Request, res: express.Response) => {
+  try {
+      const { stats } = req.body; // stats = [{ shopId, impressions: X, duree_affichage: Y }, ...]
+
+      if (!Array.isArray(stats) || stats.length === 0) {
+          return res.status(400).json({ message: "Données invalides" });
+      }
+
+      const bulkOps = stats.map(({ shopId, impressions, duree_affichage }) => ({
+          updateOne: {
+              filter: { _id: shopId },
+              update: {
+                  $inc: {
+                      impressions: impressions || 0,
+                      nombre_affichages_valides: impressions ? 1 : 0,
+                      temps_affichage_total: duree_affichage || 0,
+                  }
+              }
+          }
+      }));
+
+      await ShopModel.bulkWrite(bulkOps);
+      res.json({ message: "Mises à jour des statistiques effectuées" });
+
+  } catch (error) {
+      res.status(500).json({ message: "Erreur lors de la mise à jour des stats", error });
+  }
+};
+
+const incrementImpression = async (req: express.Request, res: express.Response) => {
+  try {
+      const { id } = req.params;
+      console.log(`📢 Tentative d'incrémentation d'impression pour la boutique ${id}`);
+
+      const shop = await ShopModel.findById(id);
+      if (!shop) {
+          console.error(`❌ Boutique introuvable : ${id}`);
+          return res.status(404).json({ message: "Boutique non trouvée" });
+      }
+
+      shop.impressions += 1;
+      await shop.save();
+
+      console.log(`✅ Impression mise à jour avec succès pour ${id}`);
+      res.json({ message: "Impression mise à jour", shop });
+  } catch (error) {
+      console.error("❌ Erreur dans incrementImpression :", error);
+      res.status(500).json({ message: "Erreur lors de la mise à jour des impressions", error });
+  }
+};
+
+
+const updateShopDisplayTime = async (req: express.Request, res: express.Response) => {
+  try {
+      const { id } = req.params;
+      const { duree_affichage } = req.body;
+
+      if (!duree_affichage || duree_affichage <= 0) {
+          return res.status(400).json({ message: "Durée d'affichage invalide" });
+      }
+
+      const shop = await ShopModel.findById(id);
+      if (!shop) {
+          return res.status(404).json({ message: "Boutique non trouvée" });
+      }
+
+      shop.temps_affichage_total += duree_affichage;
+      shop.nombre_affichages_valides += 1;
+      await shop.save();
+      res.json({ message: "Temps d'affichage mis à jour", shop });
+  } catch (error) {
+      res.status(500).json({ message: "Erreur lors de la mise à jour du temps d'affichage", error });
+  }
+};
+
+
 
 
 module.exports = {
@@ -343,4 +419,7 @@ module.exports = {
   getGalleryImages,
   getShopsByIds,
   addShopReview,
+  incrementImpression,
+  updateShopDisplayTime,
+  bulkUpdateShopStats,
 };

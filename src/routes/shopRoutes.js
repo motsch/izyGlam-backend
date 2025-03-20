@@ -62,4 +62,12 @@ router.get("/shops-count-all", authMiddleware, shopController.getShopsAllCount);
 // Route to add a review to a shop
 router.patch('/shop-add-review/:id', shopController.addShopReview);
 
+// Stats
+router.put("/shop-stats/:id/impression", authMiddleware, shopController.incrementImpression);
+
+router.put("/shop-stats/:id/display-time", authMiddleware, shopController.updateShopDisplayTime);
+
+// ✅ Ajouter cette route dans le routeur :
+router.put("/shop-stats/bulk-update", authMiddleware, shopController.bulkUpdateShopStats);
+
 module.exports = router;

@@ -46,6 +46,11 @@ export interface iShop extends mongoose.Document {
       end: string;
     };
   };
+  // ✅ Ajout des nouvelles stats
+  impressions: number;
+  nombre_affichages_valides: number;
+  temps_affichage_total: number;
+  taux_conversion: number;
 }
 
 const shopSchema = new mongoose.Schema<iShop>({
@@ -98,6 +103,11 @@ const shopSchema = new mongoose.Schema<iShop>({
       end: { type: String, required: true },
     },
   },
+  // ✅ Ajout des stats
+  impressions: { type: Number, default: 0 },
+  nombre_affichages_valides: { type: Number, default: 0 },
+  temps_affichage_total: { type: Number, default: 0 },
+  taux_conversion: { type: Number, default: 0 },
 });
 
 const shopModel = mongoose.model<iShop>("Shop", shopSchema);

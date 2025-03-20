@@ -10,10 +10,10 @@ export interface iBooking extends mongoose.Document {
   userProId: string; // Référence à l'utilisateur qui fait la réservation
   serviceId: string; // Référence au service réservé
   shopId: string; // Référence à la boutique où le service est réservé
-  status: "pending" | "confirmed" | "cancelled" | "completed" | "no-show-client" | "no-show-pro"; // Statut de la réservation
+  status: "pending" | "refused" | "accepted" | "deleted" | "cancelled" | "finished" | "no-show-client" | "no-show-pro"; // Statut de la réservation
   price: string;
   commission: string;
-  date: String; // Date et heure du passage de la commande
+  date: string; // Date et heure du passage de la commande
   orderDate: Date; // Date et heure du passage de la commande
   start: Date; // Date et heure de début du créneau réservé
   end: Date; // Date et heure de fin du créneau réservé
@@ -22,6 +22,9 @@ export interface iBooking extends mongoose.Document {
   shopEarnings: string;
   reviewAdded: boolean;
   image: string;
+  generatedCode: string;
+  proCodeConfirmed: boolean;
+  paymentIntentId?: string; // ID du paymentIntent Stripe
 }
 
 const bookingSchema = new mongoose.Schema<iBooking>({
@@ -40,23 +43,20 @@ const bookingSchema = new mongoose.Schema<iBooking>({
   shopId: { type: String, required: true },
   status: {
     type: String,
-    enum: ["pending", "confirmed", "cancelled", "completed", "no-show-client", "no-show-pro"],
+    enum: ["pending", "refused", "accepted", "deleted", "cancelled", "finished", "no-show-client", "no-show-pro"],
     default: "pending",
     required: true,
   },
-  price: {
-    type: String,
-    required: false,
-  },
-  commission: {
-    type: String,
-    required: false,
-  },
+  price: { type: String, required: false },
+  commission: { type: String, required: false },
   date: { type: String, required: true },
   orderDate: { type: Date, required: true },
   start: { type: Date, required: true },
   end: { type: Date, required: true },
   color: { type: String, required: true },
+  generatedCode: { type: String, required: false },
+  proCodeConfirmed: { type: Boolean, default: false, required: false },
+  paymentIntentId: { type: String, required: false }, // Champ ajouté pour stocker l'ID du paymentIntent
 });
 
 const bookingModel = mongoose.model<iBooking>("Booking", bookingSchema);

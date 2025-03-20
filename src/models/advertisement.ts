@@ -1,0 +1,44 @@
+import mongoose from "mongoose";
+
+// Interface définissant la structure d'un document Color
+export interface iAdvertisement extends mongoose.Document {
+    image: string;
+    date_expiration: Date;
+    lien: string;
+    annonceur: string;
+    budget: number;
+    impressions: number;
+    clics: number;
+    taux_conversion: number;
+    affichage_prioritaire: Boolean;
+    temps_affichage_total: number;
+    nombre_affichages_valides: number;
+}
+
+// Schéma Mongoose pour le modèle advertisementM
+const advertisementSchema = new mongoose.Schema<iAdvertisement>({
+  
+    image: { type: String, required: true },
+    date_expiration: { type: Date, required: true },
+    lien: { type: String, required: true },
+    annonceur: { type: String, required: true },
+    budget: { type: Number, default: 0 }, // Budget alloué
+    impressions: { type: Number, default: 0 }, // Nombre d'affichages
+    clics: { type: Number, default: 0 }, // Nombre de clics
+    taux_conversion: { type: Number, default: 0 }, // Clics / Impressions
+    affichage_prioritaire: { type: Boolean, default: false }, // Vérifie que l'hex est un code valide
+    // ✅ Nouveaux champs pour le suivi du temps moyen d'affichage
+    temps_affichage_total: { type: Number, default: 0 }, // Temps total d'affichage en secondes
+    nombre_affichages_valides: { type: Number, default: 0 } // Nombre de fois où la pub a été vue suffisamment
+});
+
+// ✅ Ajouter un champ calculé pour le temps moyen d'affichage
+advertisementSchema.virtual("temps_affichage_moyen").get(function () {
+    return this.nombre_affichages_valides > 0
+        ? this.temps_affichage_total / this.nombre_affichages_valides
+        : 0;
+});
+
+// Création du modèle Color basé sur le schéma
+const advertisementModel = mongoose.model<iAdvertisement>("Advertisement", advertisementSchema);
+export default advertisementModel;

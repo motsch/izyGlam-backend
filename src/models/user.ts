@@ -1,6 +1,17 @@
 import mongoose, { Document, Schema } from "mongoose";
 const bcrypt = require("bcryptjs");
 
+// Définis Fidelity
+interface Fidelity {
+  stars: number;
+  card_expiration: Date;
+  rewards_history: Array<{
+    type: string;
+    reward_name: string;
+    reward_date: Date;
+  }>;
+}
+
 export interface iUser extends Document {
   lastname: string;
   firstname: string;
@@ -65,6 +76,9 @@ export interface iUser extends Document {
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   customerId?: string;
+  
+  // Nouveau système de fidélité
+  fidelity: Fidelity;
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -115,6 +129,16 @@ const userSchema = new Schema<iUser>({
     type: String,
     required: true,
     enum: ["male", "female"],
+  },
+  fidelity: {                             // Ajout du système fidélité ici 👇
+    stars: { type: Number, default: 0 },  // Compteur étoiles
+    card_expiration: { type: Date },      // Date expiration carte
+    rewards_history: [
+      {
+        reward_name: { type: String, required: true },
+        reward_date: { type: Date, required: true },
+      },
+    ],
   },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -193,6 +217,8 @@ userSchema.methods.comparePassword = async function (password: string) {
     throw new Error(error);
   }
 };
+
+
 
 const UserModel = mongoose.model<iUser>("Users", userSchema);
 export default UserModel;

@@ -32,11 +32,17 @@ router.post("/usersNoToken", usersController.createUser);
 // Route to retrieve all users without requiring authentication
 router.get("/usersNoToken", usersController.getAllUsers);
 
+    // Route pour ajouter une adresse à un utilisateur
+    router.patch("/users/:id/address", usersController.addUserAddress);
+
 // Authenticated route to create a new user
 router.post("/users", usersController.createUser);
 
 // Authenticated route to get all users
 router.get("/users", authMiddleware, usersController.getAllUsers);
+
+// Authenticated route to get all users
+router.put("/admin-users", authMiddleware, usersController.getAllByAdminOptions);
 
 // Authenticated route to get the currently logged-in user's info
 router.get("/me", authMiddleware, usersController.getUserInfo);
@@ -73,6 +79,5 @@ router.get("/geolocation", usersController.geolocation);
 router.post('/bluesky/connect/:userId', usersController.connectToBluesky); // Connexion à Bluesky
 router.post('/bluesky/post/:userId', authMiddleware, usersController.postToBluesky); // Publier un post sur Bluesky
 router.delete('/bluesky/revoke/:userId', authMiddleware, usersController.revokeBlueskyAccess); // Révoquer l'accès à Bluesky
-
 
 module.exports = router;

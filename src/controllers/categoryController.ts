@@ -29,9 +29,9 @@ const calculateDistance = (
   const a =
     Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
     Math.cos(radLat1) *
-      Math.cos(radLat2) *
-      Math.sin(deltaLon / 2) *
-      Math.sin(deltaLon / 2);
+    Math.cos(radLat2) *
+    Math.sin(deltaLon / 2) *
+    Math.sin(deltaLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -133,16 +133,81 @@ const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
   }
 };
 
-// Récupérer toutes les catégories
+// Récupérer toutes les catégories triées par position (ordre croissant)
 const getAllCategories = async (req: Request, res: Response) => {
   try {
-    const categories = await CategoryModel.find();
-    // console.log(categories);
+    console.log("🔍 Début de récupération des catégories...");
+
+    let categories = await CategoryModel.find().sort({ position: 1 });
+
+    console.log(`📌 Catégories trouvées (${categories.length}) :`, categories);
+
+    let missingPosition = 1;
+    let updates = 0;
+
+    for (const category of categories) {
+      console.log(`➡️ Vérification de la catégorie ${category.name} (ID: ${category._id}) - Position actuelle: ${category.position}`);
+
+      if (!category.position || category.position !== missingPosition) {
+        console.log(`⚠️ Correction de la position de ${category.name} : ${category.position} ➡️ ${missingPosition}`);
+
+        try {
+          category.position = missingPosition;
+          await category.save(); // Met à jour la position
+
+          console.log(`✅ Position de ${category.name} mise à jour avec succès.`);
+          updates++;
+        } catch (saveError) {
+          console.error(`❌ Erreur lors de la mise à jour de ${category.name} (ID: ${category._id}):`, saveError);
+        }
+      }
+      missingPosition++;
+    }
+
+    if (updates > 0) {
+      console.log(`🔄 ${updates} catégories mises à jour. Rechargement des catégories...`);
+      categories = await CategoryModel.find().sort({ position: 1 });
+    } else {
+      console.log("✅ Aucune mise à jour nécessaire.");
+    }
+
+    console.log("🚀 Envoi de la réponse au client...");
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ message: "Impossible de récupérer les catégories" });
+    console.error("❌ Erreur générale dans getAllCategories :", error);
+    res.status(500).json({ message: "Impossible de récupérer les catégories", error });
   }
 };
+
+
+// Met à jour toutes les positions des catégories
+const updatePositions = async (req: Request, res: Response) => {
+  try {
+    const { categories } = req.body;
+
+    if (!Array.isArray(categories)) {
+      return res.status(400).json({ message: "Données invalides" });
+    }
+
+    console.log("🔄 Attribution de positions temporaires...");
+    await Promise.all(categories.map((cat, index) =>
+      CategoryModel.findByIdAndUpdate(cat._id, { position: 9999 + index })
+    ));
+
+    console.log("✅ Positions temporaires attribuées, mise à jour des positions réelles...");
+    await Promise.all(categories.map((cat, index) =>
+      CategoryModel.findByIdAndUpdate(cat._id, { position: index + 1 })
+    ));
+
+    res.json({ message: "✅ Positions mises à jour avec succès" });
+  } catch (error) {
+    console.error("❌ Erreur lors de la mise à jour des positions :", error);
+    res.status(500).json({ message: "Impossible de mettre à jour les positions" });
+  }
+};
+
+
+
 
 // Récupérer une catégorie par son ID
 const getCategoryById = async (req: Request, res: Response) => {
@@ -198,4 +263,5 @@ module.exports = {
   updateCategoryById,
   deleteCategoryById,
   getCategoriesWithAvailableShops,
+  updatePositions,
 };

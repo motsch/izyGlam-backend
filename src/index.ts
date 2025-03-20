@@ -4,6 +4,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const fs = require("fs");
 const path = require('path');
+// Import du seeder
+import { seedDatabase } from "./seeder";
 
 // Charger les variables d'environnement
 require('dotenv').config();
@@ -14,27 +16,6 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
-
-// Connexion à la base de données
-mongoose
-  .connect(
-  
-    // "mongodb://0.0.0.0:27017/izyGlam",
-    // process.env.BDDPRIVATE,
-    // "mongodb://mongo:IaHkRHRswXpmXOViZjZIJlUFrEOuqpqO@autorack.proxy.rlwy.net:44196/izyglam?authSource=admin&retryWrites=true&w=majority",
-   "mongodb+srv://fmotsch:Fr%40ncis2018%21@cluster0.dzdgnj3.mongodb.net/devfreelance",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
-  .then(() => {
-    console.log("Connexion à la base de données réussie");
-  })
-  .catch((err: any) => {
-    console.error("Erreur de connexion à la base de données :", err.message);
-    process.exit(1);
-  });
 
 // Point d'entrée de l'API
 app.get("/", (req: any, res: any) => {
@@ -54,7 +35,6 @@ const colorRoutes = require('./routes/colorRoutes');
 const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 const openAIRoutes = require('./routes/openAIRoutes');
-
 const profileRoutes = require('./routes/profileRoutes');
 const socialMediaRoutes = require('./routes/socialMediaRoutes');
 const postRoutes = require('./routes/postRoutes');
@@ -65,9 +45,17 @@ const tipsRoutes = require("./routes/tipsRoutes");
 const vpnCheckerRoutes = require('./routes/vpnCheckerRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
+const kpiRoutes = require('./routes/kpiRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const financialRoutes = require('./routes/financialRoutes');
+const villeRoutes = require('./routes/villeRoutes');
+const languageRoutes = require('./routes/languageRoutes');
+const advertisementRoutes = require('./routes/advertisementRoutes');
+
 
 // Utilisation des routes OpenAI dans l'application
 app.use("/api", bookingRoutes);
+app.use("/api", advertisementRoutes);
 app.use("/api", serviceRoutes);
 app.use("/api", serviceTemplateRoutes);
 app.use("/api", shopRoutes);
@@ -79,7 +67,9 @@ app.use('/api', colorRoutes);
 app.use('/api', adminSettingsRoutes);
 app.use('/api', imageRoutes);
 app.use('/api', openAIRoutes);
-
+app.use('/api', kpiRoutes);
+app.use('/api', transactionRoutes);
+app.use('/api', financialRoutes);
 app.use('/api', profileRoutes);
 app.use('/api', socialMediaRoutes);
 app.use('/api', postRoutes);
@@ -89,11 +79,35 @@ app.use('/api', planRoutes);
 app.use("/api", tipsRoutes);
 app.use('/api', vpnCheckerRoutes);
 app.use('/api', metaRoutes);
-
 app.use('/api', stripeRoutes);
-
+app.use("/api", villeRoutes);
+app.use("/api", languageRoutes);
 // Middleware pour servir les fichiers statiques dans le dossier 'uploads'
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));
+
+
+// Connexion à la base de données
+mongoose
+  .connect(
+
+    // "mongodb://0.0.0.0:27017/izyGlam",
+    // process.env.BDDPRIVATE,
+    // "mongodb://mongo:IaHkRHRswXpmXOViZjZIJlUFrEOuqpqO@autorack.proxy.rlwy.net:44196/izyglam?authSource=admin&retryWrites=true&w=majority",
+    "mongodb+srv://fmotsch:Fr%40ncis2018%21@cluster0.dzdgnj3.mongodb.net/devfreelance",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(async () => {
+    // Appel du seed
+    await seedDatabase();
+    console.log("Connexion à la base de données réussie");
+  })
+  .catch((err: any) => {
+    console.error("Erreur de connexion à la base de données :", err.message);
+    process.exit(1);
+  });
 
 // Démarrage du serveur
 app.listen(port, () => {

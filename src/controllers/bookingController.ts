@@ -110,12 +110,15 @@ const getBookingsByShop = async (req: express.Request, res: express.Response) =>
   }
 };
 
-// Récupérer toutes les réservations d'un utilisateur
+// Récupérer toutes les réservations d'un utilisateur Pro (sans le champ generatedCode)
 const getBookingsByUserPro = async (req: express.Request, res: express.Response) => {
   try {
     console.log("in by userPro");
     const { userId } = req.params;
-    const bookings = await BookingModel.find({ userProId: userId });
+    // Exclure le champ 'generatedCode'
+    const bookings = await BookingModel.find({ userProId: userId })
+      .select("-generatedCode");
+
     if (bookings.length > 0) {
       res.json(bookings);
     } else {
@@ -125,6 +128,7 @@ const getBookingsByUserPro = async (req: express.Request, res: express.Response)
     res.status(500).json({ message: "Impossible de récupérer les réservations pour cet utilisateur" });
   }
 };
+
 
 // Récupérer toutes les réservations d'un utilisateur
 // Récupérer toutes les réservations d'un utilisateur en excluant celles supprimées
@@ -180,6 +184,7 @@ const getAvailableSlots = async (req: express.Request, res: express.Response) =>
     const bookings = await BookingModel.find({
       userProId: professional._id,
       start: { $gte: startDate.toDate(), $lte: endDate.toDate() },
+      status: { $in: ["pending", "accepted"] } // Filtrer uniquement sur les réservations actives
     });
 
     // Vérifier si le professionnel a des disponibilités
@@ -253,6 +258,7 @@ const getAvailableSlots = async (req: express.Request, res: express.Response) =>
   }
 };
 
+
 // Annuler une réservation en mettant à jour son statut à "cancelled"
 const updateBookingStatusById = async (req: express.Request, res: express.Response) => {
   try {
@@ -275,6 +281,41 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
   }
 };
 
+/**
+ * Controller pour confirmer le code du booking.
+ * Expects { bookingId: string, code: string } dans req.body.
+ */
+const confirmBookingCode = async (req: express.Request, res: express.Response) => {
+  try {
+    const { bookingId, code } = req.body;
+
+    // Vérification des paramètres obligatoires
+    if (!bookingId || !code) {
+      return res.status(400).json({ message: "bookingId et code sont obligatoires" });
+    }
+
+    // Recherche du booking par son ID
+    const booking = await BookingModel.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking non trouvé" });
+    }
+
+    // Vérification du code
+    if (booking.generatedCode === code) {
+      // Mise à jour de proCodeConfirmed à true
+      booking.proCodeConfirmed = true;
+      await booking.save();
+      return res.json({ confirmed: true });
+    } else {
+      // Le code ne correspond pas
+      return res.json({ confirmed: false });
+    }
+  } catch (error) {
+    console.error("Erreur lors de la confirmation du code :", error);
+    return res.status(500).json({ message: "Erreur interne du serveur" });
+  }
+};
+
 
 
 module.exports = {
@@ -289,4 +330,5 @@ module.exports = {
   getBookingsByClient,
   getAvailableSlots,
   updateBookingStatusById,
+  confirmBookingCode,
 };

@@ -11,6 +11,32 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 /**
+ * Traite un remboursement en utilisant l'API Stripe.
+ * Le corps de la requête doit contenir paymentIntentId et peut contenir amount.
+ */
+export const refundPayment = async (req: express.Request, res: express.Response) => {
+  const { paymentIntentId, amount } = req.body;
+  if (!paymentIntentId) {
+    return res.status(400).json({ error: "paymentIntentId est requis" });
+  }
+  try {
+    // Préparer le payload pour le remboursement
+    const refundPayload: any = {
+      payment_intent: paymentIntentId,
+    };
+    // Si un montant est fourni, l'ajouter au payload
+    if (amount) {
+      refundPayload.amount = amount;
+    }
+    // Créez un remboursement pour le payment intent spécifié
+    const refund = await stripe.refunds.create(refundPayload);
+    res.status(200).json(refund);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
  * Crée une méthode de paiement à partir des détails de la carte.
  */
 export const createPaymentMethodFromDetails = async (

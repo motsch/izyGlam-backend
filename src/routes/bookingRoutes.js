@@ -21,4 +21,7 @@ router.patch('/booking-update-status/:id', bookingController.updateBookingStatus
 // get number of CA on the platform
 router.get("/ca-count-all", authMiddleware, bookingController.getAllCACount);
 
+// Route pour confirmer le code d'un booking
+router.post("/bookings-confirm-code", authMiddleware, bookingController.confirmBookingCode);
+
 module.exports = router;
