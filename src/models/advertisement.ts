@@ -40,5 +40,5 @@ advertisementSchema.virtual("temps_affichage_moyen").get(function () {
 });
 
 // Création du modèle Color basé sur le schéma
-const advertisementModel = mongoose.model<iAdvertisement>("Advertisement", advertisementSchema);
-export default advertisementModel;
+const AdvertisementModel = mongoose.model<iAdvertisement>("Advertisement", advertisementSchema);
+export default AdvertisementModel;

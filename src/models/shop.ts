@@ -47,10 +47,12 @@ export interface iShop extends mongoose.Document {
     };
   };
   // ✅ Ajout des nouvelles stats
-  impressions: number;
-  nombre_affichages_valides: number;
-  temps_affichage_total: number;
-  taux_conversion: number;
+    impressions: number;
+    clics: number;
+    taux_conversion: number;
+    affichage_prioritaire: Boolean;
+    temps_affichage_total: number;
+    nombre_affichages_valides: number;
 }
 
 const shopSchema = new mongoose.Schema<iShop>({
@@ -104,11 +106,14 @@ const shopSchema = new mongoose.Schema<iShop>({
     },
   },
   // ✅ Ajout des stats
-  impressions: { type: Number, default: 0 },
-  nombre_affichages_valides: { type: Number, default: 0 },
-  temps_affichage_total: { type: Number, default: 0 },
-  taux_conversion: { type: Number, default: 0 },
+    impressions: { type: Number, default: 0 }, // Nombre d'affichages
+    clics: { type: Number, default: 0 }, // Nombre de clics
+    taux_conversion: { type: Number, default: 0 }, // Clics / Impressions
+    affichage_prioritaire: { type: Boolean, default: false }, // Vérifie que l'hex est un code valide
+    // ✅ Nouveaux champs pour le suivi du temps moyen d'affichage
+    temps_affichage_total: { type: Number, default: 0 }, // Temps total d'affichage en secondes
+    nombre_affichages_valides: { type: Number, default: 0 } // Nombre de fois où la pub a été vue suffisamment
 });
 
 const shopModel = mongoose.model<iShop>("Shop", shopSchema);
-export default shopModel;
+export default shopModel;

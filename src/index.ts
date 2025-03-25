@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require('path');
 // Import du seeder
 import { seedDatabase } from "./seeder";
+import './services/mqtt.service'; // Active le service MQTT
 
 // Charger les variables d'environnement
 require('dotenv').config();
