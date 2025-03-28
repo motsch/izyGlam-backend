@@ -2,9 +2,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const fs = require("fs");
 const path = require('path');
 // Import du seeder
+import https from 'https';
+import fs from 'fs';
 import { seedDatabase } from "./seeder";
 import './services/mqtt.service'; // Active le service MQTT
 
@@ -110,7 +111,7 @@ mongoose
     process.exit(1);
   });
 
-// Démarrage du serveur
-app.listen(port, () => {
-  console.log(`Serveur démarré sur le port ${port}`);
-});
+  app.listen(port, () => {
+    console.log(`✅ Serveur démarré sur http://localhost:${port}`);
+  });
+  

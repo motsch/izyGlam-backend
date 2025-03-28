@@ -1,0 +1,10 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "3000:3000"  # au lieu de "3000:443"
+    # plus besoin du volume ssl
+    depends_on:
+      - rabbitmq
+    command: ["./scripts/wait-for-it.sh", "rabbitmq", "5672", "--", "npx", "ts-node", "src/index.ts"]
