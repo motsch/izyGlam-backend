@@ -6,7 +6,7 @@ import ConversationModel from '../models/conversation';
 
 class MqttService {
     private client: mqtt.MqttClient;
-    private brokerUrl = 'mqtt://0.0.0.0:1883'; // Change avec ton adresse MQTT
+    private brokerUrl = 'mqtt://rabbitmq:1883'; // Change avec ton adresse MQTT
     private username = 'fmotsch'; // Met les identifiants de RabbitMQ si besoin
     private password = 'Fr@ncis2018!';
     private pubImpressionQueue: { pubId: string; count: number }[] = []; // Buffer d'impressions pub
@@ -20,6 +20,8 @@ class MqttService {
             username: this.username,
             password: this.password,
         });
+        // À ajouter dans le constructeur AVANT le connect()
+        console.log('🔍 Tentative de connexion à MQTT sur :', this.brokerUrl);
 
         this.client.on('connect', () => {
             console.log('✅ Connecté à MQTT');
@@ -55,7 +57,6 @@ class MqttService {
         this.client.on('error', (err) => {
             console.error('❌ Erreur MQTT:', err);
         });
-
         // Toutes les 5 minutes, envoie les mises à jour à MongoDB
         setInterval(() => this.updatePubImpressionsBatch(), this.updateInterval);
 
