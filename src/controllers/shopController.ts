@@ -401,6 +401,88 @@ const updateShopDisplayTime = async (req: express.Request, res: express.Response
   }
 };
 
+const searchShopsWithServices = async (req: express.Request, res: express.Response) => {
+  try {
+    const { postalCode, query } = req.query;
+
+    if (!postalCode || !query) {
+      return res.status(400).json({ message: "postalCode et query sont requis" });
+    }
+
+    const lowerQuery = query.toString().toLowerCase();
+
+    const results = await ShopModel.aggregate([
+      {
+        $match: {
+          deliveryPostalCodes: postalCode,
+        }
+      },
+      {
+        $lookup: {
+          from: 'services', // nom exact de la collection Mongo
+          localField: '_id',
+          foreignField: 'shopId',
+          as: 'services'
+        }
+      },
+      {
+        $addFields: {
+          matchedServices: {
+            $filter: {
+              input: '$services',
+              as: 'service',
+              cond: {
+                $regexMatch: {
+                  input: { $toLower: '$$service.name' },
+                  regex: lowerQuery
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          $or: [
+            { name: { $regex: query.toString(), $options: 'i' } },
+            { 'matchedServices.0': { $exists: true } }
+          ]
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          description: 1,
+          image: 1,
+          note: 1,
+          type: 1,
+          ville: 1,
+          district: 1,
+          averagePrice: 1,
+          minimumDelay: 1,
+          trad: 1,
+          galleryImages: 1,
+          location: 1,
+          hours: 1,
+          promo: 1,
+          affichage_prioritaire: 1,
+          impressions: 1,
+          clics: 1,
+          taux_conversion: 1,
+          temps_affichage_total: 1,
+          nombre_affichages_valides: 1,
+          services: '$matchedServices'
+        }
+      }
+    ]);
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Erreur dans searchShopsWithServices :", error);
+    res.status(500).json({ message: "Erreur lors de la recherche des boutiques", error });
+  }
+};
+
 
 
 
@@ -422,4 +504,5 @@ module.exports = {
   incrementImpression,
   updateShopDisplayTime,
   bulkUpdateShopStats,
+  searchShopsWithServices,
 };
