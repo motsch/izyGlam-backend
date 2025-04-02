@@ -70,4 +70,6 @@ router.put("/shop-stats/:id/display-time", authMiddleware, shopController.update
 // ✅ Ajouter cette route dans le routeur :
 router.put("/shop-stats/bulk-update", authMiddleware, shopController.bulkUpdateShopStats);
 
+router.get('/shops-search', shopController.searchShopsWithServices);
+
 module.exports = router;

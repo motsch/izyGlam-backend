@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# wait-for-it.sh (version légère et propre)
+# wait-for-it.sh (version légère)
 
 host="$1"
 shift
