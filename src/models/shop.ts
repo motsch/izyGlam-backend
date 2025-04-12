@@ -58,7 +58,7 @@ export interface iShop extends mongoose.Document {
 const shopSchema = new mongoose.Schema<iShop>({
   name: { type: String, required: true },
   description: { type: String, required: true },
-  image: { type: String, required: true },
+  image: { type: String, required: true, default:"default.png" },
   note: { type: String, required: true },
   deliveryPostalCodes: { type: [String], required: false },
   averagePrice: { type: String, required: false },
@@ -92,8 +92,8 @@ const shopSchema = new mongoose.Schema<iShop>({
     type: { type: String, required: true },
   },
   location: {
-    latitude: { type: Number, required: false },
-    longitude: { type: Number, required: false },
+    latitude: { type: Number, required: true},
+    longitude: { type: Number, required: true },
   },
   hours: {
     morning: {

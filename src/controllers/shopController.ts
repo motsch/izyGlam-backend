@@ -1,4 +1,5 @@
 import ShopModel from "../models/shop";
+import ServiceTemplateModel from "../models/serviceTemplate";
 import ServiceModel from "../models/service";
 import * as express from "express";
 import { Request, Response } from 'express';
@@ -36,14 +37,48 @@ const getShopsByIds = async (req: any, res: express.Response) => {
 // Créer une nouvelle boutique (shop)
 const createShop = async (req: express.Request, res: express.Response) => {
   try {
-    console.log("IN CREATE");
-    console.log(req.body);
-    const newShop = new ShopModel(req.body);
+    console.log("IN CREATE SHOP");
+    const body = req.body;
+
+    // Étape 1 – Création de la boutique
+    const newShop = new ShopModel(body);
     await newShop.save();
-    res.status(201).json(newShop);
+
+    // Étape 2 – Recherche des templates du bon type
+    let templates = await ServiceTemplateModel.find({ type: newShop.type, active: true });
+
+    // Si aucun, on prend n'importe quels templates actifs
+    if (templates.length === 0) {
+      console.log("Aucun template du type trouvé, fallback vers des templates actifs génériques");
+      templates = await ServiceTemplateModel.find({ active: true });
+    }
+
+    // Étape 3 – Clonage des services à partir des templates
+    const servicesToCreate = templates.map((template) => {
+      return new ServiceModel({
+        name: template.name,
+        description: template.description,
+        image: template.image,
+        type: template.type,
+        price: template.price,
+        duration: template.duration,
+        color: template.color || "#ff4081", // fallback si jamais
+        shopId: newShop._id,
+      });
+    });
+
+    // Étape 4 – Sauvegarde des services
+    const createdServices = await ServiceModel.insertMany(servicesToCreate);
+
+    // Étape 5 – On peut renvoyer la boutique + les services
+    res.status(201).json({
+      shop: newShop,
+      services: createdServices,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Impossible de créer la boutique" });
-  145}
+    console.error("Erreur dans createShop :", error);
+    res.status(500).json({ message: "Impossible de créer la boutique et ses services." });
+  }
 };
 
 // Récupérer toutes les boutiques

@@ -791,12 +791,12 @@ const updateUserById = async (req: any, res: express.Response) => {
 
         const userRole = decodedToken.role;
         // Vérifier le rôle de l'utilisateur avant de permettre la suppression
-        if (userRole === "professionnel") {
+        /*if (userRole === "professionnel") {
           return res.status(403).json({
             message:
               "Accès refusé : Un compte professionnel ne peut pas modifier un utilisateur",
           });
-        }
+        }*/
         const updatedUser = await UserModel.findByIdAndUpdate(
           id,
           { username, email, role, lastname, firstname },

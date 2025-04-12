@@ -17,12 +17,16 @@ const serviceSchema = new mongoose.Schema<iService>({
   image: { type: String, required: false },
   type: { type: String, required: true },
   price: { type: Number, required: true },
-  duration: { type: Number, required: true }, // Durée de la prestation en minutes
+  duration: { type: Number, required: true },
   shopId: { 
     type: String, 
     required: true 
   },
-  color: { type: String, required: true },
+  color: { 
+    type: String, 
+    required: false,
+    default: "#ff4081" // Rose IzyGlam 💖
+  },
 });
 
 const serviceModel = mongoose.model<iService>("Service", serviceSchema);

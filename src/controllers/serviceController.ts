@@ -1,4 +1,6 @@
 import ServiceModel from "../models/service";
+import ShopModel from "../models/shop";
+import ServiceTemplateModel from "../models/serviceTemplate";
 import * as express from "express";
 import { Request, Response } from 'express';
 
@@ -81,20 +83,56 @@ const deleteServiceById = async (req: express.Request, res: express.Response) =>
 const getServicesByShop = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    // const services = await ServiceModel.find({ shopId: id });
-    const services = await ServiceModel.find({ shopId: id });
-    // const services = await ServiceModel.find();
-    console.log("shopId serviceController: " + id)
+
+    let services = await ServiceModel.find({ shopId: id });
+
     if (services.length > 0) {
-      console.log("Service length > 0")
-      res.json(services);
-    } else {
-      res.status(404).json({ message: "Aucun service trouvé pour cette boutique" });
+      return res.json(services);
     }
+
+    console.log("Aucun service trouvé, on cherche un template…");
+
+    const shop = await ShopModel.findById(id);
+    if (!shop) {
+      return res.status(404).json({ message: "Boutique introuvable" });
+    }
+
+    let template = await ServiceTemplateModel.findOne({ type: shop.type, active: true });
+
+    if (!template) {
+      console.log("Pas de template du même type, on en prend un actif au hasard");
+      template = await ServiceTemplateModel.findOne({ active: true });
+    }
+
+    if (!template) {
+      return res.status(500).json({ message: "Aucun template de service actif disponible pour créer un service" });
+    }
+
+    // 👇 On définit une couleur par défaut si absente
+    const color = template.color || "#ff4081"; // Rose IzyGlam si non défini
+
+    const newService = new ServiceModel({
+      name: template.name,
+      description: template.description,
+      image: template.image,
+      type: template.type,
+      price: template.price,
+      duration: template.duration,
+      color: color,
+      shopId: id,
+    });
+
+    await newService.save();
+
+    console.log("Service créé automatiquement à partir du template");
+    res.json([newService]);
+
   } catch (error) {
-    res.status(500).json({ message: "Impossible de récupérer les services pour cette boutique" });
+    console.error("Erreur dans getServicesByShop :", error);
+    res.status(500).json({ message: "Erreur lors de la récupération ou de la création des services." });
   }
 };
+
 
 // Créer plusieurs services en une seule requête
 const createMultipleServices = async (req: express.Request, res: express.Response) => {
