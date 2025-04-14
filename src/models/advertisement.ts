@@ -13,6 +13,7 @@ export interface iAdvertisement extends mongoose.Document {
     affichage_prioritaire: Boolean;
     temps_affichage_total: number;
     nombre_affichages_valides: number;
+    type: "PREMIUM" | "CLASSIC"; // type de la publicité réservation
 }
 
 // Schéma Mongoose pour le modèle advertisementM
@@ -24,12 +25,19 @@ const advertisementSchema = new mongoose.Schema<iAdvertisement>({
     annonceur: { type: String, required: true },
     budget: { type: Number, default: 0 }, // Budget alloué
     impressions: { type: Number, default: 0 }, // Nombre d'affichages
+    type: {
+        type: String,
+        enum: ["PREMIUM", "CLASSIC"],
+        default: "CLASSIC",
+        required: true,
+      },
     clics: { type: Number, default: 0 }, // Nombre de clics
     taux_conversion: { type: Number, default: 0 }, // Clics / Impressions
     affichage_prioritaire: { type: Boolean, default: false }, // Vérifie que l'hex est un code valide
     // ✅ Nouveaux champs pour le suivi du temps moyen d'affichage
     temps_affichage_total: { type: Number, default: 0 }, // Temps total d'affichage en secondes
-    nombre_affichages_valides: { type: Number, default: 0 } // Nombre de fois où la pub a été vue suffisamment
+    nombre_affichages_valides: { type: Number, default: 0 }, // Nombre de fois où la pub a été vue suffisamment
+    
 });
 
 // ✅ Ajouter un champ calculé pour le temps moyen d'affichage

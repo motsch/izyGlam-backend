@@ -12,22 +12,34 @@ const addAdvertisement = async (req: express.Request, res: express.Response) => 
     }
 };
 
-// Récupérer toutes les couleurs
+// Récupérer les publicités selon le type (PREMIUM ou CLASSIC)
 const getAdvertisements = async (req: express.Request, res: express.Response) => {
-
     try {
         const now = new Date();
-        const ads = await AdvertisementModel.find({
-            date_expiration: { $gte: new Date(now) } // S'assure que la comparaison est faite avec un objet Date valide
-        }).sort({ budget: -1 });
+        const { type } = req.query;
 
-        console.log(ads)
-        console.log("ADS GET ALL")
+        // Vérifie que le type est bien défini et valide
+        const filterType = (type === 'PREMIUM' || type === 'CLASSIC') ? type : null;
+
+        const filter: any = {
+            date_expiration: { $gte: now }
+        };
+
+        // Si un type valide est fourni, on l'ajoute au filtre
+        if (filterType) {
+            filter.type = filterType;
+        }
+
+        const ads = await AdvertisementModel.find(filter).sort({ nombre_affichages_valides: 1 });
+
+        console.log("ADS GET ALL", ads.length);
         res.json(ads);
     } catch (error) {
+        console.error("Erreur récupération pubs", error);
         res.status(500).json({ message: 'Erreur lors de la récupération des pubs', error });
     }
 };
+
 
 // Récupérer une couleur par son ID
 const getAdvertisementById = async (req: express.Request, res: express.Response) => {
