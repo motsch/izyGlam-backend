@@ -53,6 +53,7 @@ const financialRoutes = require('./routes/financialRoutes');
 const villeRoutes = require('./routes/villeRoutes');
 const languageRoutes = require('./routes/languageRoutes');
 const advertisementRoutes = require('./routes/advertisementRoutes');
+const adParkRoutes = require("./routes/adParkRoutes");
 
 
 // Utilisation des routes OpenAI dans l'application
@@ -84,6 +85,7 @@ app.use('/api', metaRoutes);
 app.use('/api', stripeRoutes);
 app.use("/api", villeRoutes);
 app.use("/api", languageRoutes);
+app.use("/api", adParkRoutes);
 // Middleware pour servir les fichiers statiques dans le dossier 'uploads'
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));
 
