@@ -8,7 +8,7 @@ import https from 'https';
 import fs from 'fs';
 import { seedDatabase } from "./seeder";
 import './services/mqtt.service'; // Active le service MQTT
-
+import CityModel from "./models/city";
 // Charger les variables d'environnement
 require('dotenv').config();
 
@@ -54,6 +54,7 @@ const villeRoutes = require('./routes/villeRoutes');
 const languageRoutes = require('./routes/languageRoutes');
 const advertisementRoutes = require('./routes/advertisementRoutes');
 const adParkRoutes = require("./routes/adParkRoutes");
+const cityRoutes = require("./routes/cityRoutes");
 
 
 // Utilisation des routes OpenAI dans l'application
@@ -86,8 +87,10 @@ app.use('/api', stripeRoutes);
 app.use("/api", villeRoutes);
 app.use("/api", languageRoutes);
 app.use("/api", adParkRoutes);
+app.use("/api", cityRoutes);
 // Middleware pour servir les fichiers statiques dans le dossier 'uploads'
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));
+
 
 
 // Connexion à la base de données
@@ -106,6 +109,7 @@ mongoose
   .then(async () => {
     // Appel du seed
     await seedDatabase();
+    await seedCities();
     console.log("Connexion à la base de données réussie");
   })
   .catch((err: any) => {
@@ -116,4 +120,30 @@ mongoose
   app.listen(port, () => {
     console.log(`✅ Serveur démarré sur http://localhost:${port}`);
   });
+  
+
+  const seedCities = async () => {
+    const count = await CityModel.countDocuments();
+    if (count > 0) return;
+  
+    console.log("Initialisation des villes...");
+  
+    const filePath = path.join(__dirname, "./data/villes-france.json");
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const { data } = JSON.parse(raw);
+  
+    const formattedCities = data.map((v: any) => ({
+      code_insee: v.code_insee,
+      nom: v.nom_standard,
+      code_postal: v.code_postal,
+      dep_nom: v.dep_nom,
+      reg_nom: v.reg_nom,
+      pays: "France",
+      latitude: parseFloat(v.latitude_mairie),
+      longitude: parseFloat(v.longitude_mairie),
+    }));
+  
+    await CityModel.insertMany(formattedCities);
+    console.log(`✅ ${formattedCities.length} villes importées avec coordonnées`);
+  };
   
