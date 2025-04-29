@@ -4,11 +4,12 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require('path');
 // Import du seeder
-import https from 'https';
 import fs from 'fs';
 import { seedDatabase } from "./seeder";
 import './services/mqtt.service'; // Active le service MQTT
 import CityModel from "./models/city";
+import http from 'http';
+import { WebSocketServer } from 'ws';
 // Charger les variables d'environnement
 require('dotenv').config();
 
@@ -56,7 +57,6 @@ const advertisementRoutes = require('./routes/advertisementRoutes');
 const adParkRoutes = require("./routes/adParkRoutes");
 const cityRoutes = require("./routes/cityRoutes");
 
-
 // Utilisation des routes OpenAI dans l'application
 app.use("/api", bookingRoutes);
 app.use("/api", advertisementRoutes);
@@ -91,12 +91,34 @@ app.use("/api", cityRoutes);
 // Middleware pour servir les fichiers statiques dans le dossier 'uploads'
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));
 
+// Créer le serveur HTTP basé sur Express
+const server = http.createServer(app);
 
+// Créer le serveur WebSocket
+const wss = new WebSocketServer({ server });
+
+// Gérer les connexions WebSocket
+wss.on('connection', (ws) => {
+  console.log('🧠 Nouvelle connexion WebSocket');
+
+  ws.on('message', (message) => {
+    console.log(`📩 Message reçu : ${message}`);
+    
+    // Tu peux envoyer une réponse
+    ws.send(`Echo : ${message}`);
+  });
+
+  ws.send('👋 Bienvenue sur le WebSocket Server !');
+});
+
+// Démarrer le serveur HTTP (et donc WS aussi)
+server.listen(port, () => {
+  console.log(`✅ Serveur HTTP + WebSocket démarré sur http://localhost:${port}`);
+});
 
 // Connexion à la base de données
 mongoose
   .connect(
-
     // "mongodb://0.0.0.0:27017/izyGlam",
     // process.env.BDDPRIVATE,
     // "mongodb://mongo:IaHkRHRswXpmXOViZjZIJlUFrEOuqpqO@autorack.proxy.rlwy.net:44196/izyglam?authSource=admin&retryWrites=true&w=majority",
@@ -121,7 +143,6 @@ mongoose
     console.log(`✅ Serveur démarré sur http://localhost:${port}`);
   });
   
-
   const seedCities = async () => {
     const count = await CityModel.countDocuments();
     if (count > 0) return;

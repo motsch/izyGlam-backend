@@ -769,50 +769,42 @@ const updateUserPassword = async (
 const updateUserById = async (req: any, res: express.Response) => {
   try {
     const { id } = req.params;
-    const { username, email, role, lastname, firstname } = req.body;
-    // Récupérer le token d'authentification à partir de l'en-tête de la demande
+    const updates = { ...req.body }; // Récupère tout ce qui est dans req.body
+    
+    // Sécurité : On interdit de modifier certains champs sensibles
+    delete updates.password; 
+    delete updates._id; 
+    delete updates.email; // <-- selon ta politique de modification d'email
+
     const token = req.header("Authorization");
     if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Token d'authentification manquant 3" });
+      return res.status(401).json({ message: "Token d'authentification manquant" });
     }
 
-    // Vérifier et décoder le token JWT pour obtenir le rôle de l'utilisateur
     jwt.verify(
       token,
       process.env.SECRET_KEY,
-      async (err: any, decodedToken: { userId: any; role: string }) => {
+      async (err: any, decodedToken: { userId: string; role: string }) => {
         if (err) {
-          return res
-            .status(403)
-            .json({ message: "Token d'authentification invalide" });
+          return res.status(403).json({ message: "Token d'authentification invalide" });
         }
 
-        const userRole = decodedToken.role;
-        // Vérifier le rôle de l'utilisateur avant de permettre la suppression
-        /*if (userRole === "professionnel") {
-          return res.status(403).json({
-            message:
-              "Accès refusé : Un compte professionnel ne peut pas modifier un utilisateur",
-          });
-        }*/
         const updatedUser = await UserModel.findByIdAndUpdate(
           id,
-          { username, email, role, lastname, firstname },
-          { new: true }
+          updates, // <-- on passe tous les champs autorisés
+          { new: true, runValidators: true }
         );
-        if (updatedUser) {
-          res.json(updatedUser);
-        } else {
-          res.status(404).json({ message: "Utilisateur non trouvé" });
+
+        if (!updatedUser) {
+          return res.status(404).json({ message: "Utilisateur non trouvé" });
         }
+
+        res.json(updatedUser);
       }
     );
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Impossible de mettre à jour l'utilisateur" });
+    console.error(error);
+    res.status(500).json({ message: "Erreur serveur lors de la mise à jour" });
   }
 };
 
