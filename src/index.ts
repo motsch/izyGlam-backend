@@ -6,7 +6,6 @@ const path = require('path');
 // Import du seeder
 import fs from 'fs';
 import { seedDatabase } from "./seeder";
-import './services/mqtt.service'; // Active le service MQTT
 import CityModel from "./models/city";
 import http from 'http';
 import { WebSocketServer } from 'ws';
@@ -103,17 +102,12 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (message) => {
     console.log(`📩 Message reçu : ${message}`);
-    
+
     // Tu peux envoyer une réponse
     ws.send(`Echo : ${message}`);
   });
 
   ws.send('👋 Bienvenue sur le WebSocket Server !');
-});
-
-// Démarrer le serveur HTTP (et donc WS aussi)
-server.listen(port, () => {
-  console.log(`✅ Serveur HTTP + WebSocket démarré sur http://localhost:${port}`);
 });
 
 // Connexion à la base de données
@@ -139,32 +133,32 @@ mongoose
     process.exit(1);
   });
 
-  app.listen(port, () => {
-    console.log(`✅ Serveur démarré sur http://localhost:${port}`);
-  });
-  
-  const seedCities = async () => {
-    const count = await CityModel.countDocuments();
-    if (count > 0) return;
-  
-    console.log("Initialisation des villes...");
-  
-    const filePath = path.join(__dirname, "./data/villes-france.json");
-    const raw = fs.readFileSync(filePath, "utf-8");
-    const { data } = JSON.parse(raw);
-  
-    const formattedCities = data.map((v: any) => ({
-      code_insee: v.code_insee,
-      nom: v.nom_standard,
-      code_postal: v.code_postal,
-      dep_nom: v.dep_nom,
-      reg_nom: v.reg_nom,
-      pays: "France",
-      latitude: parseFloat(v.latitude_mairie),
-      longitude: parseFloat(v.longitude_mairie),
-    }));
-  
-    await CityModel.insertMany(formattedCities);
-    console.log(`✅ ${formattedCities.length} villes importées avec coordonnées`);
-  };
-  
+// Démarrer le serveur HTTP (et donc WS aussi)
+server.listen(port, () => {
+  console.log(`✅ Serveur HTTP + WebSocket démarré sur http://localhost:${port}`);
+});
+
+const seedCities = async () => {
+  const count = await CityModel.countDocuments();
+  if (count > 0) return;
+
+  console.log("Initialisation des villes...");
+
+  const filePath = path.join(__dirname, "./data/villes-france.json");
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const { data } = JSON.parse(raw);
+
+  const formattedCities = data.map((v: any) => ({
+    code_insee: v.code_insee,
+    nom: v.nom_standard,
+    code_postal: v.code_postal,
+    dep_nom: v.dep_nom,
+    reg_nom: v.reg_nom,
+    pays: "France",
+    latitude: parseFloat(v.latitude_mairie),
+    longitude: parseFloat(v.longitude_mairie),
+  }));
+
+  await CityModel.insertMany(formattedCities);
+  console.log(`✅ ${formattedCities.length} villes importées avec coordonnées`);
+};
