@@ -47,18 +47,19 @@ export interface iShop extends mongoose.Document {
     };
   };
   // ✅ Ajout des nouvelles stats
-    impressions: number;
-    clics: number;
-    taux_conversion: number;
-    affichage_prioritaire: Boolean;
-    temps_affichage_total: number;
-    nombre_affichages_valides: number;
+  impressions: number;
+  clics: number;
+  taux_conversion: number;
+  affichage_prioritaire: Boolean;
+  temps_affichage_total: number;
+  nombre_affichages_valides: number;
+  temps_affichage_moyen: number; // Ce champ reste ici pour TypeScript, mais il est virtuel en base
 }
 
 const shopSchema = new mongoose.Schema<iShop>({
   name: { type: String, required: true },
   description: { type: String, required: true },
-  image: { type: String, required: true, default:"default.png" },
+  image: { type: String, required: true, default: "default.png" },
   note: { type: String, required: true },
   deliveryPostalCodes: { type: [String], required: false },
   averagePrice: { type: String, required: false },
@@ -92,7 +93,7 @@ const shopSchema = new mongoose.Schema<iShop>({
     type: { type: String, required: true },
   },
   location: {
-    latitude: { type: Number, required: true},
+    latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
   },
   hours: {
@@ -106,14 +107,15 @@ const shopSchema = new mongoose.Schema<iShop>({
     },
   },
   // ✅ Ajout des stats
-    impressions: { type: Number, default: 0 }, // Nombre d'affichages
-    clics: { type: Number, default: 0 }, // Nombre de clics
-    taux_conversion: { type: Number, default: 0 }, // Clics / Impressions
-    affichage_prioritaire: { type: Boolean, default: false }, // Vérifie que l'hex est un code valide
-    // ✅ Nouveaux champs pour le suivi du temps moyen d'affichage
-    temps_affichage_total: { type: Number, default: 0 }, // Temps total d'affichage en secondes
-    nombre_affichages_valides: { type: Number, default: 0 } // Nombre de fois où la pub a été vue suffisamment
+  impressions: { type: Number, default: 0 }, // Nombre d'affichages
+  clics: { type: Number, default: 0 }, // Nombre de clics
+  taux_conversion: { type: Number, default: 0 }, // Clics / Impressions
+  affichage_prioritaire: { type: Boolean, default: false }, // Vérifie que l'hex est un code valide
+  // ✅ Nouveaux champs pour le suivi du temps moyen d'affichage
+  temps_affichage_total: { type: Number, default: 0 }, // Temps total d'affichage en secondes
+  nombre_affichages_valides: { type: Number, default: 0 }, // Nombre de fois où la pub a été vue suffisamment
+  temps_affichage_moyen: { type: Number, default: 0 } // Ce champ reste ici pour TypeScript, mais il est virtuel en base
 });
 
 const shopModel = mongoose.model<iShop>("Shop", shopSchema);
-export default shopModel;
+export default shopModel;

@@ -3,13 +3,14 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require('path');
-// Import du seeder
 import fs from 'fs';
 import { seedDatabase } from "./seeder";
 import CityModel from "./models/city";
 import http from 'http';
-import { WebSocketServer } from 'ws';
-// Charger les variables d'environnement
+import { WebSocketServer, WebSocket } from 'ws';
+import ConversationModel from './models/conversation';
+import AdvertisementModel from './models/advertisement';
+import ShopModel from './models/shop';
 require('dotenv').config();
 
 const app = express();
@@ -87,11 +88,184 @@ app.use("/api", villeRoutes);
 app.use("/api", languageRoutes);
 app.use("/api", adParkRoutes);
 app.use("/api", cityRoutes);
+
 // Middleware pour servir les fichiers statiques dans le dossier 'uploads'
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));
 
 // Créer le serveur HTTP basé sur Express
 const server = http.createServer(app);
+
+// Initialisation des files d'attente
+const pubImpressionQueue: { pubId: string; count: number }[] = [];
+const shopImpressionQueue: { shopId: string; count: number }[] = [];
+const pubClickQueue: { pubId: string; count: number }[] = [];
+const shopClickQueue: { shopId: string; count: number }[] = [];
+
+// Fonction pour stocker les impressions en mémoire
+async function handleMessage(topic: string, message: Buffer) {
+  if (topic === 'pub/impression') {
+    try {
+      const { pubId } = JSON.parse(message.toString());
+
+      // Vérifie si la pub est déjà dans la file
+      const existing = pubImpressionQueue.find((item) => item.pubId === pubId);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        pubImpressionQueue.push({ pubId, count: 1 });
+      }
+    } catch (error) {
+      console.error('❌ Erreur parsing WebSocket message:', error);
+    }
+  } else if (topic === 'shop/impression') {
+    try {
+      const { shopId } = JSON.parse(message.toString());
+
+      // Vérifie si la pub est déjà dans la file
+      const existing = shopImpressionQueue.find((item) => item.shopId === shopId);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        shopImpressionQueue.push({ shopId, count: 1 });
+      }
+    } catch (error) {
+      console.error('❌ Erreur parsing WebSocket message:', error);
+    }
+  } else if (topic === 'pub/click') {
+    try {
+      const { pubId } = JSON.parse(message.toString());
+      // Vérifie si la pub est déjà dans le buffer
+      const existing = pubClickQueue.find((item) => item.pubId === pubId);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        pubClickQueue.push({ pubId, count: 1 });
+      }
+    } catch (error) {
+      console.error('❌ Erreur parsing WebSocket message:', error);
+    }
+  } else if (topic === 'shop/click') {
+    try {
+      const { shopId } = JSON.parse(message.toString());
+      // Vérifie si la pub est déjà dans le buffer
+      const existing = shopClickQueue.find((item) => item.shopId === shopId);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        shopClickQueue.push({ shopId, count: 1 });
+      }
+    } catch (error) {
+      console.error('❌ Erreur parsing WebSocket message:', error);
+    }
+  } else if (topic.startsWith('conversation/') && topic.endsWith('/new')) {
+    const parts = topic.split('/');
+    const conversationId = parts[1];
+    try {
+      const msg = JSON.parse(message.toString());
+      const conversation = await ConversationModel.findById(conversationId);
+      if (!conversation) {
+        console.warn(`❌ Conversation non trouvée: ${conversationId}`);
+        return;
+      }
+      conversation.messages.push({
+        sender: msg.sender,
+        content: msg.content,
+        messageType: msg.messageType || 'text',
+        createdAt: new Date(),
+      });
+      await conversation.save();
+      // Broadcast aux abonnés du topic conversation/{id}
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ topic: `conversation/${conversationId}`, message: conversation.messages }));
+        }
+      });
+      console.log(`💬 Nouveau message publié dans conversation/${conversationId}`);
+    } catch (error) {
+      console.error('❌ Erreur traitement message de conversation:', error);
+    }
+  } else if (topic === "pub/temps_impression") {
+    try {
+      const msg = JSON.parse(message.toString());
+      const { advertisementId, duree } = msg;
+      if (!advertisementId || typeof duree !== "number") {
+        console.warn("❌ Données invalides pour 'pub/temps_impression'", msg);
+        return;
+      }
+      const pub = await AdvertisementModel.findById(advertisementId);
+      if (!pub) {
+        console.warn(`❌ Publicité non trouvée: ${advertisementId}`);
+        return;
+      }
+      pub.temps_affichage_total += duree;
+      pub.nombre_affichages_valides += 1;
+      await pub.save();
+      console.log(`📈 Publicité ${advertisementId} mise à jour : +${duree}s d'affichage`);
+      // Si tu veux notifier d'autres clients WebSocket de la mise à jour :
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            topic: `pub/${advertisementId}/updated`,
+            message: {
+              advertisementId,
+              temps_affichage_total: pub.temps_affichage_total,
+              nombre_affichages_valides: pub.nombre_affichages_valides,
+              temps_affichage_moyen: pub.temps_affichage_moyen // via le virtual
+            }
+          }));
+        }
+      });
+    } catch (error) {
+      console.error("❌ Erreur traitement 'pub/temps_impression':", error);
+    }
+  } else if (topic === "shop/display") {
+    try {
+      const msg = JSON.parse(message.toString());
+      const { _id, timeSpent } = msg;
+
+      if (!_id || typeof timeSpent !== "number") {
+        console.warn("❌ Données invalides pour 'shop/display'", msg);
+        return;
+      }
+
+      const shop = await ShopModel.findById(_id);
+      if (!shop) {
+        console.warn(`❌ Shop non trouvé: ${_id}`);
+        return;
+      }
+
+      // Mise à jour des stats d'affichage
+      shop.temps_affichage_total += timeSpent;
+      shop.nombre_affichages_valides += 1;
+      shop.temps_affichage_moyen =
+        shop.temps_affichage_total / shop.nombre_affichages_valides;
+
+      await shop.save();
+
+      console.log(`📊 Shop ${_id} mis à jour : +${timeSpent}s d'affichage`);
+
+      // Notification WebSocket
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            topic: `shop/${_id}/updated`,
+            message: {
+              _id,
+              temps_affichage_total: shop.temps_affichage_total,
+              nombre_affichages_valides: shop.nombre_affichages_valides,
+              temps_affichage_moyen: shop.temps_affichage_moyen
+            }
+          }));
+        }
+      });
+
+    } catch (error) {
+      console.error("❌ Erreur traitement 'shop/display':", error);
+    }
+  }
+
+
+}
 
 // Créer le serveur WebSocket
 const wss = new WebSocketServer({ server });
@@ -99,23 +273,25 @@ const wss = new WebSocketServer({ server });
 // Gérer les connexions WebSocket
 wss.on('connection', (ws) => {
   console.log('🧠 Nouvelle connexion WebSocket');
-
-  ws.on('message', (message) => {
+  ws.on('message', async (message: any) => {
     console.log(`📩 Message reçu : ${message}`);
-
-    // Tu peux envoyer une réponse
-    ws.send(`Echo : ${message}`);
+    try {
+      const parsedMessage = JSON.parse(message);
+      const { topic, message: msg } = parsedMessage;
+      await handleMessage(topic, Buffer.from(msg));
+      // Tu peux envoyer une réponse
+      ws.send(`Echo : ${message}`);
+    } catch (error) {
+      console.error('❌ Erreur parsing WebSocket message:', error);
+      ws.send('❌ Erreur lors du traitement du message');
+    }
   });
-
   ws.send('👋 Bienvenue sur le WebSocket Server !');
 });
 
 // Connexion à la base de données
 mongoose
   .connect(
-    // "mongodb://0.0.0.0:27017/izyGlam",
-    // process.env.BDDPRIVATE,
-    // "mongodb://mongo:IaHkRHRswXpmXOViZjZIJlUFrEOuqpqO@autorack.proxy.rlwy.net:44196/izyglam?authSource=admin&retryWrites=true&w=majority",
     "mongodb+srv://fmotsch:Fr%40ncis2018%21@cluster0.dzdgnj3.mongodb.net/devfreelance",
     {
       useNewUrlParser: true,
