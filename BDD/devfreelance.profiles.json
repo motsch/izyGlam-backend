@@ -1,0 +1,191 @@
+[{
+  "_id": {
+    "$oid": "674ea02b764ddf3c991431c7"
+  },
+  "activity": {
+    "name": "Restaurateur",
+    "trad": "PROFIL_TYPE.RESTAURANT"
+  },
+  "visualStyle": "Style surréaliste",
+  "color": "Bleu",
+  "categories": [
+    {
+      "name": "Restaurant familial",
+      "trad": "ACTIVITIES_TYPE.RESTAURANT_FAMILIAL",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431c8"
+      }
+    },
+    {
+      "name": "Sushi bar",
+      "trad": "ACTIVITIES_TYPE.SUSHI_BAR",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431c9"
+      }
+    },
+    {
+      "name": "Barbecue coréen",
+      "trad": "ACTIVITIES_TYPE.BBQ_COREEN",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431ca"
+      }
+    },
+    {
+      "name": "Restaurant gastronomique local",
+      "trad": "ACTIVITIES_TYPE.RESTAURANT_LOCAL",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431cb"
+      }
+    },
+    {
+      "name": "Restaurant spécialisé en fruits de mer",
+      "trad": "ACTIVITIES_TYPE.FRUIT_DE_MER",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431cc"
+      }
+    }
+  ],
+  "introduction": "premier restaurant asiatique hallal de Roubaix",
+  "highlights": [
+    {
+      "name": "Événements",
+      "trad": "PROFIL_HIGHLIGHT.EVENTS",
+      "detail": "Présentation ou communication sur des événements",
+      "detail_trad": "PROFIL_HIGHLIGHT_DETAIL.EVENTS",
+      "examples": [
+        "Webinaires",
+        "Lancements de produits",
+        "Rencontres communautaires"
+      ],
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431cd"
+      }
+    },
+    {
+      "name": "Équipe",
+      "trad": "PROFIL_HIGHLIGHT.TEAM",
+      "detail": "Mise en avant des membres ou de la culture d’équipe",
+      "detail_trad": "PROFIL_HIGHLIGHT_DETAIL.TEAM",
+      "examples": [
+        "Portraits d’équipe",
+        "Moments d’entreprise",
+        "Valeurs collectives"
+      ],
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431ce"
+      }
+    },
+    {
+      "name": "Humour/Memes",
+      "trad": "PROFIL_HIGHLIGHT.HUMOURMEMES",
+      "detail": "Contenu léger et engageant",
+      "detail_trad": "PROFIL_HIGHLIGHT_DETAIL.HUMOURMEMES",
+      "examples": [
+        "Mèmes thématiques",
+        "Blagues légères",
+        "GIFs humoristiques"
+      ],
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431cf"
+      }
+    },
+    {
+      "name": "Expérience client",
+      "trad": "PROFIL_HIGHLIGHT.CLIENTEXPERIENCE",
+      "detail": "Témoignages, cas pratiques",
+      "detail_trad": "PROFIL_HIGHLIGHT_DETAIL.CLIENTEXPERIENCE",
+      "examples": [
+        "Avis clients",
+        "Études de cas",
+        "Exemples d’utilisation"
+      ],
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d0"
+      }
+    },
+    {
+      "name": "Success stories",
+      "trad": "PROFIL_HIGHLIGHT.SUCCESSSTORIES",
+      "detail": "Succès professionnels ou personnels",
+      "detail_trad": "PROFIL_HIGHLIGHT_DETAIL.SUCCESSSTORIES",
+      "examples": [
+        "Projets réussis",
+        "Témoignages inspirants",
+        "Partenariats fructueux"
+      ],
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d1"
+      }
+    },
+    {
+      "name": "Behind the scenes",
+      "trad": "PROFIL_HIGHLIGHT.BEHINDTHESCENES",
+      "detail": "Coulisses ou processus de création",
+      "detail_trad": "PROFIL_HIGHLIGHT_DETAIL.BEHINDTHESCENES",
+      "examples": [
+        "Processus de fabrication",
+        "Préparatifs d’événements",
+        "Journées type"
+      ],
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d2"
+      }
+    },
+    {
+      "name": "Community building",
+      "trad": "PROFIL_HIGHLIGHT.COMMUNITY",
+      "detail": "Création et engagement autour d’une communauté",
+      "detail_trad": "PROFIL_HIGHLIGHT_DETAIL.COMMUNITY",
+      "examples": [
+        "Discussions interactives",
+        "Forums communautaires",
+        "Engagement collectif"
+      ],
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d3"
+      }
+    }
+  ],
+  "tones": [
+    {
+      "name": "Sérieuse",
+      "trad": "TONE.SERIEUSE",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d4"
+      }
+    },
+    {
+      "name": "Décontractée",
+      "trad": "TONE.DECONTRACTEE",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d5"
+      }
+    },
+    {
+      "name": "Créative",
+      "trad": "TONE.CREATIVE",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d6"
+      }
+    },
+    {
+      "name": "Audacieuse",
+      "trad": "TONE.AUDACIEUSE",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d7"
+      }
+    },
+    {
+      "name": "Amicale",
+      "trad": "TONE.AMICALE",
+      "_id": {
+        "$oid": "674ea02b764ddf3c991431d8"
+      }
+    }
+  ],
+  "country": "France",
+  "language": "Anglais",
+  "userId": "669ee9a38db173e538d0659b",
+  "active": true,
+  "__v": 0
+}]

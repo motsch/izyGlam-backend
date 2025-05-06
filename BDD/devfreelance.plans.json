@@ -1,0 +1,33 @@
+[{
+  "_id": {
+    "$oid": "673b4ce2a81f6882e8788dce"
+  },
+  "name": "premium",
+  "price": 89.9,
+  "description": "Plan avancé pour les professionnels, incluant des fonctionnalités automatisées et illimitées.",
+  "maxPostsPerWeek": 50,
+  "includesPhotos": true,
+  "isAutomated": true
+},
+{
+  "_id": {
+    "$oid": "673b4ce2a81f6882e8788dcc"
+  },
+  "name": "gratuit",
+  "price": 0,
+  "description": "Accès limité pour découvrir nos services. Idéal pour un usage personnel ou occasionnel.",
+  "maxPostsPerWeek": 3,
+  "includesPhotos": false,
+  "isAutomated": false
+},
+{
+  "_id": {
+    "$oid": "673b4ce2a81f6882e8788dcd"
+  },
+  "name": "basic",
+  "price": 19.9,
+  "description": "Plan adapté aux utilisateurs réguliers avec des fonctionnalités de base.",
+  "maxPostsPerWeek": 10,
+  "includesPhotos": true,
+  "isAutomated": false
+}]

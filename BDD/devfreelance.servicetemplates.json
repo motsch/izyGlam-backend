@@ -1,0 +1,574 @@
+[{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf6d"
+  },
+  "name": "Soin royal pour des mains parfaites",
+  "description": "Ce soin transformera tes mains, en leur offrant douceur et hydratation en profondeur. Tes mains méritent toute l'attention, avec un soin qui embellit et apaise.",
+  "image": "url_image_beaute_des_mains",
+  "type": "manucure",
+  "price": 34,
+  "duration": 45
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf6e"
+  },
+  "name": "Semi-permanent pour des mains sublimes",
+  "description": "Un vernis qui dure des semaines sans retouches ! Ce soin semi-permanent est parfait pour garder tes ongles impeccables, sans compromis.",
+  "image": "url_image_mains_semi_permanent",
+  "type": "manucure",
+  "price": 40,
+  "duration": 45
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf6f"
+  },
+  "name": "Soin pieds de déesse",
+  "description": "Ce soin transforme tes pieds en véritables bijoux, en leur apportant hydratation et douceur. Marche sur des nuages avec des pieds aussi beaux que confortables.",
+  "image": "url_image_beaute_des_pieds",
+  "type": "manucure",
+  "price": 45,
+  "duration": 45
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf70"
+  },
+  "name": "Semi-permanent glamour pour les pieds",
+  "description": "Des pieds parfaits pendant des semaines ! Ce soin semi-permanent t’offre des ongles impeccables qui ne perdent pas leur éclat, sans effort.",
+  "image": "url_image_pieds_semi_permanent",
+  "type": "manucure",
+  "price": 51,
+  "duration": 50
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf71"
+  },
+  "name": "Mani-Pedi soin douceur",
+  "description": "Un soin complet pour tes mains et tes pieds, parfait pour un moment de détente. Repose-toi pendant que tes ongles sont soignés et embellis, pour un look parfait.",
+  "image": "url_image_mani_pedi",
+  "type": "manucure",
+  "price": 67,
+  "duration": 90
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf72"
+  },
+  "name": "Mani-Pedi semi-permanent chic",
+  "description": "Pour des ongles toujours impeccables, opte pour ce soin semi-permanent sur tes mains et pieds. Parfait pour une longue tenue et un look impeccable.",
+  "image": "url_image_mani_pedi_semi_permanent",
+  "type": "manucure",
+  "price": 79,
+  "duration": 90
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf73"
+  },
+  "name": "Mani-Pedi mixte pour un résultat parfait",
+  "description": "Un soin combiné pour tes mains et pieds, utilisant des techniques variées pour un résultat impeccable et longue durée. Prête à être sublimée des pieds à la tête !",
+  "image": "url_image_mani_pedi_mixte",
+  "type": "manucure",
+  "price": 73,
+  "duration": 90
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf74"
+  },
+  "name": "Brushing éclat express",
+  "description": "Un brushing rapide pour des cheveux brillants et soyeux en un clin d'œil. Parfait pour celles qui veulent un look stylé, même avec un emploi du temps chargé.",
+  "image": "url_image_brushing_court",
+  "type": "coiffure",
+  "price": 45,
+  "duration": 30
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf75"
+  },
+  "name": "Brushing chic et longue tenue",
+  "description": "Obtiens un look élégant et soigné avec un brushing qui donne du style et du volume. Idéal pour des occasions spéciales ou une journée où tu veux briller.",
+  "image": "url_image_brushing",
+  "type": "coiffure",
+  "price": 57,
+  "duration": 45
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf76"
+  },
+  "name": "Attache rapide et stylée",
+  "description": "Une coiffure express mais ultra-chic pour les journées où tu veux être impeccable sans trop d’effort. Idéale pour un look soigné en un rien de temps.",
+  "image": "url_image_attache_express",
+  "type": "coiffure",
+  "price": 57,
+  "duration": 45
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf77"
+  },
+  "name": "Coupe et brushing sur mesure",
+  "description": "Un service complet pour une coupe impeccable accompagnée d’un brushing professionnel. Parfait pour celles qui cherchent un look sur mesure qui dure.",
+  "image": "url_image_coupe_brushing",
+  "type": "coiffure",
+  "price": 71,
+  "duration": 90
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf78"
+  },
+  "name": "Coiffure élégante pour un grand événement",
+  "description": "Prépare-toi à être la star de l’événement avec une coiffure élégante et sur mesure. Parfait pour ton mariage ou tout événement important.",
+  "image": "url_image_coiffure_evenement",
+  "type": "coiffure",
+  "price": 112,
+  "duration": 90
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf79"
+  },
+  "name": "Coiffure événement avec essai inclus",
+  "description": "Parce que chaque détail compte pour un jour spécial. Nous te proposons un essai pour s'assurer que ta coiffure sera parfaite pour ton grand jour.",
+  "image": "url_image_coiffure_essai",
+  "type": "coiffure",
+  "price": 254,
+  "duration": 120
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf7a"
+  },
+  "name": "Soirée coiffure fun entre amies",
+  "description": "Quoi de mieux qu'une soirée entre filles avec des coiffures stylées et amusantes ? Passez un bon moment tout en profitant de nos experts coiffure.",
+  "image": "url_image_hair_party",
+  "type": "coiffure",
+  "price": 51,
+  "duration": 35
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf7b"
+  },
+  "name": "Massage californien détente profonde",
+  "description": "Profite d’un moment de relaxation totale avec ce massage californien. Ses mouvements doux et enveloppants te feront sentir apaisée et ressourcée. Idéal pour évacuer le stress accumulé.",
+  "image": "url_image_massage_californien_1h",
+  "type": "massage",
+  "price": 67,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf7c"
+  },
+  "name": "Massage californien prolongé bien-être",
+  "description": "Prolonge ton moment de bien-être avec 90 minutes de massage californien. Ce soin est parfait pour une relaxation encore plus profonde, pour que tu te sentes totalement revitalisée.",
+  "image": "url_image_massage_californien_1h30",
+  "type": "massage",
+  "price": 93,
+  "duration": 90
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf7d"
+  },
+  "name": "Massage Deep Tissue énergie retrouvée",
+  "description": "Libère les tensions profondes de ton corps avec ce massage Deep Tissue. Ce soin ciblé est parfait pour détendre les muscles contractés et redonner à ton corps toute son énergie.",
+  "image": "url_image_massage_deep_tissue_1h",
+  "type": "massage",
+  "price": 67,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf7e"
+  },
+  "name": "Deep Tissue intense et revitalisant",
+  "description": "Pour une détente musculaire complète, ce massage Deep Tissue de 90 minutes te permet de libérer les tensions les plus profondes. Idéal pour retrouver ton bien-être musculaire.",
+  "image": "url_image_massage_deep_tissue_1h30",
+  "type": "massage",
+  "price": 93,
+  "duration": 90
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf7f"
+  },
+  "name": "Massage prénatal tout en douceur",
+  "description": "Un massage spécialement conçu pour les futures mamans. Ce soin doux t'apportera réconfort et détente tout en prenant soin de bébé. Un vrai moment de bien-être à partager.",
+  "image": "url_image_massage_prenatal_1h",
+  "type": "massage",
+  "price": 93,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf80"
+  },
+  "name": "Maquillage naturel et éclat",
+  "description": "Sublime ta beauté naturelle avec un maquillage léger qui met en valeur ton teint sans en faire trop. Idéal pour un look frais et élégant au quotidien.",
+  "image": "url_image_maquillage_nude",
+  "type": "maquillage",
+  "price": 67,
+  "duration": 45
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf81"
+  },
+  "name": "Maquillage pour événement glamour",
+  "description": "Que ce soit pour une soirée, un mariage ou une grande occasion, ce maquillage personnalisé te fera briller sous les projecteurs. Laisse-nous révéler la version la plus glamour de toi-même.",
+  "image": "url_image_maquillage_evenement",
+  "type": "maquillage",
+  "price": 112,
+  "duration": 90
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf82"
+  },
+  "name": "Makeup Party entre amies",
+  "description": "Une soirée fun entre copines avec des looks maquillages sur mesure. Amusez-vous tout en étant sublimées pour passer un moment inoubliable avec vos amies.",
+  "image": "url_image_makeup_party",
+  "type": "maquillage",
+  "price": 51,
+  "duration": 30
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf83"
+  },
+  "name": "Massage Amma express",
+  "description": "Besoin de te détendre rapidement ? Ce massage Amma sur chaise est idéal pour une pause bien-être express. Détends-toi en quelques minutes et repars pleine d’énergie.",
+  "image": "url_image_massage_amma",
+  "type": "massage",
+  "price": 51,
+  "duration": 30
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf84"
+  },
+  "name": "Massage VIP personnalisé",
+  "description": "Un massage entièrement sur mesure, adapté à tes besoins spécifiques. Que ce soit pour la relaxation ou le soulagement des tensions, nous créons une expérience unique rien que pour toi.",
+  "image": "url_image_massage_vip",
+  "type": "massage",
+  "price": 170,
+  "duration": 120
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf85"
+  },
+  "name": "Massage crânien relaxation express",
+  "description": "Ce massage crânien te permet de décompresser en quelques minutes. Une pause rapide mais efficace pour éliminer le stress et repartir détendue.",
+  "image": "url_image_massage_cranien",
+  "type": "massage",
+  "price": 51,
+  "duration": 20
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf86"
+  },
+  "name": "Massage des mains détente",
+  "description": "Tes mains méritent un soin particulier. Ce massage relaxant les rendra douces, apaisées et prêtes à affronter la journée. Un vrai moment de détente pour toi.",
+  "image": "url_image_massage_mains",
+  "type": "massage",
+  "price": 51,
+  "duration": 20
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf87"
+  },
+  "name": "Massage Californien enveloppant",
+  "description": "Laisse-toi emporter par la douceur de ce massage californien, qui combine mouvements lents et fluides pour une relaxation profonde et durable. Un moment de bien-être total.",
+  "image": "url_image_massage_californien",
+  "type": "massage",
+  "price": 68,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf88"
+  },
+  "name": "Massage Kobido visage éclatant",
+  "description": "Le Kobido est un massage facial japonais qui redonne à ta peau tonicité et éclat. Un soin parfait pour détendre les muscles du visage et raviver ton teint.",
+  "image": "url_image_massage_kobido",
+  "type": "massage",
+  "price": 68,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf89"
+  },
+  "name": "Drainage lymphatique bien-être",
+  "description": "Améliore la circulation de ton corps et élimine les toxines grâce à ce drainage lymphatique doux et apaisant. Tu te sentiras plus légère et revitalisée après cette séance.",
+  "image": "url_image_drainage_lymphatique",
+  "type": "massage",
+  "price": 68,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf8a"
+  },
+  "name": "Réflexologie plantaire détente totale",
+  "description": "Ce massage des pieds stimule les points de réflexe pour détendre tout ton corps. Un soin apaisant qui te fera marcher sur un nuage, littéralement.",
+  "image": "url_image_reflexologie_plantaire",
+  "type": "massage",
+  "price": 68,
+  "duration": 45
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf8b"
+  },
+  "name": "Massage Thaï traditionnel",
+  "description": "Ce massage thaïlandais combine des étirements et des pressions pour libérer les tensions et rééquilibrer l’énergie de ton corps. Parfait pour te ressourcer.",
+  "image": "url_image_massage_thai",
+  "type": "massage",
+  "price": 59,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf8c"
+  },
+  "name": "Massage Shiatsu zen",
+  "description": "Ce massage énergétique japonais utilise des pressions sur des points clés pour équilibrer corps et esprit. Idéal pour retrouver un bien-être physique et mental.",
+  "image": "url_image_massage_shiatsu",
+  "type": "massage",
+  "price": 51,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf8d"
+  },
+  "name": "Atelier auto-massage corps",
+  "description": "Apprends à te masser toi-même pour libérer les tensions et améliorer ton bien-être au quotidien. Un atelier pratique et relaxant, parfait pour prendre soin de toi.",
+  "image": "url_image_auto_massage_corps",
+  "type": "massage",
+  "price": 425,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf8e"
+  },
+  "name": "Atelier auto-massage visage",
+  "description": "Découvre les techniques pour te masser le visage et retrouver une peau détendue et éclatante. Un moment de soin à intégrer facilement dans ta routine beauté.",
+  "image": "url_image_auto_massage_visage",
+  "type": "massage",
+  "price": 425,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf8f"
+  },
+  "name": "Yoga Hatha dynamisant",
+  "description": "Un yoga pour bien commencer ta journée, en équilibrant corps et esprit. Idéal pour te recentrer et retrouver énergie et sérénité.",
+  "image": "url_image_yoga_hatha",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf90"
+  },
+  "name": "Yoga Vinyasa fluide",
+  "description": "Un yoga dynamique qui harmonise le souffle et les mouvements. Renforce ton corps tout en apaisant ton esprit avec cette séance fluide et énergisante.",
+  "image": "url_image_yoga_vinyasa",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf91"
+  },
+  "name": "Yoga sur chaise relax",
+  "description": "Ce yoga doux et accessible est parfait pour celles qui préfèrent une approche plus tranquille. Une séance relaxante pour détendre le corps sans effort.",
+  "image": "url_image_yoga_chaise",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf92"
+  },
+  "name": "Yoga du rire joyeux",
+  "description": "Un mélange unique de yoga et de rires pour relâcher la pression tout en t'amusant. Parfait pour une explosion de bonne humeur et d'énergie positive.",
+  "image": "url_image_yoga_rire",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "active": false
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf93"
+  },
+  "name": "Yoga visage lumineux",
+  "description": "Un yoga pour tonifier les muscles de ton visage et retrouver un teint éclatant. Idéal pour détendre le visage et améliorer la circulation.",
+  "image": "url_image_yoga_visage",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf94"
+  },
+  "name": "Yoga des yeux reposant",
+  "description": "Soulage la fatigue oculaire avec des exercices doux et apaisants. Parfait pour celles qui passent beaucoup de temps devant un écran.",
+  "image": "url_image_yoga_yeux",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf95"
+  },
+  "name": "Yoga Nidra relax total",
+  "description": "Un yoga axé sur la relaxation profonde, parfait pour déconnecter et trouver une paix intérieure. Laisse-toi guider dans un état de calme absolu.",
+  "image": "url_image_yoga_nidra",
+  "type": "relaxation",
+  "price": 255,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf96"
+  },
+  "name": "Yoga Yin profond",
+  "description": "Étire ton corps en profondeur et relâche les tensions avec ce yoga doux et relaxant. Un moment parfait pour te recentrer et prendre soin de toi.",
+  "image": "url_image_yoga_yin",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf97"
+  },
+  "name": "Yoga restauratif revitalisant",
+  "description": "Un yoga conçu pour détendre chaque muscle en douceur et recharger ton énergie. Idéal pour un moment de relaxation intense et revitalisant.",
+  "image": "url_image_yoga_restauratif",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 120
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf98"
+  },
+  "name": "Yoga HIT intense",
+  "description": "Un yoga de haute intensité qui combine renforcement musculaire et mouvements énergisants. Parfait pour celles qui cherchent à renforcer leur corps rapidement.",
+  "image": "url_image_hit_yoga",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 75
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf99"
+  },
+  "name": "Yoga Hip Hop énergique",
+  "description": "Une séance de yoga rythmée, où les mouvements de yoga rencontrent le dynamisme du hip hop. Un moment fun et original pour bouger tout en s’amusant.",
+  "image": "url_image_yoga_hiphop",
+  "type": "relaxation",
+  "price": 255,
+  "duration": 75
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf9a"
+  },
+  "name": "Yoga inversions",
+  "description": "Repousse tes limites avec ce yoga qui t'apprend à maîtriser les inversions. Une pratique fun et intense pour renforcer ton corps tout en te challengeant.",
+  "image": "url_image_yoga_inversion",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf9b"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "active": true
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf9c"
+  },
+  "name": "SlimFit",
+  "description": "Un programme doux et flexible pour vous permettre de retrouver bien-être et tonicité, à votre rythme. Objectif : sérénité et estime de soi.",
+  "image": "url_image_slimfit",
+  "type": "fitness",
+  "price": 79,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf9d"
+  },
+  "name": "PowerUp",
+  "description": "Un programme revitalisant conçu pour renforcer vos bases, redonner de l’énergie et vous accompagner à chaque étape vers une meilleure forme.",
+  "image": "url_image_powerup",
+  "type": "fitness",
+  "price": 79,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf9e"
+  },
+  "name": "MaxBurn",
+  "description": "Un programme intensif combinant cardio et renforcement musculaire pour vous pousser à dépasser vos limites et ressentir la satisfaction physique.",
+  "image": "url_image_maxburn",
+  "type": "fitness",
+  "price": 79,
+  "duration": 60
+},
+{
+  "_id": {
+    "$oid": "67061570f422a4d42ecb6cd4"
+  },
+  "name": "Russian lips",
+  "description": "Des lèvres exquisentavec russian lips.",
+  "image": "/uploads/images/articles/estehetique_1.png",
+  "type": "esthetique",
+  "price": 50,
+  "duration": 30
+},
+{
+  "_id": {
+    "$oid": "67063997f422a4d42ecb6cde"
+  },
+  "name": "Cils Bambi",
+  "description": "Des cils d'une longueure ravageuse.",
+  "image": "/uploads/images/articles/estehetique_2.png",
+  "type": "esthetique",
+  "price": 30,
+  "duration": 15
+}]

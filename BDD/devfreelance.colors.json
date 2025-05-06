@@ -1,0 +1,140 @@
+[{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a237"
+  },
+  "name": "Pêche pastel",
+  "hex": "#FFB3BA"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a238"
+  },
+  "name": "Rose pastel",
+  "hex": "#FFDFD3"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a239"
+  },
+  "name": "Menthe pastel",
+  "hex": "#B3FFD9"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a23a"
+  },
+  "name": "Bleu ciel pastel",
+  "hex": "#A0D8F1"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a23b"
+  },
+  "name": "Lavande pastel",
+  "hex": "#D4A4F7"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a23c"
+  },
+  "name": "Jaune pâle",
+  "hex": "#FDFD96"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a23d"
+  },
+  "name": "Vert pastel",
+  "hex": "#C5E1A5"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a23e"
+  },
+  "name": "Corail pastel",
+  "hex": "#FFD1A9"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a23f"
+  },
+  "name": "Bleu pastel",
+  "hex": "#AEDFF7"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a240"
+  },
+  "name": "Mauve pastel",
+  "hex": "#F3D0FF"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a241"
+  },
+  "name": "Saumon pastel",
+  "hex": "#FFC4A3"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a242"
+  },
+  "name": "Aqua pastel",
+  "hex": "#A4EBF3"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a243"
+  },
+  "name": "Lilas pastel",
+  "hex": "#E8BBE3"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a244"
+  },
+  "name": "Citrine pastel",
+  "hex": "#FFFACD"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a245"
+  },
+  "name": "Verveine pastel",
+  "hex": "#D6ECC2"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a246"
+  },
+  "name": "Perle pastel",
+  "hex": "#E6E0F8"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a247"
+  },
+  "name": "Orange pastel",
+  "hex": "#FFB88C"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a248"
+  },
+  "name": "Bleu glacier",
+  "hex": "#B3E5FC"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a249"
+  },
+  "name": "Jaune clair",
+  "hex": "#FFF9A6"
+},
+{
+  "_id": {
+    "$oid": "66fbc08cfd8f045aa6e5a24a"
+  },
+  "name": "Vert d'eau pastel",
+  "hex": "#D1FAD7"
+}]

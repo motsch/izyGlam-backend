@@ -1,0 +1,121 @@
+[{
+  "_id": {
+    "$oid": "67d407faaaf8375eced3933b"
+  },
+  "code": "fi",
+  "name": "Finlandais",
+  "flag": "/assets/flags/fi.png",
+  "active": true,
+  "trad": "LANGUE.FINLANDAIS",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced39340"
+  },
+  "code": "sv",
+  "name": "Suédois",
+  "flag": "/assets/flags/sv.png",
+  "active": false,
+  "trad": "LANGUE.SUEDOIS",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced3933e"
+  },
+  "code": "pl",
+  "name": "Polonais",
+  "flag": "/assets/flags/pl.png",
+  "active": false,
+  "trad": "LANGUE.POLONAIS",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced39341"
+  },
+  "code": "da",
+  "name": "Danois",
+  "flag": "/assets/flags/da.png",
+  "active": true,
+  "trad": "LANGUE.DANOIS",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced39337"
+  },
+  "code": "fr",
+  "name": "Français",
+  "flag": "/assets/flags/fr.png",
+  "active": true,
+  "trad": "LANGUE.FRANCAIS",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced39339"
+  },
+  "code": "en",
+  "name": "Anglais",
+  "flag": "/assets/flags/gb.png",
+  "active": true,
+  "trad": "LANGUE.ANGLAIS",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced3933a"
+  },
+  "code": "es",
+  "name": "Espagnol",
+  "flag": "/assets/flags/es.png",
+  "active": true,
+  "trad": "LANGUE.ESPAGNOL",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced3933c"
+  },
+  "code": "it",
+  "name": "Italien",
+  "flag": "/assets/flags/it.png",
+  "active": true,
+  "trad": "LANGUE.ITALIEN",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced3933d"
+  },
+  "code": "nl",
+  "name": "Néerlandais",
+  "flag": "/assets/flags/nl.png",
+  "active": true,
+  "trad": "LANGUE.NEERLANDAIS",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced39338"
+  },
+  "code": "de",
+  "name": "Allemand",
+  "flag": "/assets/flags/de.png",
+  "active": true,
+  "trad": "LANGUE.ALLEMAND",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67d407faaaf8375eced3933f"
+  },
+  "code": "pt",
+  "name": "Portugais",
+  "flag": "/assets/flags/pt.png",
+  "active": false,
+  "trad": "LANGUE.PORTUGAIS",
+  "__v": 0
+}]

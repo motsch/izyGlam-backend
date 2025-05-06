@@ -1,0 +1,1249 @@
+[{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86470"
+  },
+  "name": "Mélina S.",
+  "description": "Des stylistes experts prêts à transformer vos cheveux avec les tendances actuelles et les styles classiques.",
+  "image": "profile1.png",
+  "note": "4.8",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.HAIRDRESSER",
+  "averagePrice": "80€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "coiffure",
+  "price": 70,
+  "reviews": [
+    {
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel.",
+      "_id": {
+        "$oid": "671f9caa740aa73273972a0c"
+      },
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      }
+    },
+    {
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé.",
+      "_id": {
+        "$oid": "671f9caa740aa73273972a0d"
+      },
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      }
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Coupes",
+    "Coloration",
+    "Coiffure"
+  ],
+  "location": {
+    "latitude": 48.6298,
+    "longitude": 2.4407
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "1"
+  },
+  "idUser": "67ca07ba58dca58f1d92e49a",
+  "galleryImages": [],
+  "__v": 1,
+  "deliveryPostalCodes": [],
+  "impressions": 1043,
+  "nombre_affichages_valides": 35,
+  "taux_conversion": 0,
+  "temps_affichage_total": 311
+},
+{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86471"
+  },
+  "name": "Manou F.",
+  "description": "Services professionnels de maquillage pour mariages, bals et événements spéciaux.",
+  "image": "profile3.png",
+  "note": "4.7",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.NAILTECHNICIAN",
+  "averagePrice": "100€",
+  "minimumDelay": "3 jours",
+  "delayScale": "jours",
+  "type": "manucure",
+  "price": 90,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Maquillage de mariée",
+    "Maquillage pour événements",
+    "Cours de maquillage"
+  ],
+  "location": {
+    "latitude": 48.6359,
+    "longitude": 2.429
+  },
+  "hours": {
+    "morning": {
+      "start": "10:00",
+      "end": "13:00"
+    },
+    "afternoon": {
+      "start": "14:00",
+      "end": "19:00"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "2"
+  },
+  "idUser": "67c8671c58dca58f1d92e492",
+  "__v": 1,
+  "deliveryPostalCodes": [],
+  "galleryImages": [],
+  "impressions": 1026,
+  "nombre_affichages_valides": 29,
+  "taux_conversion": 68.75,
+  "temps_affichage_total": 282,
+  "clics": 286
+},
+{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86472"
+  },
+  "name": "Roxane P.",
+  "description": "Des manucures et pédicures luxueuses pour choyer vos mains et vos pieds.",
+  "image": "profile2.png",
+  "note": "4.9",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.MAKEUP",
+  "averagePrice": "60€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "massage",
+  "price": 55,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Manucures",
+    "Pédicures",
+    "Art sur ongles"
+  ],
+  "location": {
+    "latitude": 48.6387,
+    "longitude": 2.4531
+  },
+  "hours": {
+    "morning": {
+      "start": "09:30",
+      "end": "12:30"
+    },
+    "afternoon": {
+      "start": "13:30",
+      "end": "18:30"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "3"
+  },
+  "idUser": "67c8671c58dca58f1d92e492",
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "galleryImages": [],
+  "impressions": 756,
+  "nombre_affichages_valides": 192,
+  "taux_conversion": 0,
+  "temps_affichage_total": 1356,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 7.0625
+},
+{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86474"
+  },
+  "name": "Alexandra T.",
+  "description": "Une ambiance amusante et conviviale pour tous vos besoins de teinture et de coiffure.",
+  "image": "profile6.png",
+  "note": "4.2",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.FACIAL",
+  "averagePrice": "75€",
+  "minimumDelay": "2 jours",
+  "delayScale": "jours",
+  "type": "epilation",
+  "price": 65,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Teinture de cheveux",
+    "Coupes",
+    "Permanentes"
+  ],
+  "location": {
+    "latitude": 48.6162,
+    "longitude": 2.4229
+  },
+  "hours": {
+    "morning": {
+      "start": "10:00",
+      "end": "13:00"
+    },
+    "afternoon": {
+      "start": "14:00",
+      "end": "20:00"
+    }
+  },
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "idUser": "669ee9a38db173e538d0659c",
+  "galleryImages": [
+    ""
+  ],
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 499,
+  "nombre_affichages_valides": 46,
+  "taux_conversion": 176.54320987654322,
+  "temps_affichage_total": 254,
+  "clics": 286,
+  "affichage_prioritaire": false,
+  "temps_affichage_moyen": 5.521739130434782
+},
+{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86475"
+  },
+  "name": "Alain M.",
+  "description": "Services experts de mise en forme des sourcils et de soins du visage pour définir votre beauté.",
+  "image": "profile9.png",
+  "note": "4.5",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.MASSAGE",
+  "averagePrice": "40€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "bronzage",
+  "price": 30,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Mise en forme des sourcils",
+    "Extensions de cils",
+    "Épilation faciale"
+  ],
+  "location": {
+    "latitude": 48.629,
+    "longitude": 2.4571
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "idUser": "669ee9a38db173e538d0659c",
+  "galleryImages": [
+    ""
+  ],
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 464,
+  "nombre_affichages_valides": 97,
+  "taux_conversion": 0,
+  "temps_affichage_total": 393,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 4.051546391752577
+},
+{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86476"
+  },
+  "name": "Emma C.",
+  "description": "Toilettage traditionnel et moderne pour l'homme distingué.",
+  "image": "profile4.png",
+  "note": "4.8",
+  "ville": "Paris",
+  "filter": "extensions",
+  "trad": "SHOPTYPE.EYELASH",
+  "averagePrice": "50€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "extensions",
+  "price": 45,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Coupe pour hommes",
+    "Taille de barbe",
+    "Rasage"
+  ],
+  "location": {
+    "latitude": 48.6185,
+    "longitude": 2.4528
+  },
+  "hours": {
+    "morning": {
+      "start": "08:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "19:00"
+    }
+  },
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "idUser": "67c8671c58dca58f1d92e492",
+  "galleryImages": [
+    ""
+  ],
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 542,
+  "nombre_affichages_valides": 101,
+  "taux_conversion": 0,
+  "temps_affichage_total": 359,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 3.5544554455445545
+},
+{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86477"
+  },
+  "name": "Rachel S.",
+  "description": "Spécialisés dans les extensions et traitements de cils pour magnifier votre regard.",
+  "image": "profile7.png",
+  "note": "4.9",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.EYEBROW",
+  "averagePrice": "85€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "nutrition",
+  "price": 80,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Extensions de cils",
+    "Teinture de cils",
+    "Rehaussement de cils"
+  ],
+  "location": {
+    "latitude": 48.635,
+    "longitude": 2.4319
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "13:00"
+    },
+    "afternoon": {
+      "start": "14:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "idUser": "67c8671c58dca58f1d92e492",
+  "galleryImages": [
+    ""
+  ],
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 454,
+  "nombre_affichages_valides": 91,
+  "taux_conversion": 0,
+  "temps_affichage_total": 373,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 4.0989010989010985
+},
+{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86478"
+  },
+  "name": "Laurent V.",
+  "description": "L'expérience ultime de relaxation avec nos masseurs certifiés.",
+  "image": "profile8.png",
+  "note": "4.7",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.TANNING",
+  "averagePrice": "90€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "fitness",
+  "price": 85,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Massage suédois",
+    "Massage profond",
+    "Thérapie aux pierres chaudes"
+  ],
+  "location": {
+    "latitude": 48.6204,
+    "longitude": 2.4359
+  },
+  "hours": {
+    "morning": {
+      "start": "10:00",
+      "end": "14:00"
+    },
+    "afternoon": {
+      "start": "15:00",
+      "end": "20:00"
+    }
+  },
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "idUser": "67c8671c58dca58f1d92e492",
+  "galleryImages": [
+    ""
+  ],
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 449,
+  "nombre_affichages_valides": 65,
+  "taux_conversion": 0,
+  "temps_affichage_total": 383,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 5.892307692307693
+},
+{
+  "_id": {
+    "$oid": "66983bd3ab6bb2a89fe86479"
+  },
+  "name": "Charlotte S.",
+  "description": "Services de bronzage premium pour atteindre votre éclat parfaitement ensoleillé.",
+  "image": "profile12.png",
+  "note": "4.3",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.HAIRDRESSER",
+  "averagePrice": "30€",
+  "minimumDelay": "1 heure",
+  "delayScale": "heure",
+  "type": "acupuncture",
+  "price": 25,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "66983bd3ab6bb2a89fe86479"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67da8c941b5680a9e9bd9e40"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Bronzage par pulvérisation",
+    "Bronzage UV",
+    "Lotions de bronzage"
+  ],
+  "location": {
+    "latitude": 48.6218,
+    "longitude": 2.4483
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "13:00"
+    },
+    "afternoon": {
+      "start": "14:00",
+      "end": "19:00"
+    }
+  },
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "idUser": "67c8671c58dca58f1d92e492",
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "galleryImages": [],
+  "impressions": 495,
+  "nombre_affichages_valides": 54,
+  "taux_conversion": 0,
+  "temps_affichage_total": 296,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 5.481481481481482
+},
+{
+  "_id": {
+    "$oid": "66d0ddf7ac2fe1ec4ebd9763"
+  },
+  "name": "Morgane D.",
+  "description": "Des stylistes experts prêts à transformer vos cheveux avec les tendances actuelles et les styles classiques.",
+  "image": "profile10.png",
+  "note": "4.8",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.HAIRDRESSER",
+  "averagePrice": "80€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "coiffure",
+  "price": 70,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Coupes",
+    "Coloration",
+    "Coiffure"
+  ],
+  "location": {
+    "latitude": 48.6298,
+    "longitude": 2.4407
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "1"
+  },
+  "idUser": "67ca077858dca58f1d92e499",
+  "galleryImages": [],
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 620,
+  "nombre_affichages_valides": 133,
+  "taux_conversion": 0,
+  "temps_affichage_total": 904,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 6.796992481203008
+},
+{
+  "_id": {
+    "$oid": "66d0eccfac2fe1ec4ebd9767"
+  },
+  "name": "Mathieu M.",
+  "description": "Des stylistes experts prêts à transformer vos cheveux avec les tendances actuelles et les styles classiques.",
+  "image": "profile5.png",
+  "note": "4.8",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.HAIRDRESSER",
+  "averagePrice": "80€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "coiffure",
+  "price": 70,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Coupes",
+    "Coloration",
+    "Coiffure"
+  ],
+  "location": {
+    "latitude": 48.6298,
+    "longitude": 2.4407
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "1"
+  },
+  "idUser": "67c8671c58dca58f1d92e492",
+  "galleryImages": [
+    ""
+  ],
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 579,
+  "nombre_affichages_valides": 136,
+  "taux_conversion": 0,
+  "temps_affichage_total": 977,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 7.1838235294117645
+},
+{
+  "_id": {
+    "$oid": "66d0f320ac2fe1ec4ebd976c"
+  },
+  "name": "Charly M.",
+  "description": "Des stylistes experts prêts à transformer vos cheveux avec les tendances actuelles et les styles classiques.",
+  "image": "profile13.png",
+  "note": "4.8",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.HAIRDRESSER",
+  "averagePrice": "80€",
+  "minimumDelay": "1 jour",
+  "type": "coiffure",
+  "price": 70,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "670419ca9113115f764cf0ce"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel.",
+      "_id": {
+        "$oid": "67e27b2f4dde22164e1d41e9"
+      }
+    },
+    {
+      "user": {
+        "$oid": "670419ca9113115f764cf0cf"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé.",
+      "_id": {
+        "$oid": "67e27b2f4dde22164e1d41ea"
+      }
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Coupes",
+    "Coloration",
+    "Coiffure"
+  ],
+  "location": {
+    "latitude": 48.8626,
+    "longitude": 2.3364
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "1"
+  },
+  "idUser": "669ee9a38db173e538d0659b",
+  "galleryImages": [
+    "/uploads/images/gallery/1728395167435-coiffeur5.png",
+    "/uploads/images/gallery/1728395167480-coiffeur6.png",
+    "/uploads/images/gallery/1728395167506-coiffeur7.png",
+    "/uploads/images/gallery/1740386229237-IMG-20250222-WA0010.jpg",
+    "/uploads/images/gallery/1740386245179-IMG-20250222-WA0014.jpg",
+    "/uploads/images/gallery/1740509944133-IMG-20250224-WA0004.jpg",
+    "/uploads/images/gallery/1740511232533-IMG-20250217-WA0005.jpg",
+    "/uploads/images/gallery/1740544962820-IMG-20250224-WA0007.jpg",
+    "/uploads/images/gallery/1740544967988-IMG-20250224-WA0006.jpg"
+  ],
+  "district": "1er",
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 515,
+  "nombre_affichages_valides": 126,
+  "temps_affichage_total": 845,
+  "taux_conversion": 953.9805825242718,
+  "clics": 4913,
+  "affichage_prioritaire": false,
+  "temps_affichage_moyen": 6.7063492063492065
+},
+{
+  "_id": {
+    "$oid": "671b58db436000f2d9a64fd1"
+  },
+  "name": "Francis M.",
+  "description": "test6",
+  "image": "profile14.png",
+  "note": "5",
+  "type": "massage",
+  "ville": "Paris",
+  "trad": "MAIN_CATEGORY.MASSAGE",
+  "galleryImages": [
+    "/uploads/images/gallery/1744292449507-DALLÂ·E 2025-03-22 20.27.53 - A friendly and elegant virtual assistant named Lizy, represented as a young woman with a confident and warm smile. She wears a sleek white headset and.webp",
+    "/uploads/images/gallery/1744292453194-ChatGPT Image 5 avr. 2025, 21_20_57.png",
+    "/uploads/images/gallery/1744292456227-DALLÂ·E 2024-12-22 12.58.11 - A futuristic and minimalist logo design inspired by technology and mythology, with an Apple-like aesthetic. The logo features a clean and sleek design.webp"
+  ],
+  "maxDistance": 1500,
+  "idUser": "669ee9a38db173e538d0659b",
+  "services": [],
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "location": {
+    "latitude": 48.8626,
+    "longitude": 2.3364
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "reviews": [],
+  "__v": 1,
+  "district": "1er",
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 419,
+  "nombre_affichages_valides": 70,
+  "taux_conversion": 0,
+  "temps_affichage_total": 301,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 4.3
+},
+{
+  "_id": {
+    "$oid": "67e7dec031fc935ac8dc6cbf"
+  },
+  "name": "Roberta T.",
+  "description": "Des stylistes experts prêts à transformer vos cheveux avec les tendances actuelles et les styles classiques.",
+  "image": "profile15.png",
+  "note": "4.8",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.HAIRDRESSER",
+  "averagePrice": "80€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "coiffure",
+  "price": 70,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Coupes",
+    "Coloration",
+    "Coiffure"
+  ],
+  "location": {
+    "latitude": 48.6298,
+    "longitude": 2.4407
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "1"
+  },
+  "idUser": "67ca077858dca58f1d92e499",
+  "galleryImages": [],
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "impressions": 620,
+  "nombre_affichages_valides": 118,
+  "taux_conversion": 0,
+  "temps_affichage_total": 795,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 6.737288135593221
+},
+{
+  "_id": {
+    "$oid": "67e7df0631fc935ac8dc6cc0"
+  },
+  "name": "Paula V.",
+  "description": "Des stylistes experts prêts à transformer vos cheveux avec les tendances actuelles et les styles classiques.",
+  "image": "profile16.png",
+  "note": "4.8",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.HAIRDRESSER",
+  "averagePrice": "80€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "coiffure",
+  "price": 70,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Coupes",
+    "Coloration",
+    "Coiffure"
+  ],
+  "location": {
+    "latitude": 48.6298,
+    "longitude": 2.4407
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "1"
+  },
+  "idUser": "67ca077858dca58f1d92e499",
+  "galleryImages": [],
+  "deliveryPostalCodes": [
+    "75001",
+    "75002",
+    "75003",
+    "75004",
+    "75005",
+    "75006"
+  ],
+  "impressions": 620,
+  "nombre_affichages_valides": 91,
+  "taux_conversion": 0,
+  "temps_affichage_total": 411,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 4.516483516483516
+},
+{
+  "_id": {
+    "$oid": "67e7e37431fc935ac8dc6cc1"
+  },
+  "name": "Nicole O.",
+  "description": "Des stylistes experts prêts à transformer vos cheveux avec les tendances actuelles et les styles classiques.",
+  "image": "profile17.png",
+  "note": "4.8",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.HAIRDRESSER",
+  "averagePrice": "80€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "coiffure",
+  "price": 70,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Coupes",
+    "Coloration",
+    "Coiffure"
+  ],
+  "location": {
+    "latitude": 48.6298,
+    "longitude": 2.4407
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": true,
+    "type": "1"
+  },
+  "idUser": "67ca077858dca58f1d92e499",
+  "galleryImages": [],
+  "deliveryPostalCodes": [
+    "75001",
+    "75002",
+    "75003",
+    "75004",
+    "75005",
+    "75006"
+  ],
+  "impressions": 620,
+  "nombre_affichages_valides": 58,
+  "taux_conversion": 0,
+  "temps_affichage_total": 297,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 5.120689655172414
+},
+{
+  "_id": {
+    "$oid": "67e7e3a231fc935ac8dc6cc2"
+  },
+  "name": "Robert P.",
+  "description": "Spécialisés dans les extensions et traitements de cils pour magnifier votre regard.",
+  "image": "profile18.png",
+  "note": "4.9",
+  "ville": "Paris",
+  "filter": "coiffeur",
+  "trad": "SHOPTYPE.EYEBROW",
+  "averagePrice": "85€",
+  "minimumDelay": "1 jour",
+  "delayScale": "jour",
+  "type": "nutrition",
+  "price": 80,
+  "reviews": [
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 5,
+      "comment": "J'ai adoré ma coupe de cheveux! Le personnel était très sympathique et professionnel."
+    },
+    {
+      "user": {
+        "$oid": "67ca077858dca58f1d92e499"
+      },
+      "rating": 4,
+      "comment": "Le service était excellent, mais le prix était un peu élevé."
+    }
+  ],
+  "maxDistance": 2000,
+  "services": [
+    "Extensions de cils",
+    "Teinture de cils",
+    "Rehaussement de cils"
+  ],
+  "location": {
+    "latitude": 48.635,
+    "longitude": 2.4319
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "13:00"
+    },
+    "afternoon": {
+      "start": "14:00",
+      "end": "18:00"
+    }
+  },
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "idUser": "669ee9a38db173e538d0659b",
+  "galleryImages": [
+    ""
+  ],
+  "__v": 1,
+  "deliveryPostalCodes": [
+    "75001",
+    "75002"
+  ],
+  "impressions": 454,
+  "nombre_affichages_valides": 73,
+  "taux_conversion": 0,
+  "temps_affichage_total": 354,
+  "affichage_prioritaire": false,
+  "clics": 0,
+  "temps_affichage_moyen": 4.8493150684931505
+},
+{
+  "_id": {
+    "$oid": "67fa30a1ab5d56d76a1a799c"
+  },
+  "name": "Mot F.",
+  "description": "test10",
+  "image": "default.png",
+  "note": "5",
+  "deliveryPostalCodes": [
+    "75001"
+  ],
+  "type": "fitness",
+  "ville": "Paris",
+  "trad": "MAIN_CATEGORY.FITNESS",
+  "galleryImages": [],
+  "maxDistance": 15,
+  "idUser": "669ee9a38db173e538d0659b",
+  "services": [],
+  "promo": {
+    "active": false,
+    "type": "1"
+  },
+  "location": {
+    "latitude": 48.8626,
+    "longitude": 2.3364
+  },
+  "hours": {
+    "morning": {
+      "start": "09:00",
+      "end": "12:00"
+    },
+    "afternoon": {
+      "start": "13:00",
+      "end": "18:00"
+    }
+  },
+  "impressions": 0,
+  "clics": 0,
+  "taux_conversion": 0,
+  "affichage_prioritaire": false,
+  "temps_affichage_total": 0,
+  "nombre_affichages_valides": 0,
+  "reviews": [],
+  "__v": 0
+}]

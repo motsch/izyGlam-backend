@@ -1,0 +1,14 @@
+[{
+  "_id": {
+    "$oid": "67347be8fe2435ced5b79304"
+  },
+  "userId": "669ee9a38db173e538d0659b",
+  "startDate": {
+    "$date": "2024-11-13T00:00:00.000Z"
+  },
+  "endDate": {
+    "$date": "2024-12-13T00:00:00.000Z"
+  },
+  "active": true,
+  "planType": "premium"
+}]

@@ -1,0 +1,171 @@
+[{
+  "_id": {
+    "$oid": "67d7fa5d1b5680a9e9bd9e39"
+  },
+  "image": "pub3.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://example.com",
+  "annonceur": "Sponsor C",
+  "budget": 400,
+  "impressions": 559,
+  "clics": 3,
+  "taux_conversion": 2.912621359223301,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 3008,
+  "temps_affichage_total": 160224,
+  "type": "PREMIUM"
+},
+{
+  "_id": {
+    "$oid": "67d7fa5d1b5680a9e9bd9e38"
+  },
+  "image": "pub2.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://example.com",
+  "annonceur": "Sponsor B",
+  "budget": 300,
+  "impressions": 640,
+  "clics": 1,
+  "taux_conversion": 0.6535947712418301,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 3008,
+  "temps_affichage_total": 181841,
+  "type": "PREMIUM"
+},
+{
+  "_id": {
+    "$oid": "67d7fa5d1b5680a9e9bd9e37"
+  },
+  "image": "pub1.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://example.com",
+  "annonceur": "Sponsor A",
+  "budget": 500,
+  "impressions": 640,
+  "clics": 10,
+  "taux_conversion": 1.5625,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 3008,
+  "temps_affichage_total": 176844,
+  "type": "PREMIUM"
+},
+{
+  "_id": {
+    "$oid": "67d7fa5d1b5680a9e9bd9e3a"
+  },
+  "image": "pub4.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://example.com",
+  "annonceur": "Miss Dior",
+  "budget": 1000,
+  "impressions": 573,
+  "clics": 3,
+  "taux_conversion": 0.7194244604316548,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 3008,
+  "temps_affichage_total": 119811,
+  "type": "PREMIUM"
+},
+{
+  "_id": {
+    "$oid": "67ed3f2f31fc935ac8dc6cc8"
+  },
+  "image": "pub5.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://example.com",
+  "annonceur": "Sephora",
+  "budget": 1000,
+  "impressions": 573,
+  "clics": 3,
+  "taux_conversion": 0.7194244604316548,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 3007,
+  "temps_affichage_total": 259687,
+  "type": "PREMIUM"
+},
+{
+  "_id": {
+    "$oid": "67fce331810994b3a0d308ac"
+  },
+  "image": "pub6.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://www.sephora.fr/shop/soin-visage-c303/",
+  "annonceur": "Sephora",
+  "budget": 1000,
+  "impressions": 0,
+  "clics": 6,
+  "taux_conversion": 0,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 1356,
+  "temps_affichage_total": 87060,
+  "type": "CLASSIC"
+},
+{
+  "_id": {
+    "$oid": "67feba62810994b3a0d308ae"
+  },
+  "image": "pub7.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://www.ohmycream.com/collections/visage",
+  "annonceur": "oh my cream",
+  "budget": 1000,
+  "impressions": 0,
+  "clics": 5,
+  "taux_conversion": 0,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 1382,
+  "temps_affichage_total": 95599,
+  "type": "CLASSIC"
+},
+{
+  "_id": {
+    "$oid": "67febc58810994b3a0d308af"
+  },
+  "image": "pub8.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://www.respire.co/products/deodorant-solide-certifie-bio-douceur-monoi-50g",
+  "annonceur": "Respire",
+  "budget": 1000,
+  "impressions": 0,
+  "clics": 9,
+  "taux_conversion": 0,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 1361,
+  "temps_affichage_total": 107018,
+  "type": "CLASSIC"
+},
+{
+  "_id": {
+    "$oid": "67febe18810994b3a0d308b0"
+  },
+  "image": "pub9.jpg",
+  "date_expiration": {
+    "$date": "2025-12-31T00:00:00.000Z"
+  },
+  "lien": "https://www.rituals.com/fr-fr/corps/soins-du-corps",
+  "annonceur": "Rituals",
+  "budget": 1000,
+  "impressions": 0,
+  "clics": 5,
+  "taux_conversion": 0,
+  "affichage_prioritaire": false,
+  "nombre_affichages_valides": 1352,
+  "temps_affichage_total": 117586,
+  "type": "CLASSIC"
+}]

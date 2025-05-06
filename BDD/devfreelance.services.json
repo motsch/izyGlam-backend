@@ -1,0 +1,1900 @@
+[{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9de6"
+  },
+  "name": "Coupe de cheveux classique",
+  "description": "Coupe de cheveux standard pour hommes et femmes, adaptée à votre style.",
+  "image": "/uploads/images/logo.png",
+  "note": "Coupe réalisée par des coiffeurs expérimentés.",
+  "averagePrice": "25€",
+  "minimumDelay": "30",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86470",
+  "color": "#E6E0F8"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9de7"
+  },
+  "name": "Shampoing et brushing",
+  "description": "Lavage des cheveux suivi d'un brushing pour un style impeccable.",
+  "image": "/uploads/images/logo.png",
+  "note": "Parfait pour un événement spécial.",
+  "averagePrice": "20€",
+  "minimumDelay": "40",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 20,
+  "duration": 40,
+  "shopId": "66983bd3ab6bb2a89fe86470",
+  "color": "#FFB88C"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9de8"
+  },
+  "name": "Couleur et mèches",
+  "description": "Coloration complète ou partielle avec des mèches pour un look unique.",
+  "image": "/uploads/images/logo.png",
+  "note": "Utilisation de produits de haute qualité.",
+  "averagePrice": "60€",
+  "minimumDelay": "90",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 60,
+  "duration": 90,
+  "shopId": "66983bd3ab6bb2a89fe86470",
+  "color": "#B3E5FC"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9deb"
+  },
+  "name": "Manucure classique",
+  "description": "Manucure avec coupe et mise en forme des ongles, suivi d'une application de vernis.",
+  "image": "/uploads/images/logo.png",
+  "note": "Utilisation de produits de qualité supérieure.",
+  "averagePrice": "30€",
+  "minimumDelay": "45",
+  "delayScale": "minutes",
+  "type": "manucure",
+  "price": 30,
+  "duration": 45,
+  "shopId": "66983bd3ab6bb2a89fe86471",
+  "color": "#FFB3BA"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9dec"
+  },
+  "name": "Pédicure spa",
+  "description": "Soins des pieds avec bain, exfoliation, massage, et application de vernis.",
+  "image": "/uploads/images/logo.png",
+  "note": "Offre une relaxation complète.",
+  "averagePrice": "40€",
+  "minimumDelay": "60",
+  "delayScale": "minutes",
+  "type": "manucure",
+  "price": 40,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86471",
+  "color": "#FFDFD3"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9ded"
+  },
+  "name": "Soin des mains et des ongles",
+  "description": "Soins hydratants et nourrissants pour des mains douces et des ongles renforcés.",
+  "image": "/uploads/images/logo.png",
+  "note": "Convient à tous types de peaux.",
+  "averagePrice": "35€",
+  "minimumDelay": "50",
+  "delayScale": "minutes",
+  "type": "manucure",
+  "price": 35,
+  "duration": 50,
+  "shopId": "66983bd3ab6bb2a89fe86471",
+  "color": "#B3FFD9"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9dee"
+  },
+  "name": "Brushing bouclé",
+  "description": "Création de boucles durables avec un brushing professionnel.",
+  "image": "/uploads/images/logo.png",
+  "note": "Idéal pour des occasions spéciales.",
+  "averagePrice": "30€",
+  "minimumDelay": "45",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 30,
+  "duration": 45,
+  "shopId": "66d0f328ac2fe1ec4ebd976d",
+  "color": "#A0D8F1"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9def"
+  },
+  "name": "Soin capillaire nourrissant",
+  "description": "Traitement en profondeur pour des cheveux soyeux et en bonne santé.",
+  "image": "/uploads/images/articles/1745766573619-test654.png",
+  "note": "Recommandé pour les cheveux secs ou abîmés.",
+  "averagePrice": "35€",
+  "minimumDelay": "45",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 35,
+  "duration": 45,
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "color": "#D4A4F7"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9df0"
+  },
+  "name": "Maquillage de jour",
+  "description": "Maquillage léger et naturel pour un look quotidien.",
+  "image": "/uploads/images/logo.png",
+  "note": "Réalisé avec des produits de maquillage haut de gamme.",
+  "averagePrice": "40€",
+  "minimumDelay": "30",
+  "delayScale": "minutes",
+  "type": "esthetique",
+  "price": 40,
+  "duration": 30,
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "color": "#FDFD96"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9df3"
+  },
+  "name": "Soin anti-âge",
+  "description": "Traitement visage pour réduire les signes de l'âge et raffermir la peau.",
+  "image": "/uploads/images/logo.png",
+  "note": "Idéal pour les peaux matures.",
+  "averagePrice": "70€",
+  "minimumDelay": "75",
+  "delayScale": "minutes",
+  "type": "esthetique",
+  "price": 70,
+  "duration": 75,
+  "shopId": "66d0eccfac2fe1ec4ebd9767",
+  "color": "#AEDFF7"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d9cde9df4"
+  },
+  "name": "Manucure gel",
+  "description": "Application de vernis gel pour une tenue longue durée et brillante.",
+  "image": "/uploads/images/logo.png",
+  "note": "Parfait pour les occasions spéciales ou un usage quotidien.",
+  "averagePrice": "40€",
+  "minimumDelay": "60",
+  "delayScale": "minutes",
+  "type": "manucure",
+  "price": 40,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86471",
+  "color": "#F3D0FF"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9de6"
+  },
+  "name": "Coupe de cheveux classique",
+  "description": "Coupe de cheveux standard pour hommes et femmes, adaptée à votre style.",
+  "image": "/uploads/images/logo.png",
+  "note": "Coupe réalisée par des coiffeurs expérimentés.",
+  "averagePrice": "25€",
+  "minimumDelay": "30",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86470",
+  "color": "#FFC4A3"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9de7"
+  },
+  "name": "Shampoing et brushing",
+  "description": "Lavage des cheveux suivi d'un brushing pour un style impeccable.",
+  "image": "/uploads/images/logo.png",
+  "note": "Parfait pour un événement spécial.",
+  "averagePrice": "20€",
+  "minimumDelay": "40",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 20,
+  "duration": 40,
+  "shopId": "66983bd3ab6bb2a89fe86470",
+  "color": "#A4EBF3"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9de8"
+  },
+  "name": "Couleur et mèches",
+  "description": "Coloration complète ou partielle avec des mèches pour un look unique.",
+  "image": "/uploads/images/logo.png",
+  "note": "Utilisation de produits de haute qualité.",
+  "averagePrice": "60€",
+  "minimumDelay": "90",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 60,
+  "duration": 90,
+  "shopId": "66983bd3ab6bb2a89fe86470",
+  "color": "#E8BBE3"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9deb"
+  },
+  "name": "Manucure classique",
+  "description": "Manucure avec coupe et mise en forme des ongles, suivi d'une application de vernis.",
+  "image": "/uploads/images/logo.png",
+  "note": "Utilisation de produits de qualité supérieure.",
+  "averagePrice": "30€",
+  "minimumDelay": "45",
+  "delayScale": "minutes",
+  "type": "manucure",
+  "price": 30,
+  "duration": 45,
+  "shopId": "66983bd3ab6bb2a89fe86471",
+  "color": "#E6E0F8"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9dec"
+  },
+  "name": "Pédicure spa",
+  "description": "Soins des pieds avec bain, exfoliation, massage, et application de vernis.",
+  "image": "/uploads/images/logo.png",
+  "note": "Offre une relaxation complète.",
+  "averagePrice": "40€",
+  "minimumDelay": "60",
+  "delayScale": "minutes",
+  "type": "manucure",
+  "price": 40,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86471",
+  "color": "#FFB88C"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9ded"
+  },
+  "name": "Soin des mains et des ongles",
+  "description": "Soins hydratants et nourrissants pour des mains douces et des ongles renforcés.",
+  "image": "/uploads/images/logo.png",
+  "note": "Convient à tous types de peaux.",
+  "averagePrice": "35€",
+  "minimumDelay": "50",
+  "delayScale": "minutes",
+  "type": "manucure",
+  "price": 35,
+  "duration": 50,
+  "shopId": "66983bd3ab6bb2a89fe86471",
+  "color": "#B3E5FC\""
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9dee"
+  },
+  "name": "Brushing bouclé",
+  "description": "Création de boucles durables avec un brushing professionnel.",
+  "image": "/uploads/images/logo.png",
+  "note": "Idéal pour des occasions spéciales.",
+  "averagePrice": "30€",
+  "minimumDelay": "45",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 30,
+  "duration": 45,
+  "shopId": "66d0f328ac2fe1ec4ebd976d",
+  "color": "#FFF9A6"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9def"
+  },
+  "name": "Soin capillaire nourrissant",
+  "description": "Traitement en profondeur pour des cheveux soyeux et en bonne santé.",
+  "image": "/uploads/images/logo.png",
+  "note": "Recommandé pour les cheveux secs ou abîmés.",
+  "averagePrice": "35€",
+  "minimumDelay": "45",
+  "delayScale": "minutes",
+  "type": "coiffure",
+  "price": 35,
+  "duration": 45,
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "color": "#D1FAD7"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9df0"
+  },
+  "name": "Maquillage de jour",
+  "description": "Maquillage léger et naturel pour un look quotidien.",
+  "image": "/uploads/images/logo.png",
+  "note": "Réalisé avec des produits de maquillage haut de gamme.",
+  "averagePrice": "40€",
+  "minimumDelay": "30",
+  "delayScale": "minutes",
+  "type": "esthetique",
+  "price": 40,
+  "duration": 30,
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "color": "#FFD1A9"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9df3"
+  },
+  "name": "Soin anti-âge",
+  "description": "Traitement visage pour réduire les signes de l'âge et raffermir la peau.",
+  "image": "/uploads/images/logo.png",
+  "note": "Idéal pour les peaux matures.",
+  "averagePrice": "70€",
+  "minimumDelay": "75",
+  "delayScale": "minutes",
+  "type": "esthetique",
+  "price": 70,
+  "duration": 75,
+  "shopId": "66d0eccfac2fe1ec4ebd9767",
+  "color": "#D4A4F7"
+},
+{
+  "_id": {
+    "$oid": "66c5a1b209327c7d8cde9df4"
+  },
+  "name": "Manucure gel",
+  "description": "Application de vernis gel pour une tenue longue durée et brillante.",
+  "image": "/uploads/images/logo.png",
+  "note": "Parfait pour les occasions spéciales ou un usage quotidien.",
+  "averagePrice": "40€",
+  "minimumDelay": "60",
+  "delayScale": "minutes",
+  "type": "manucure",
+  "price": 40,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86471",
+  "color": "#A0D8F1"
+},
+{
+  "_id": {
+    "$oid": "67bc47044a1e6a59e267f628"
+  },
+  "name": "Coupe et brushing sur mesure",
+  "description": "Un service complet pour une coupe impeccable accompagnée d’un brushing professionnel. Parfait pour celles qui cherchent un look sur mesure qui dure.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 71,
+  "duration": 90,
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67bdc59937c7adc311500c85"
+  },
+  "name": "Coiffure élégante pour un grand événement",
+  "description": "Prépare-toi à être la star de l’événement avec une coiffure élégante et sur mesure. Parfait pour ton mariage ou tout événement important.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 112,
+  "duration": 90,
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "color": "#E8BBE3",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f8d8e35474e2426064f4b7"
+  },
+  "name": "Massage prénatal tout en douceur",
+  "description": "Un massage spécialement conçu pour les futures mamans. Ce soin doux t'apportera réconfort et détente tout en prenant soin de bébé. Un vrai moment de bien-être à partager.",
+  "image": "/uploads/images/logo.png",
+  "type": "massage",
+  "price": 93,
+  "duration": 60,
+  "shopId": "671b58db436000f2d9a64fd1",
+  "color": "#C5E1A5",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f8d8f35474e2426064f4bf"
+  },
+  "name": "Réflexologie plantaire détente totale",
+  "description": "Ce massage des pieds stimule les points de réflexe pour détendre tout ton corps. Un soin apaisant qui te fera marcher sur un nuage, littéralement.",
+  "image": "/uploads/images/logo.png",
+  "type": "massage",
+  "price": 68,
+  "duration": 45,
+  "shopId": "671b58db436000f2d9a64fd1",
+  "color": "#A0D8F1",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f8d95f5474e2426064f7a0"
+  },
+  "name": "Deep Tissue intense et revitalisant",
+  "description": "Pour une détente musculaire complète, ce massage Deep Tissue de 90 minutes te permet de libérer les tensions les plus profondes. Idéal pour retrouver ton bien-être musculaire.",
+  "image": "/uploads/images/logo.png",
+  "type": "massage",
+  "price": 93,
+  "duration": 90,
+  "shopId": "671b58dd436000f2d9a64fe5",
+  "color": "#AEDFF7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f8d9705474e2426064f7a8"
+  },
+  "name": "Massage Amma express",
+  "description": "Besoin de te détendre rapidement ? Ce massage Amma sur chaise est idéal pour une pause bien-être express. Détends-toi en quelques minutes et repars pleine d’énergie.",
+  "image": "/uploads/images/logo.png",
+  "type": "massage",
+  "price": 51,
+  "duration": 30,
+  "shopId": "671b58dd436000f2d9a64fe5",
+  "color": "#FFFACD",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f926a8c42c71b44e50ca2f"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67d2e90f004faaba14b6668f",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f964af4b7b0fea339facb8"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f96351c42c71b44e50f3c5",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f964c34b7b0fea339facf1"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f96328c42c71b44e50f3a7",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf9c"
+  },
+  "name": "SlimFit",
+  "description": "Un programme doux et flexible pour vous permettre de retrouver bien-être et tonicité, à votre rythme. Objectif : sérénité et estime de soi.",
+  "image": "/uploads/images/logo.png",
+  "type": "fitness",
+  "price": 79,
+  "duration": 60,
+  "shopId": "67f96b254b7b0fea339fb0f8",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf9d"
+  },
+  "name": "PowerUp",
+  "description": "Un programme revitalisant conçu pour renforcer vos bases, redonner de l’énergie et vous accompagner à chaque étape vers une meilleure forme.",
+  "image": "/uploads/images/logo.png",
+  "type": "fitness",
+  "price": 79,
+  "duration": 60,
+  "shopId": "67f96b254b7b0fea339fb0f8",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66f573da4ce1dd566822bf9e"
+  },
+  "name": "MaxBurn",
+  "description": "Un programme intensif combinant cardio et renforcement musculaire pour vous pousser à dépasser vos limites et ressentir la satisfaction physique.",
+  "image": "/uploads/images/logo.png",
+  "type": "fitness",
+  "price": 79,
+  "duration": 60,
+  "shopId": "67f96b254b7b0fea339fb0f8",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f96e7ca5bd09ba077b524d"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f96c704b7b0fea339fb63e",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f96eaea5bd09ba077b5301"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f96eaea5bd09ba077b52fd",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f96f7ca5bd09ba077b53ca"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f96f7ba5bd09ba077b53c6",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f97096a5bd09ba077b55c2"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f97095a5bd09ba077b55be",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f97163a5bd09ba077b57d3"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f97163a5bd09ba077b57cf",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f97205a5bd09ba077b5b63"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f97205a5bd09ba077b5b5f",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f9725ca5bd09ba077b5d3e"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67f9725ba5bd09ba077b5d3a",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67fa3063ab5d56d76a1a77e9"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67fa3063ab5d56d76a1a77cb",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67fa3063ab5d56d76a1a77ec"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67fa3063ab5d56d76a1a77e4",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67fa30a1ab5d56d76a1a79a0"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67fa30a1ab5d56d76a1a799c",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67ff6c66fa3ec46ee3119ca6"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86472",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67ff9a2ffa3ec46ee311a36e"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86478",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6800c81efa3ec46ee311d394"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86476",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6800c823fa3ec46ee311d413"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "66d0ddf7ac2fe1ec4ebd9763",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801237254e87fc077f4b982"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86479",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801408154e87fc077f4bd13"
+  },
+  "name": "Coloration Racines",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 55,
+  "duration": 60,
+  "shopId": "67e7e37431fc935ac8dc6cc1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680140da810994b3a0d308d6"
+  },
+  "name": "Coupe Enfant (moins de 12 ans)",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 30,
+  "duration": 10,
+  "shopId": "67e7e37431fc935ac8dc6cc1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801410a810994b3a0d308d7"
+  },
+  "name": "Coupe Homme",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "67e7e37431fc935ac8dc6cc1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68014120810994b3a0d308d8"
+  },
+  "name": "Coupe Femme + Coiffage",
+  "description": "Après un diagnostic personnalisé, la coupe est réalisée selon la morphologie et le style souhaité, puis mise en forme",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 60,
+  "shopId": "67e7e37431fc935ac8dc6cc1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801412d810994b3a0d308d9"
+  },
+  "name": "Shampoing + Brushing",
+  "description": "Le classique qui fait toujours son effet ! Un shampoing relaxant suivi d’un brushing soigné pour une chevelure souple, brillante et bien mise.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 40,
+  "duration": 40,
+  "shopId": "67e7e37431fc935ac8dc6cc1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680144ba54e87fc077f4c113"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67e7dec031fc935ac8dc6cbf",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308dd"
+  },
+  "name": "Coupe Homme",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86472",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308df"
+  },
+  "name": "Shampoing + Brushing",
+  "description": "Le classique qui fait toujours son effet ! Un shampoing relaxant suivi d’un brushing soigné pour une chevelure souple, brillante et bien mise.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 40,
+  "duration": 40,
+  "shopId": "66983bd3ab6bb2a89fe86472",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e2"
+  },
+  "name": "Coupe Enfant (moins de 12 ans)",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 30,
+  "duration": 10,
+  "shopId": "66d0eccfac2fe1ec4ebd9767",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308ea"
+  },
+  "name": "Coupe Femme + Coiffage",
+  "description": "Après un diagnostic personnalisé, la coupe est réalisée selon la morphologie et le style souhaité, puis mise en forme",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 60,
+  "shopId": "66d0ddf7ac2fe1ec4ebd9763",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308eb"
+  },
+  "name": "Shampoing + Brushing",
+  "description": "Le classique qui fait toujours son effet ! Un shampoing relaxant suivi d’un brushing soigné pour une chevelure souple, brillante et bien mise.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 40,
+  "duration": 40,
+  "shopId": "66d0ddf7ac2fe1ec4ebd9763",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308ed"
+  },
+  "name": "Chignon de soirée ou mariage",
+  "description": "Coiffure élégante et structurée réalisée sur mesure selon l’événement (mariage, gala, etc.).",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 70,
+  "duration": 60,
+  "shopId": "67e7dec031fc935ac8dc6cbf",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308de"
+  },
+  "name": "Coupe Femme + Coiffage",
+  "description": "Après un diagnostic personnalisé, la coupe est réalisée selon la morphologie et le style souhaité, puis mise en forme",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86472",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e5"
+  },
+  "name": "Shampoing + Brushing",
+  "description": "Le classique qui fait toujours son effet ! Un shampoing relaxant suivi d’un brushing soigné pour une chevelure souple, brillante et bien mise.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 40,
+  "duration": 40,
+  "shopId": "66d0eccfac2fe1ec4ebd9767",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e8"
+  },
+  "name": "Coupe Enfant (moins de 12 ans)",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 30,
+  "duration": 10,
+  "shopId": "66d0ddf7ac2fe1ec4ebd9763",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e9"
+  },
+  "name": "Coupe Homme",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "66d0ddf7ac2fe1ec4ebd9763",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e0"
+  },
+  "name": "Tresses / Nattes (2 à 4)",
+  "description": "Réalisation de tresses simples ou bohèmes, parfaites pour une coiffure pratique et tendance.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 35,
+  "duration": 60,
+  "shopId": "66d0eccfac2fe1ec4ebd9767",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308f1"
+  },
+  "name": "Shampoing + Brushing",
+  "description": "Le classique qui fait toujours son effet ! Un shampoing relaxant suivi d’un brushing soigné pour une chevelure souple, brillante et bien mise.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 40,
+  "duration": 40,
+  "shopId": "67e7dec031fc935ac8dc6cbf",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308da"
+  },
+  "name": "Tresses / Nattes (2 à 4)",
+  "description": "Réalisation de tresses simples ou bohèmes, parfaites pour une coiffure pratique et tendance.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 35,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86472",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308db"
+  },
+  "name": "Chignon de soirée ou mariage",
+  "description": "Coiffure élégante et structurée réalisée sur mesure selon l’événement (mariage, gala, etc.).",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 70,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86472",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308dc"
+  },
+  "name": "Coupe Enfant (moins de 12 ans)",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 30,
+  "duration": 10,
+  "shopId": "66983bd3ab6bb2a89fe86472",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e1"
+  },
+  "name": "Chignon de soirée ou mariage",
+  "description": "Coiffure élégante et structurée réalisée sur mesure selon l’événement (mariage, gala, etc.).",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 70,
+  "duration": 60,
+  "shopId": "66d0eccfac2fe1ec4ebd9767",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e3"
+  },
+  "name": "Coupe Homme",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "66d0eccfac2fe1ec4ebd9767",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e4"
+  },
+  "name": "Coupe Femme + Coiffage",
+  "description": "Après un diagnostic personnalisé, la coupe est réalisée selon la morphologie et le style souhaité, puis mise en forme",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 60,
+  "shopId": "66d0eccfac2fe1ec4ebd9767",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e6"
+  },
+  "name": "Tresses / Nattes (2 à 4)",
+  "description": "Réalisation de tresses simples ou bohèmes, parfaites pour une coiffure pratique et tendance.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 35,
+  "duration": 60,
+  "shopId": "66d0ddf7ac2fe1ec4ebd9763",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308e7"
+  },
+  "name": "Chignon de soirée ou mariage",
+  "description": "Coiffure élégante et structurée réalisée sur mesure selon l’événement (mariage, gala, etc.).",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 70,
+  "duration": 60,
+  "shopId": "66d0ddf7ac2fe1ec4ebd9763",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308ec"
+  },
+  "name": "Tresses / Nattes (2 à 4)",
+  "description": "Réalisation de tresses simples ou bohèmes, parfaites pour une coiffure pratique et tendance.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 35,
+  "duration": 60,
+  "shopId": "67e7dec031fc935ac8dc6cbf",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308ee"
+  },
+  "name": "Coupe Enfant (moins de 12 ans)",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 30,
+  "duration": 10,
+  "shopId": "67e7dec031fc935ac8dc6cbf",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308ef"
+  },
+  "name": "Coupe Homme",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "67e7dec031fc935ac8dc6cbf",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801462c810994b3a0d308f0"
+  },
+  "name": "Coupe Femme + Coiffage",
+  "description": "Après un diagnostic personnalisé, la coupe est réalisée selon la morphologie et le style souhaité, puis mise en forme",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 60,
+  "shopId": "67e7dec031fc935ac8dc6cbf",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801510254e87fc077f4c2b2"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67e7df0631fc935ac8dc6cc0",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801515d810994b3a0d308f2"
+  },
+  "name": "Shampoing + Brushing",
+  "description": "Le classique qui fait toujours son effet ! Un shampoing relaxant suivi d’un brushing soigné pour une chevelure souple, brillante et bien mise.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 40,
+  "duration": 40,
+  "shopId": "67e7df0631fc935ac8dc6cc0",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801515d810994b3a0d308f3"
+  },
+  "name": "Chignon de soirée ou mariage",
+  "description": "Coiffure élégante et structurée réalisée sur mesure selon l’événement (mariage, gala, etc.).",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 70,
+  "duration": 60,
+  "shopId": "67e7df0631fc935ac8dc6cc0",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801515d810994b3a0d308f5"
+  },
+  "name": "Coupe Homme",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "67e7df0631fc935ac8dc6cc0",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801515d810994b3a0d308f6"
+  },
+  "name": "Coupe Enfant (moins de 12 ans)",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 30,
+  "duration": 10,
+  "shopId": "67e7df0631fc935ac8dc6cc0",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801515d810994b3a0d308f7"
+  },
+  "name": "Coupe Femme + Coiffage",
+  "description": "Après un diagnostic personnalisé, la coupe est réalisée selon la morphologie et le style souhaité, puis mise en forme",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 60,
+  "shopId": "67e7df0631fc935ac8dc6cc0",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801515d810994b3a0d308f4"
+  },
+  "name": "Tresses / Nattes (2 à 4)",
+  "description": "Réalisation de tresses simples ou bohèmes, parfaites pour une coiffure pratique et tendance.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 35,
+  "duration": 60,
+  "shopId": "67e7df0631fc935ac8dc6cc0",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015265810994b3a0d308f8"
+  },
+  "name": "Massage Relaxant",
+  "description": "Le classique qui fait toujours son effet ! Un shampoing relaxant suivi d’un brushing soigné pour une chevelure souple, brillante et bien mise.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 40,
+  "duration": 40,
+  "shopId": "671b58db436000f2d9a64fd1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015265810994b3a0d308f9"
+  },
+  "name": "Massage Californien",
+  "description": "Coiffure élégante et structurée réalisée sur mesure selon l’événement (mariage, gala, etc.).",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 70,
+  "duration": 60,
+  "shopId": "671b58db436000f2d9a64fd1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015265810994b3a0d308fa"
+  },
+  "name": "Massage Suédois",
+  "description": "Réalisation de tresses simples ou bohèmes, parfaites pour une coiffure pratique et tendance.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 35,
+  "duration": 60,
+  "shopId": "671b58db436000f2d9a64fd1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015265810994b3a0d308fb"
+  },
+  "name": "Massage Deep Tissue",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 25,
+  "duration": 30,
+  "shopId": "671b58db436000f2d9a64fd1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015265810994b3a0d308fc"
+  },
+  "name": "Réflexologie Plantaire",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 30,
+  "duration": 10,
+  "shopId": "671b58db436000f2d9a64fd1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015265810994b3a0d308fd"
+  },
+  "name": "Massage Femme Enceinte (Prénatal)",
+  "description": "Après un diagnostic personnalisé, la coupe est réalisée selon la morphologie et le style souhaité, puis mise en forme",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 60,
+  "shopId": "671b58db436000f2d9a64fd1",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801527d54e87fc077f4c682"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86477",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153c8810994b3a0d30901"
+  },
+  "name": "Coaching Nutrition Minceur",
+  "description": "Accompagnement global vers une perte de poids durable et sans régime restrictif. Astuces, menus types, motivation.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86477",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153c8810994b3a0d308fe"
+  },
+  "name": "Bilan Nutritionnel Complet",
+  "description": "Séance de suivi pour ajuster le plan nutritionnel, répondre aux questions et renforcer la motivation.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 70,
+  "duration": 40,
+  "shopId": "66983bd3ab6bb2a89fe86477",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153c8810994b3a0d308ff"
+  },
+  "name": "Suivi Nutritionnel",
+  "description": "Séance de suivi pour ajuster le plan nutritionnel, répondre aux questions et renforcer la motivation.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 50,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86477",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153c8810994b3a0d30900"
+  },
+  "name": "Programme Nutrition Sportif",
+  "description": "Alimentation optimisée pour la performance, la récupération et les objectifs physiques (endurance, musculation, sèche...).",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 65,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86477",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153c8810994b3a0d30902"
+  },
+  "name": "Conseil Nutrition Anti-Stress et Sommeil",
+  "description": "Focus sur les aliments et routines favorisant un meilleur sommeil, moins d’anxiété et un regain d’énergie.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 45,
+  "duration": 10,
+  "shopId": "66983bd3ab6bb2a89fe86477",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153d254e87fc077f4c772"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "67e7e3a231fc935ac8dc6cc2",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153eb810994b3a0d30903"
+  },
+  "name": "Bilan Nutritionnel Complet",
+  "description": "Séance de suivi pour ajuster le plan nutritionnel, répondre aux questions et renforcer la motivation.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 70,
+  "duration": 40,
+  "shopId": "67e7e3a231fc935ac8dc6cc2",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153eb810994b3a0d30904"
+  },
+  "name": "Suivi Nutritionnel",
+  "description": "Séance de suivi pour ajuster le plan nutritionnel, répondre aux questions et renforcer la motivation.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 50,
+  "duration": 60,
+  "shopId": "67e7e3a231fc935ac8dc6cc2",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153eb810994b3a0d30906"
+  },
+  "name": "Coaching Nutrition Minceur",
+  "description": "Accompagnement global vers une perte de poids durable et sans régime restrictif. Astuces, menus types, motivation.",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 30,
+  "shopId": "67e7e3a231fc935ac8dc6cc2",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153eb810994b3a0d30907"
+  },
+  "name": "Conseil Nutrition Anti-Stress et Sommeil",
+  "description": "Focus sur les aliments et routines favorisant un meilleur sommeil, moins d’anxiété et un regain d’énergie.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 45,
+  "duration": 10,
+  "shopId": "67e7e3a231fc935ac8dc6cc2",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680153eb810994b3a0d30905"
+  },
+  "name": "Programme Nutrition Sportif",
+  "description": "Alimentation optimisée pour la performance, la récupération et les objectifs physiques (endurance, musculation, sèche...).",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 65,
+  "duration": 60,
+  "shopId": "67e7e3a231fc935ac8dc6cc2",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015596810994b3a0d30909"
+  },
+  "name": "Circuit Training Brûle-Graisse",
+  "description": "Enchaînement d’exercices dynamiques pour booster le métabolisme et brûler un max de calories.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 55,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86478",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015596810994b3a0d3090a"
+  },
+  "name": "Séance Cardio HIIT (High Intensity)",
+  "description": "Des efforts courts mais intenses, alternés avec des phases de récupération active.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 60,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86478",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015596810994b3a0d3090c"
+  },
+  "name": "Coaching Fitness Post-Partum",
+  "description": "Programme adapté aux jeunes mamans pour retrouver la forme en douceur et sécurité (abdominaux profonds, périnée, posture…).",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 75,
+  "duration": 80,
+  "shopId": "66983bd3ab6bb2a89fe86478",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015596810994b3a0d30908"
+  },
+  "name": "Coaching Fitness Personnalisé",
+  "description": "Séance sur mesure en fonction de ton niveau et de tes objectifs (tonification, perte de poids, prise de masse, remise en forme…).",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 65,
+  "duration": 40,
+  "shopId": "66983bd3ab6bb2a89fe86478",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015596810994b3a0d3090b"
+  },
+  "name": "Renforcement Musculaire Doux",
+  "description": "Travail ciblé sans impact pour renforcer les muscles profonds (abdos, dos, cuisses…)",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 70,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86478",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680155a754e87fc077f4c8e1"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86475",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015ccc810994b3a0d30920"
+  },
+  "name": "Spray Tan Express (rinçage rapide)",
+  "description": "Version accélérée du spray tan, à rincer en 2 à 4h après application selon l’intensité souhaitée.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 50,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86475",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015ccc810994b3a0d30921"
+  },
+  "name": "Brushing + Spray Tan visage & décolleté",
+  "description": "Application ciblée sur le visage, le cou et le haut du buste pour illuminer le teint sans bronzage corporel complet.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 65,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86475",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015ccc810994b3a0d30922"
+  },
+  "name": "Bronzage Éclat 3 Jours (formule progressive)",
+  "description": "Application d’un soin progressif qui intensifie le bronzage jour après jour, sans effet orangé, pour un rendu ultra naturel.",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 50,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86475",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68015ccc810994b3a0d3091f"
+  },
+  "name": "Spray Tan Classique",
+  "description": "Application d’une lotion autobronzante par pulvérisation uniforme sur tout le corps, pour un teint hâlé immédiat, sans UV ni danger pour la peau.",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 70,
+  "duration": 40,
+  "shopId": "66983bd3ab6bb2a89fe86475",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801635b810994b3a0d30924"
+  },
+  "name": "Acupuncture Anti-Stress & Anxiété",
+  "description": "Travail sur les méridiens liés au système nerveux pour apaiser le mental, améliorer le sommeil et réduire l’anxiété.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 90,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86479",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801635b810994b3a0d30927"
+  },
+  "name": "Acupuncture Minceur & Digestion",
+  "description": "Séance axée sur la régulation du métabolisme, des fringales et du transit digestif.",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 80,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86479",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801635b810994b3a0d30928"
+  },
+  "name": "Acupuncture Femme & Hormones",
+  "description": "Équilibrage hormonal naturel (règles douloureuses, cycles irréguliers, ménopause…) grâce à une approche énergétique.",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 75,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86479",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801635b810994b3a0d30923"
+  },
+  "name": "Séance Découverte Acupuncture",
+  "description": "Bilan énergétique complet + première séance d’acupuncture douce pour découvrir les bienfaits de cette pratique.",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 80,
+  "duration": 40,
+  "shopId": "66983bd3ab6bb2a89fe86479",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801635b810994b3a0d30925"
+  },
+  "name": "Acupuncture pour le Sommeil",
+  "description": "Travail sur les méridiens liés au système nerveux pour apaiser le mental, améliorer le sommeil et réduire l’anxiété.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 70,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86479",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801635b810994b3a0d30926"
+  },
+  "name": "Acupuncture pour la Douleur",
+  "description": "Stimulation des points favorisant l’endormissement et la régulation du sommeil profond.",
+  "image": "url_image_acroyoga",
+  "type": "coiffure",
+  "price": 75,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86479",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680169a554e87fc077f4cdf2"
+  },
+  "name": "Tonification des ports",
+  "description": "Soin de visage pour le truc",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86474",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801ffbf810994b3a0d30933"
+  },
+  "name": "Pose Volume Russe",
+  "description": "Plusieurs cils ultra-fins sont posés en éventail sur chaque cil naturel pour un effet dense et intense.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 90,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86476",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801ffbf810994b3a0d30934"
+  },
+  "name": "Pose Mixte (Hybride)",
+  "description": "Un mélange de cil à cil et volume russe pour un effet à la fois fourni et naturel.",
+  "image": "/uploads/images/logo.png",
+  "type": "relaxation",
+  "price": 70,
+  "duration": 60,
+  "shopId": "66983bd3ab6bb2a89fe86476",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801ffbf810994b3a0d30936"
+  },
+  "name": "Dépose d’Extensions + Soin",
+  "description": "Retrait en douceur des extensions, suivi d’un soin nourrissant pour les cils naturels.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 80,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86476",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801ffbf810994b3a0d30935"
+  },
+  "name": "Remplissage (2 à 3 semaines)",
+  "description": "Remise à neuf des extensions tombées pour prolonger la tenue et garder un regard parfait.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 75,
+  "duration": 30,
+  "shopId": "66983bd3ab6bb2a89fe86476",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6801ffbf810994b3a0d30932"
+  },
+  "name": "Pose Classique (1 cil à 1 cil)",
+  "description": "Application d’un cil synthétique sur chaque cil naturel pour un rendu discret et élégant.",
+  "image": "/uploads/images/logo.png",
+  "type": "coiffure",
+  "price": 70,
+  "duration": 40,
+  "shopId": "66983bd3ab6bb2a89fe86476",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6819b0686385da730f9d3215"
+  },
+  "name": "MaxBurn",
+  "description": "Un programme intensif combinant cardio et renforcement musculaire pour vous pousser à dépasser vos limites et ressentir la satisfaction physique.",
+  "image": "/uploads/images/articles/1746514024418-Knight-Killer.webp",
+  "type": "fitness",
+  "price": 79,
+  "duration": 60,
+  "shopId": "67fa30a1ab5d56d76a1a799c",
+  "color": "#AEDFF7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6819c8b66385da730f9d5940"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "6819c8b66385da730f9d593c",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6819c8b76385da730f9d5965"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "6819c8b76385da730f9d5961",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6819c8b96385da730f9d598a"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "6819c8b96385da730f9d5986",
+  "color": "#ff4081",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6819c9826385da730f9d5bb2"
+  },
+  "name": "Acroyoga fun et acrobatique",
+  "description": "Un mélange d’acrobaties et de yoga pour travailler ton corps tout en t'amusant. Un moment fun et stimulant à partager avec d’autres.",
+  "image": "url_image_acroyoga",
+  "type": "relaxation",
+  "price": 213,
+  "duration": 60,
+  "shopId": "6819c9826385da730f9d5bae",
+  "color": "#ff4081",
+  "__v": 0
+}]

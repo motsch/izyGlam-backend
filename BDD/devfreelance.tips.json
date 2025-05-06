@@ -1,0 +1,504 @@
+[{
+  "_id": {
+    "$oid": "6740015e3d7a9902e4cb3151"
+  },
+  "elem": "Un style vintage revisité pour un look unique !",
+  "trad": "ASTUCE.VINTAGE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740015e3d7a9902e4cb3152"
+  },
+  "elem": "Choisissez des couleurs audacieuses pour exprimer votre créativité.",
+  "trad": "ASTUCE.CREATIVITE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740015e3d7a9902e4cb3153"
+  },
+  "elem": "Un nail art minimaliste pour un effet élégant et moderne.",
+  "trad": "ASTUCE.MINIMALISTE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3154"
+  },
+  "elem": "Ajoutez des hashtags pertinents pour toucher un public plus large.",
+  "trad": "ASTUCE.HASHTAGS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3155"
+  },
+  "elem": "Commencez votre post par une question engageante pour inciter à interagir.",
+  "trad": "ASTUCE.QUESTION",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3156"
+  },
+  "elem": "Utilisez des emojis pour rendre votre contenu plus visuel et attrayant.",
+  "trad": "ASTUCE.EMOJIS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3157"
+  },
+  "elem": "Partagez des anecdotes personnelles pour créer une connexion émotionnelle.",
+  "trad": "ASTUCE.ANECDOTE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3158"
+  },
+  "elem": "Optimisez vos visuels avec des couleurs vives et un texte clair.",
+  "trad": "ASTUCE.VISUELS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3159"
+  },
+  "elem": "Ajoutez un appel à l’action clair, comme 'Cliquez sur le lien' ou 'Partagez votre avis'.",
+  "trad": "ASTUCE.APPEL_ACTION",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb315a"
+  },
+  "elem": "Postez à des heures stratégiques pour maximiser la portée.",
+  "trad": "ASTUCE.HEURES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb315b"
+  },
+  "elem": "Variez vos formats : images, vidéos, carrousels ou sondages.",
+  "trad": "ASTUCE.FORMATS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb315c"
+  },
+  "elem": "Ajoutez des statistiques ou des faits intéressants pour capter l’attention.",
+  "trad": "ASTUCE.STATISTIQUES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb315d"
+  },
+  "elem": "Racontez une histoire captivante pour garder vos lecteurs engagés.",
+  "trad": "ASTUCE.STORYTELLING",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb315e"
+  },
+  "elem": "Utilisez des légendes courtes mais percutantes pour Instagram et Twitter.",
+  "trad": "ASTUCE.LEGENDES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb315f"
+  },
+  "elem": "Adaptez le ton de votre contenu en fonction de la plateforme utilisée.",
+  "trad": "ASTUCE.TON",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3160"
+  },
+  "elem": "Mentionnez d’autres utilisateurs ou marques pour élargir votre portée.",
+  "trad": "ASTUCE.MENTIONS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3161"
+  },
+  "elem": "Intégrez des stories ou reels pour capter l’attention rapidement.",
+  "trad": "ASTUCE.STORIES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3162"
+  },
+  "elem": "Mettez en avant vos réussites ou celles de vos clients pour LinkedIn.",
+  "trad": "ASTUCE.REUSSITES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3163"
+  },
+  "elem": "Soyez authentique et montrez votre vraie personnalité.",
+  "trad": "ASTUCE.AUTHENTICITE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3164"
+  },
+  "elem": "Testez différents styles visuels pour découvrir ce qui plaît le plus à votre audience.",
+  "trad": "ASTUCE.STYLES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3165"
+  },
+  "elem": "Utilisez des légendes captivantes qui donnent envie de cliquer sur 'Lire la suite'.",
+  "trad": "ASTUCE.CAPTIVANTES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3166"
+  },
+  "elem": "Incluez des questions ouvertes pour encourager les commentaires.",
+  "trad": "ASTUCE.COMMENTAIRES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "6740089f3d7a9902e4cb3167"
+  },
+  "elem": "Analysez vos performances et ajustez votre stratégie en conséquence.",
+  "trad": "ASTUCE.ANALYSE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb5f"
+  },
+  "elem": "Utilisez des vidéos courtes pour capter l'attention rapidement.",
+  "trad": "ASTUCE.VIDEOS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb62"
+  },
+  "elem": "Mettez en avant vos valeurs pour toucher votre public cible.",
+  "trad": "ASTUCE.VALEURS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb64"
+  },
+  "elem": "Incorporez des citations inspirantes pour motiver votre audience.",
+  "trad": "ASTUCE.CITATIONS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb6b"
+  },
+  "elem": "Répétez vos messages clés régulièrement pour ancrer votre communication.",
+  "trad": "ASTUCE.MESSAGES_CLES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb6c"
+  },
+  "elem": "Identifiez les moments forts de l'année pour vos publications.",
+  "trad": "ASTUCE.MOMENTS_FORTS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb6e"
+  },
+  "elem": "Ajoutez des statistiques intéressantes pour capter l'attention.",
+  "trad": "ASTUCE.STATISTIQUES2",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb70"
+  },
+  "elem": "Mettez un lien clair dans votre bio pour diriger vos visiteurs.",
+  "trad": "ASTUCE.LIEN_BIO",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb76"
+  },
+  "elem": "Ajoutez des quiz interactifs pour augmenter l'engagement.",
+  "trad": "ASTUCE.QUIZ",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb7c"
+  },
+  "elem": "Créez des posts éducatifs pour apporter de la valeur à votre audience.",
+  "trad": "ASTUCE.EDUCATIF",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb7d"
+  },
+  "elem": "Mettez en avant des retours d'expérience pour instaurer la confiance.",
+  "trad": "ASTUCE.RETOURS_EXPERIENCE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb67"
+  },
+  "elem": "Évitez de surcharger vos visuels avec trop de texte.",
+  "trad": "ASTUCE.TEXTE_VISUEL",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb75"
+  },
+  "elem": "Rédigez vos posts comme si vous parliez directement à une personne.",
+  "trad": "ASTUCE.CONVERSATIONNEL",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb78"
+  },
+  "elem": "Intégrez des photos avant/après pour montrer des résultats concrets.",
+  "trad": "ASTUCE.AVANT_APRES_CONCRET",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb79"
+  },
+  "elem": "Créez des collaborations avec d'autres créateurs pour élargir votre audience.",
+  "trad": "ASTUCE.COLLABORATION",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb7b"
+  },
+  "elem": "Ajoutez des animations pour rendre vos vidéos plus dynamiques.",
+  "trad": "ASTUCE.ANIMATIONS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb85"
+  },
+  "elem": "Publiez régulièrement pour garder votre audience engagée.",
+  "trad": "ASTUCE.REGULARITE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb86"
+  },
+  "elem": "Incluez des remerciements ou des célébrations pour créer de la gratitude.",
+  "trad": "ASTUCE.REMERCIEMENTS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb61"
+  },
+  "elem": "Créez des sondages pour engager votre audience.",
+  "trad": "ASTUCE.SONDAGES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb65"
+  },
+  "elem": "Ajoutez des légendes en storytelling pour raconter une histoire.",
+  "trad": "ASTUCE.STORYTELLING2",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb69"
+  },
+  "elem": "Mettez en avant vos coulisses pour humaniser votre marque.",
+  "trad": "ASTUCE.COULISSES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb6a"
+  },
+  "elem": "Utilisez des photos authentiques plutôt que des banques d'images.",
+  "trad": "ASTUCE.AUTHENTIQUE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb6d"
+  },
+  "elem": "Utilisez les tendances actuelles pour surfer sur l'actualité.",
+  "trad": "ASTUCE.TENDANCES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb73"
+  },
+  "elem": "Utilisez des couleurs cohérentes avec votre branding.",
+  "trad": "ASTUCE.COULEURS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb77"
+  },
+  "elem": "Créez un sentiment d'urgence avec des promotions limitées.",
+  "trad": "ASTUCE.URGENCE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb7f"
+  },
+  "elem": "Utilisez des mots-clés pertinents pour augmenter la visibilité.",
+  "trad": "ASTUCE.MOTS_CLES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb80"
+  },
+  "elem": "Créez un calendrier éditorial pour planifier vos publications.",
+  "trad": "ASTUCE.CALENDRIER",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb83"
+  },
+  "elem": "Créez des posts humoristiques pour engager avec légèreté.",
+  "trad": "ASTUCE.HUMOUR",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb60"
+  },
+  "elem": "Ajoutez des témoignages clients pour renforcer votre crédibilité.",
+  "trad": "ASTUCE.TEMOIGNAGES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb63"
+  },
+  "elem": "Ajoutez un avant/après pour démontrer un impact clair.",
+  "trad": "ASTUCE.AVANT_APRES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb66"
+  },
+  "elem": "Adaptez vos hashtags à chaque publication pour maximiser la portée.",
+  "trad": "ASTUCE.HASHTAGS_SPECIFIQUES",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb68"
+  },
+  "elem": "Répondez rapidement aux commentaires pour créer une relation.",
+  "trad": "ASTUCE.REPONSE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb6f"
+  },
+  "elem": "Créez des carrousels pour raconter une histoire en plusieurs étapes.",
+  "trad": "ASTUCE.CARROUSELS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb71"
+  },
+  "elem": "Créez un guide ou une checklist pour offrir de la valeur à votre audience.",
+  "trad": "ASTUCE.GUIDE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb72"
+  },
+  "elem": "Ajoutez des GIF ou des stickers pour rendre vos stories plus dynamiques.",
+  "trad": "ASTUCE.GIF",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb74"
+  },
+  "elem": "Mettez en avant vos collaborateurs pour créer un sentiment d'équipe.",
+  "trad": "ASTUCE.COLLABORATEURS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb7a"
+  },
+  "elem": "Soyez transparent sur vos processus ou vos produits.",
+  "trad": "ASTUCE.TRANSPARENCE",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb7e"
+  },
+  "elem": "Soyez concis dans vos messages pour aller droit au but.",
+  "trad": "ASTUCE.CONCIS",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb81"
+  },
+  "elem": "Expérimentez avec des visuels minimalistes pour un impact visuel fort.",
+  "trad": "ASTUCE.MINIMALISTE2",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb82"
+  },
+  "elem": "Intégrez des témoignages vidéo pour plus d'authenticité.",
+  "trad": "ASTUCE.TEMOIGNAGES_VIDEO",
+  "actif": true
+},
+{
+  "_id": {
+    "$oid": "67462e13051e269a6562fb84"
+  },
+  "elem": "Utilisez des graphiques ou infographies pour expliquer des idées complexes.",
+  "trad": "ASTUCE.GRAPHIQUES",
+  "actif": true
+}]

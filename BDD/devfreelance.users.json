@@ -1,0 +1,449 @@
+[{
+  "_id": {
+    "$oid": "669ee9a38db173e538d0659c"
+  },
+  "lastname": "Bob",
+  "firstname": "Martinez",
+  "email": "martin.bob@gmail.com",
+  "password": "$2a$10$czIvB97aDYyZQHb.TO9HDOL0fQuTt0WC8LmbPoPgmkTHaPbFEo5ZO",
+  "phone": "0619742564",
+  "companyId": "66d0809657f583c38ff11c4a",
+  "role": "user",
+  "address": [
+    {
+      "street": "123 Main St",
+      "city": "Paris",
+      "code_postal": "75001",
+      "country": "France",
+      "main": true
+    },
+    {
+      "street": "456 Secondary Rd",
+      "city": "Lyon",
+      "code_postal": "69001",
+      "country": "France",
+      "main": false
+    }
+  ],
+  "proches": [
+    {
+      "lastname": "Dupont",
+      "firstname": "Marie",
+      "email": "marie.dupont@example.com",
+      "phone": "0612345678"
+    },
+    {
+      "lastname": "Lemoine",
+      "firstname": "Jean",
+      "email": "jean.lemoine@example.com",
+      "phone": "0698765432"
+    },
+    {
+      "lastname": "Martin",
+      "firstname": "Lucie",
+      "email": "lucie.martin@example.com",
+      "phone": "0623456789"
+    },
+    {
+      "lastname": "Bernard",
+      "firstname": "Paul",
+      "email": "paul.bernard@example.com",
+      "phone": "0645678901"
+    },
+    {
+      "lastname": "Roux",
+      "firstname": "Sophie",
+      "email": "sophie.roux@example.com",
+      "phone": "0678901234"
+    }
+  ],
+  "__v": 0,
+  "credit": "0",
+  "sex": "female"
+},
+{
+  "_id": {
+    "$oid": "669ee9a38db173e538d0659b"
+  },
+  "lastname": "Franc",
+  "firstname": "Mot",
+  "email": "francis.motsch@gmail.com",
+  "password": "$2a$10$iOW085XmvyjxrPPDyBwKTe3QNm1/ovufSaApIruqR3GJ6I.6fwJsO",
+  "phone": "0619742564",
+  "companyId": "66d0809657f583c38ff11c4a",
+  "role": "professionnel",
+  "address": [
+    {
+      "street": "123 Main St",
+      "city": "Paris",
+      "code_postal": "75001",
+      "country": "France",
+      "main": true,
+      "_id": {
+        "$oid": "680fad47bdf29271aecd1da2"
+      }
+    },
+    {
+      "street": "2 rue tutu",
+      "city": "Juvisy-sur-Orge",
+      "code_postal": "91260",
+      "country": "France",
+      "main": false,
+      "_id": {
+        "$oid": "6806576eef60c833168161e1"
+      }
+    },
+    {
+      "street": "3 rue toto",
+      "city": "Saint-Pierre-du-Perray",
+      "code_postal": "91280",
+      "country": "France",
+      "main": false,
+      "_id": {
+        "$oid": "680fcf61bdf29271aecd26ab"
+      }
+    }
+  ],
+  "proches": [
+    {
+      "lastname": "Dupont",
+      "firstname": "Marie",
+      "email": "marie.dupont@example.com",
+      "phone": "0612345678",
+      "_id": {
+        "$oid": "680fad47bdf29271aecd1dab"
+      }
+    },
+    {
+      "lastname": "Lemoine",
+      "firstname": "Jean",
+      "email": "jean.lemoine@example.com",
+      "phone": "0698765432",
+      "_id": {
+        "$oid": "680fad47bdf29271aecd1dac"
+      }
+    },
+    {
+      "lastname": "Martin",
+      "firstname": "Lucie",
+      "email": "lucie.martin@example.com",
+      "phone": "0623456789",
+      "_id": {
+        "$oid": "680fad47bdf29271aecd1dad"
+      }
+    },
+    {
+      "lastname": "Bernard",
+      "firstname": "Paul",
+      "email": "paul.bernard@example.com",
+      "phone": "0645678901",
+      "_id": {
+        "$oid": "680fad47bdf29271aecd1dae"
+      }
+    },
+    {
+      "lastname": "Roux",
+      "firstname": "Sophie",
+      "email": "sophie.roux@example.com",
+      "phone": "0678901234",
+      "_id": {
+        "$oid": "680fad47bdf29271aecd1daf"
+      }
+    }
+  ],
+  "credit": 50,
+  "sex": "male",
+  "availability": [
+    {
+      "day": "Monday",
+      "periods": [
+        {
+          "start": "09:00",
+          "end": "12:00"
+        },
+        {
+          "start": "13:00",
+          "end": "18:00"
+        }
+      ]
+    },
+    {
+      "day": "Tuesday",
+      "periods": [
+        {
+          "start": "10:00",
+          "end": "12:00"
+        },
+        {
+          "start": "13:00",
+          "end": "16:00"
+        }
+      ]
+    }
+  ],
+  "unavailability": [
+    {
+      "start": "2024-08-23T12:00:00.000Z",
+      "end": "2024-08-23T13:00:00.000Z"
+    },
+    {
+      "start": "2024-08-24T12:00:00.000Z",
+      "end": "2024-08-24T13:00:00.000Z"
+    }
+  ],
+  "breaks": {
+    "duration": "00:20"
+  },
+  "__v": 104,
+  "favoriteShops": [
+    "66983bd3ab6bb2a89fe86471",
+    "66983bd3ab6bb2a89fe86472",
+    "67e7e3a231fc935ac8dc6cc2",
+    "67e7dec031fc935ac8dc6cbf",
+    "66d0eccfac2fe1ec4ebd9767"
+  ],
+  "conversationId": "673a3244548a72a702dfabf1",
+  "abonnement": "free",
+  "abonnement_end": null,
+  "facebook": {
+    "accessToken": "EAARODpj68j4BO0XIwAGZC9TZBrGkN25oTrFYqdVDWw31KVYEsbZANPwwfHHZAIUHx1STbMtJuJLOjb3IFxnxH6ajuR131BHTOKpETPXu8IfYiiykKD4qCDxk33JOUF6jReZAt1UVjqqYnh9jLTS8ZC25AZBB7El8XO2px4lO3jvOTqAv2ZCKwKNwEsBYZAgS8Oxxt9kfTNJARRljuZAEuBsBkoyj0LzIbkniwzYbZBSDtFHu9NcO5ZBTwLWZC",
+    "tokenExpiresAt": {
+      "$date": "2025-05-06T10:47:39.196Z"
+    },
+    "userId": "8403917756384866"
+  },
+  "resetPasswordExpires": {
+    "$date": "2024-12-28T10:49:29.466Z"
+  },
+  "resetPasswordToken": "b353a452684a9a4827370e17e2b6b9fba7bd81df12d13c79a7d70f6bf33583dd",
+  "bluesky": {
+    "accessToken": "eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJFUzI1NksifQ.eyJzY29wZSI6ImNvbS5hdHByb3RvLmFjY2VzcyIsInN1YiI6ImRpZDpwbGM6d2dzcGlxemE2ZWk0NXI3eDZ3NDRoeXVwIiwiaWF0IjoxNzM1NTc4OTI0LCJleHAiOjE3MzU1ODYxMjQsImF1ZCI6ImRpZDp3ZWI6YnJpdHRsZWdpbGwudXMtd2VzdC5ob3N0LmJza3kubmV0d29yayJ9.qmp8Xw1hIOIUnK4OLyaDHyUazPxny3ZpwVf5OruZQPVIcRjXd0IQqs7RA-78VF01erCZe_DbBVaDAFk_cGhgmQ",
+    "refreshToken": "eyJ0eXAiOiJyZWZyZXNoK2p3dCIsImFsZyI6IkVTMjU2SyJ9.eyJzY29wZSI6ImNvbS5hdHByb3RvLnJlZnJlc2giLCJzdWIiOiJkaWQ6cGxjOndnc3BpcXphNmVpNDVyN3g2dzQ0aHl1cCIsImF1ZCI6ImRpZDp3ZWI6YnNreS5zb2NpYWwiLCJqdGkiOiJWd0RjYXVOT2tJOTZpcklIV0dPcVlKTkRKbzJmWDVoeVVLa1U3T0lxbk1zIiwiaWF0IjoxNzM1NTc4OTI0LCJleHAiOjE3NDMzNTQ5MjR9.v92UuJd9wWfgQnTknb6Wk8ljic1K69rTlFp99Ak_cpckmO3IXRWN87FaxH__m2J76fHfAkrkGNqBMvtV6z2EFA",
+    "tokenExpiresAt": {
+      "$date": "2024-12-30T18:15:25.109Z"
+    }
+  },
+  "linkedin": {
+    "accessToken": "AQVKjxolQ5A4LuP74BkxrMO8jVlvj9lhc--KaNBPqWQXL72z9GnwR26QIu5DcV1TUZ4PVAWUMb8XUIDH_2dfkxvScjdr4aOQppGDIfvbkzK5i2ecpIAZH5h5rN7br2SSuxS3dHArjQJvLeU739t4pgsLH6aii5F1JWRg0zLKzTz17WFtjUsYeirh81xEZtsqyQwv_JqQvJS8D3iw1BXqFhw3Nw8E4r18i4vT7NE9t58UjAC9NihXRqvCbHXnczOaxd0RD_3e-4KHI5c99uHdM9aMuM9hFBaS9MeRZYkYDupTAcTaYDh4vYMC6GrGvltkYixCfF6XZpKUe19y8ZRePP3VUv0KHA",
+    "tokenExpiresAt": {
+      "$date": "2025-03-01T13:42:31.896Z"
+    },
+    "fidelity": {
+      "stars": 2,
+      "card_expiration": {
+        "$date": "2025-01-01T00:00:00.000Z"
+      },
+      "rewards_history": [
+        {
+          "reward_name": "test",
+          "reward_date": "2024-03-16T00:00:00.000+00:00"
+        }
+      ]
+    }
+  },
+  "customerId": "cus_RjMTX5FqsOCMB9",
+  "fidelity": {
+    "stars": 3,
+    "card_expiration": {
+      "$date": "2024-12-28T10:49:29.466Z"
+    },
+    "rewards_history": [
+      {
+        "reward_name": "test",
+        "reward_date": {
+          "$date": "2024-12-28T10:49:29.466Z"
+        },
+        "_id": {
+          "$oid": "680fad47bdf29271aecd1db8"
+        }
+      },
+      {
+        "reward_name": "test",
+        "reward_date": {
+          "$date": "2024-12-28T10:49:29.466Z"
+        },
+        "_id": {
+          "$oid": "680fad47bdf29271aecd1db9"
+        }
+      },
+      {
+        "reward_name": "test",
+        "reward_date": {
+          "$date": "2024-12-28T10:49:29.466Z"
+        },
+        "_id": {
+          "$oid": "680fad47bdf29271aecd1dba"
+        }
+      }
+    ]
+  },
+  "shopCompany": {
+    "companyType": "coiffure",
+    "countryIndication": "FR",
+    "name": "Fra T.",
+    "street": "ok"
+  }
+},
+{
+  "_id": {
+    "$oid": "67c8671c58dca58f1d92e492"
+  },
+  "lastname": "izyGlam",
+  "firstname": "Support",
+  "email": "support@izyglam.com",
+  "password": "$2a$10$GXBNgLj/PiXrzyKLdF96xOHQ4F3JpDnODwkLXsLFPIyJGagh/uF1e",
+  "phone": "0619742564",
+  "companyId": "66d0809657f583c38ff11c4a",
+  "role": "admin",
+  "address": [
+    {
+      "street": "123 Main St",
+      "city": "Paris",
+      "code_postal": "75001",
+      "country": "France",
+      "main": true
+    },
+    {
+      "street": "456 Secondary Rd",
+      "city": "Lyon",
+      "code_postal": "69001",
+      "country": "France",
+      "main": false
+    }
+  ],
+  "proches": [
+    {
+      "lastname": "Dupont",
+      "firstname": "Marie",
+      "email": "marie.dupont@example.com",
+      "phone": "0612345678"
+    },
+    {
+      "lastname": "Lemoine",
+      "firstname": "Jean",
+      "email": "jean.lemoine@example.com",
+      "phone": "0698765432"
+    },
+    {
+      "lastname": "Martin",
+      "firstname": "Lucie",
+      "email": "lucie.martin@example.com",
+      "phone": "0623456789"
+    },
+    {
+      "lastname": "Bernard",
+      "firstname": "Paul",
+      "email": "paul.bernard@example.com",
+      "phone": "0645678901"
+    },
+    {
+      "lastname": "Roux",
+      "firstname": "Sophie",
+      "email": "sophie.roux@example.com",
+      "phone": "0678901234"
+    }
+  ],
+  "credit": 50,
+  "sex": "male",
+  "availability": [
+    {
+      "day": "Monday",
+      "periods": [
+        {
+          "start": "09:00",
+          "end": "12:00"
+        },
+        {
+          "start": "13:00",
+          "end": "18:00"
+        }
+      ]
+    },
+    {
+      "day": "Tuesday",
+      "periods": [
+        {
+          "start": "10:00",
+          "end": "12:00"
+        },
+        {
+          "start": "13:00",
+          "end": "16:00"
+        }
+      ]
+    }
+  ],
+  "unavailability": [
+    {
+      "start": "2024-08-23T12:00:00.000Z",
+      "end": "2024-08-23T13:00:00.000Z"
+    },
+    {
+      "start": "2024-08-24T12:00:00.000Z",
+      "end": "2024-08-24T13:00:00.000Z"
+    }
+  ],
+  "breaks": {
+    "duration": "00:20"
+  },
+  "__v": 40,
+  "favoriteShops": [
+    "66983bd3ab6bb2a89fe86472"
+  ],
+  "conversationId": "673a3244548a72a702dfabf1",
+  "abonnement": "free",
+  "abonnement_end": null,
+  "facebook": {
+    "accessToken": "EAARODpj68j4BO1ExMIDEiZBHUqlSFN9qYzIYRi3ZC7jDsXetdApeEki2ckdvYNYOQLNFemUWQPduRk9ypruQzTvDSSslURCmTZCJsZCaCjCiwVBobEfgiUvTye2ZAjsBMpUGzozeUIBnrVCOWK1q5ohtA51ZAeUaSAToBEUclrQF5LuHZBve6BZAxDnaMCnrCrHfY1Qs5QV9CqKh4iRjvp01MHf9N5VO99G103BrF0pcAyewMz3y9m6E",
+    "tokenExpiresAt": {
+      "$date": "2025-01-05T14:45:03.020Z"
+    },
+    "userId": "8403917756384866"
+  },
+  "resetPasswordExpires": {
+    "$date": "2024-12-28T10:49:29.466Z"
+  },
+  "resetPasswordToken": "b353a452684a9a4827370e17e2b6b9fba7bd81df12d13c79a7d70f6bf33583dd",
+  "bluesky": {
+    "accessToken": "eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJFUzI1NksifQ.eyJzY29wZSI6ImNvbS5hdHByb3RvLmFjY2VzcyIsInN1YiI6ImRpZDpwbGM6d2dzcGlxemE2ZWk0NXI3eDZ3NDRoeXVwIiwiaWF0IjoxNzM1NTc4OTI0LCJleHAiOjE3MzU1ODYxMjQsImF1ZCI6ImRpZDp3ZWI6YnJpdHRsZWdpbGwudXMtd2VzdC5ob3N0LmJza3kubmV0d29yayJ9.qmp8Xw1hIOIUnK4OLyaDHyUazPxny3ZpwVf5OruZQPVIcRjXd0IQqs7RA-78VF01erCZe_DbBVaDAFk_cGhgmQ",
+    "refreshToken": "eyJ0eXAiOiJyZWZyZXNoK2p3dCIsImFsZyI6IkVTMjU2SyJ9.eyJzY29wZSI6ImNvbS5hdHByb3RvLnJlZnJlc2giLCJzdWIiOiJkaWQ6cGxjOndnc3BpcXphNmVpNDVyN3g2dzQ0aHl1cCIsImF1ZCI6ImRpZDp3ZWI6YnNreS5zb2NpYWwiLCJqdGkiOiJWd0RjYXVOT2tJOTZpcklIV0dPcVlKTkRKbzJmWDVoeVVLa1U3T0lxbk1zIiwiaWF0IjoxNzM1NTc4OTI0LCJleHAiOjE3NDMzNTQ5MjR9.v92UuJd9wWfgQnTknb6Wk8ljic1K69rTlFp99Ak_cpckmO3IXRWN87FaxH__m2J76fHfAkrkGNqBMvtV6z2EFA",
+    "tokenExpiresAt": {
+      "$date": "2024-12-30T18:15:25.109Z"
+    }
+  },
+  "linkedin": {
+    "accessToken": "AQVKjxolQ5A4LuP74BkxrMO8jVlvj9lhc--KaNBPqWQXL72z9GnwR26QIu5DcV1TUZ4PVAWUMb8XUIDH_2dfkxvScjdr4aOQppGDIfvbkzK5i2ecpIAZH5h5rN7br2SSuxS3dHArjQJvLeU739t4pgsLH6aii5F1JWRg0zLKzTz17WFtjUsYeirh81xEZtsqyQwv_JqQvJS8D3iw1BXqFhw3Nw8E4r18i4vT7NE9t58UjAC9NihXRqvCbHXnczOaxd0RD_3e-4KHI5c99uHdM9aMuM9hFBaS9MeRZYkYDupTAcTaYDh4vYMC6GrGvltkYixCfF6XZpKUe19y8ZRePP3VUv0KHA",
+    "tokenExpiresAt": {
+      "$date": "2025-03-01T13:42:31.896Z"
+    }
+  },
+  "customerId": "cus_RjMTX5FqsOCMB9"
+},
+{
+  "_id": {
+    "$oid": "6819afb06385da730f9d2fa3"
+  },
+  "lastname": "sss",
+  "abonnement": "free",
+  "firstname": "ss",
+  "favoriteShops": [],
+  "sex": "female",
+  "fidelity": {
+    "stars": 0,
+    "card_expiration": {
+      "$date": "2026-05-06T06:44:00.672Z"
+    },
+    "rewards_history": []
+  },
+  "email": "fff.fff@gmail.com",
+  "password": "$2a$10$QHEjPQwhuNPavwzYdzp4Cer7.eXsJvGhyDx2.gcg8k/.2iuxvia1.",
+  "phone": "0619742565",
+  "conversationId": "8f72fb7a-5d73-46ba-a3c2-6c4e2f0fac89",
+  "credit": 0,
+  "role": "user",
+  "proches": [],
+  "address": [],
+  "availability": [],
+  "unavailability": [],
+  "__v": 0
+}]

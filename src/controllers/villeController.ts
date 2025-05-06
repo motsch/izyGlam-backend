@@ -67,9 +67,6 @@ export const getAllVillesLimited = async (req: express.Request, res: express.Res
   }
 };
 
-
-
-
 // Récupérer une ville par son ID
 const getVilleById = async (req: express.Request, res: express.Response) => {
   try {

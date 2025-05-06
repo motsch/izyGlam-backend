@@ -1,0 +1,2586 @@
+[{
+  "_id": {
+    "$oid": "66b93d7a336274221e558bda"
+  },
+  "user": "669ee9a38db173e538d0659b",
+  "service": "66c5a1b209327c7d9cde9de6",
+  "shop": "66d0f320ac2fe1ec4ebd976c",
+  "date": "2024-09-11T10:00:00",
+  "status": "confirmed",
+  "price": "20",
+  "end": "2024-09-11T14:00:00",
+  "start": "2024-09-11T10:00:00",
+  "title": "M. Louis Zoom",
+  "address": "40 rue paul",
+  "phoneNumber": "00.00.00.00.00",
+  "color": "#FFB3BA"
+},
+{
+  "_id": {
+    "$oid": "66b93d7a336274221e558bdb"
+  },
+  "user": "669ee9a38db173e538d0659b",
+  "service": "66c5a1b209327c7d9cde9de7",
+  "shop": "66d0f320ac2fe1ec4ebd976c",
+  "date": "2024-10-04T14:00:00",
+  "status": "pending",
+  "price": "50",
+  "end": "2024-10-04T15:30:00",
+  "start": "2024-10-04T14:00:00",
+  "title": "Mme. Anais Dong",
+  "phoneNumber": "00.00.00.00.00",
+  "address": "10 rue paul Meurice 75020 Paris",
+  "color": "#FFDFD3"
+},
+{
+  "_id": {
+    "$oid": "66b93d7a336274221e558bdc"
+  },
+  "user": "669ee9a38db173e538d0659b",
+  "service": "66c5a1b209327c7d9cde9de9",
+  "shop": "66d0f328ac2fe1ec4ebd976d",
+  "date": "2024-10-03T09:00:00",
+  "status": "completed",
+  "price": "44",
+  "end": "2024-10-03T09:45:00",
+  "start": "2024-10-03T09:00:00",
+  "title": "Mme Martine Paul",
+  "phoneNumber": "00.00.00.00.00",
+  "address": "60 rue paul Meurice 75020 Paris",
+  "color": "B3FFD9"
+},
+{
+  "_id": {
+    "$oid": "66b93d7a376274221e558bda"
+  },
+  "user": "669ee9a38db173e538d0659b",
+  "service": "66c5a1b209327c7d9cde9de6",
+  "shop": "66d0f320ac2fe1ec4ebd976c",
+  "date": "2024-09-11T10:00:00",
+  "status": "confirmed",
+  "price": "20",
+  "end": "2024-09-11T10:30:00",
+  "start": "2024-09-11T10:00:00",
+  "title": "Mme Jacqueline Titus",
+  "phoneNumber": "00.00.00.00.00",
+  "address": "33 rue paul Meurice 75020 Paris",
+  "color": "#D4A4F7"
+},
+{
+  "_id": {
+    "$oid": "66b93d7a339274221e558bdb"
+  },
+  "service": "66c5a1b209327c7d9cde9de7",
+  "shop": "66d0f320ac2fe1ec4ebd976c",
+  "date": "2024-09-11T15:30:00",
+  "status": "pending",
+  "price": "50",
+  "end": "2024-09-11T11:00:00",
+  "start": "2024-09-11T10:00:00",
+  "title": "Mm Paule Pot",
+  "phoneNumber": "00.00.00.00.00",
+  "address": "7 rue paul Meurice 75020 Paris",
+  "color": "#A0D8F1",
+  "userProId": "669ee9a38db173e538d0659b"
+},
+{
+  "_id": {
+    "$oid": "66b93d7a326274221e558bdc"
+  },
+  "service": "66c5a1b209327c7d9cde9de9",
+  "shop": "66d0f328ac2fe1ec4ebd976d",
+  "date": "2024-10-02T09:00:00",
+  "status": "finished",
+  "price": "44",
+  "end": "2024-10-02T10:00:00",
+  "start": "2024-10-02T09:00:00",
+  "title": "M.Alain Her",
+  "phoneNumber": "00.00.00.00.00",
+  "address": "66 rue paul Meurice 75020 Paris",
+  "color": "#C5E1A5",
+  "userProId": "669ee9a38db173e538d0659b"
+},
+{
+  "_id": {
+    "$oid": "66fecf1815dd1067779773b7"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9de9",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "pending",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-03T17:06:32.811Z"
+  },
+  "start": {
+    "$date": "2024-08-23T10:20:00.000Z"
+  },
+  "end": {
+    "$date": "2024-08-23T11:20:00.000Z"
+  },
+  "color": "#FFF9A6",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "670144ce6b24ba3153426ece"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9de9",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "pending",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-06T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-07T12:00:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-07T13:00:00.000Z"
+  },
+  "color": "#FFF9A6",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "670145296b24ba3153426f5d"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "14.235000000000001",
+  "shopEarnings": "80",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df2",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "pending",
+  "price": "109.135",
+  "commission": "12",
+  "date": {
+    "$date": "2024-10-06T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-07T13:00:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-07T15:00:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "670145c36b24ba315342701a"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9de9",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "pending",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-13T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-14T12:00:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-14T13:00:00.000Z"
+  },
+  "color": "#FFF9A6",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "670145f56b24ba3153427072"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9de9",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "pending",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-06T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-07T13:20:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-07T14:20:00.000Z"
+  },
+  "color": "#FFF9A6",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "670146036b24ba31534270ca"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9de9",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "pending",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-06T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-07T08:20:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-07T09:20:00.000Z"
+  },
+  "color": "#FFF9A6",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6701492a7b5e7a967e282dc0"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9de9",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "pending",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-06T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-07T15:00:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-07T16:00:00.000Z"
+  },
+  "color": "#FFF9A6",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6702973f364bdd01cca17284"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "19.755000000000003",
+  "shopEarnings": "112",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66f573da4ce1dd566822bf81",
+  "shopId": "66f69834295fc2b362355760",
+  "status": "pending",
+  "price": "151.455",
+  "commission": "16.8",
+  "date": {
+    "$date": "2024-10-07T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-08T11:00:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-08T12:30:00.000Z"
+  },
+  "color": "#FFDFD3",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6713add81a8053afb5197324"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "67063b1546e8ca5de4292572",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "cancelled",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-21T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-22T11:00:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-22T11:30:00.000Z"
+  },
+  "color": "#F3D0FF",
+  "__v": 0,
+  "establishmentName": "toto",
+  "productName": "tata"
+},
+{
+  "_id": {
+    "$oid": "6713ae2d1a8053afb519740b"
+  },
+  "title": "M. Francis Motsch",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9de9",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "cancelled",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-20T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-21T15:00:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-21T16:00:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "__v": 0,
+  "establishmentName": "test",
+  "productName": "test produit"
+},
+{
+  "_id": {
+    "$oid": "6714fe3b46906d0b0eb76f31"
+  },
+  "title": "M. Francis Motsch",
+  "establishmentName": "Vanessa L.",
+  "productName": "Russian lips",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "9.059999999999999",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "67063db946e8ca5de4292718",
+  "shopId": "66983bd3ab6bb2a89fe86473",
+  "status": "cancelled",
+  "price": "69.46",
+  "commission": "7.5",
+  "date": {
+    "$date": "2024-10-20T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2024-10-21T13:30:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-21T14:00:00.000Z"
+  },
+  "color": "#FFC4A3",
+  "__v": 0,
+  "reviewAdded": true
+},
+{
+  "_id": {
+    "$oid": "6718f0a3dd59453cf1f28473"
+  },
+  "reviewAdded": false,
+  "title": "test",
+  "establishmentName": "Vanessa L.",
+  "productName": "Some Product",
+  "address": "test @ test.com, 91280",
+  "phoneNumber": "06.19.74.25.64",
+  "tva": null,
+  "shopEarnings": null,
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9deb",
+  "shopId": "66983bd3ab6bb2a89fe86470",
+  "status": "pending",
+  "price": null,
+  "commission": null,
+  "date": {
+    "$date": "2024-10-23T12:48:35.309Z"
+  },
+  "start": {
+    "$date": "2024-10-29T15:00:00.000Z"
+  },
+  "end": {
+    "$date": "2024-10-29T15:30:00.000Z"
+  },
+  "color": "#dddddd",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67a486941a655927a7e6ece0"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 10 février 2025",
+  "orderDate": {
+    "$date": "2025-02-06T09:53:24.981Z"
+  },
+  "start": {
+    "$date": "2025-02-10T14:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-10T14:55:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67a4876f1a655927a7e6ed75"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 10 février 2025",
+  "orderDate": {
+    "$date": "2025-02-06T09:57:04.175Z"
+  },
+  "start": {
+    "$date": "2025-02-10T15:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-10T16:00:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67a63bc81a655927a7e70ceb"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 17 février 2025",
+  "orderDate": {
+    "$date": "2025-02-07T16:58:49.440Z"
+  },
+  "start": {
+    "$date": "2025-02-17T13:05:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-17T13:50:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67a704341a655927a7e71b7c"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 10 février 2025",
+  "orderDate": {
+    "$date": "2025-02-08T07:13:57.067Z"
+  },
+  "start": {
+    "$date": "2025-02-10T13:05:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-10T13:50:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67ac709e0a98f3504bf3fe72"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 17 février 2025",
+  "orderDate": {
+    "$date": "2025-02-12T09:57:49.214Z"
+  },
+  "start": {
+    "$date": "2025-02-17T15:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-17T16:00:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67ac71260a98f3504bf3fecc"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 17 février 2025",
+  "orderDate": {
+    "$date": "2025-02-12T10:00:05.317Z"
+  },
+  "start": {
+    "$date": "2025-02-17T14:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-17T14:55:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67ac733a0a98f3504bf3ffae"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 17 février 2025",
+  "orderDate": {
+    "$date": "2025-02-12T10:08:56.972Z"
+  },
+  "start": {
+    "$date": "2025-02-17T12:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-17T12:45:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67ac7efd0a98f3504bf40125"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388053719-coiffeur10 - Copie.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "lundi 24 février 2025",
+  "orderDate": {
+    "$date": "2025-02-12T10:59:08.009Z"
+  },
+  "start": {
+    "$date": "2025-02-24T12:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-24T12:30:00.000Z"
+  },
+  "color": "#FDFD96",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67aca5e80a98f3504bf403ad"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "mardi 18 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-12T13:45:11.751Z"
+  },
+  "start": {
+    "$date": "2025-03-18T12:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-18T12:45:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67aca60d0a98f3504bf403ee"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388060938-coiffeur20.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "mardi 18 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-12T13:45:48.732Z"
+  },
+  "start": {
+    "$date": "2025-03-18T09:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-18T09:30:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67b4e4ef62ba36e7d3887e60"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388069285-facial4.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "mardi 18 février 2025",
+  "orderDate": {
+    "$date": "2025-02-18T19:52:15.465Z"
+  },
+  "start": {
+    "$date": "2025-02-18T14:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-18T14:55:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67b4e50162ba36e7d3887eb6"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388060938-coiffeur20.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "mardi 18 février 2025",
+  "orderDate": {
+    "$date": "2025-02-18T19:52:33.860Z"
+  },
+  "start": {
+    "$date": "2025-02-18T13:40:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-18T14:10:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67b4e51062ba36e7d3887ee6"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 10 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-18T19:52:48.997Z"
+  },
+  "start": {
+    "$date": "2025-03-10T10:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-10T10:55:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67b4e52c62ba36e7d3887f38"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388053719-coiffeur10 - Copie.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "59.225",
+  "commission": "6",
+  "date": "mardi 25 février 2025",
+  "orderDate": {
+    "$date": "2025-02-18T19:53:17.153Z"
+  },
+  "start": {
+    "$date": "2025-02-25T14:30:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-25T15:00:00.000Z"
+  },
+  "color": "#FDFD96",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67b4e54662ba36e7d3887f8e"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388053719-coiffeur10 - Copie.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "mardi 4 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-18T19:53:42.958Z"
+  },
+  "start": {
+    "$date": "2025-03-04T12:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-04T12:30:00.000Z"
+  },
+  "color": "#FDFD96",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67b4e56162ba36e7d3887fcf"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388069285-facial4.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 24 février 2025",
+  "orderDate": {
+    "$date": "2025-02-18T19:54:09.480Z"
+  },
+  "start": {
+    "$date": "2025-02-24T15:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-02-24T16:00:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67be1ae537c7adc311504ba7"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "refused",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 10 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-25T19:32:52.266Z"
+  },
+  "start": {
+    "$date": "2025-03-10T12:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-10T12:45:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67c067515642476b3f3178b6"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388053719-coiffeur10 - Copie.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "lundi 10 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-27T13:23:28.635Z"
+  },
+  "start": {
+    "$date": "2025-03-10T15:20:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-10T15:50:00.000Z"
+  },
+  "color": "#FDFD96",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67c067515642476b3f3178b8"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388053719-coiffeur10 - Copie.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "finished",
+  "price": "59.225",
+  "commission": "6",
+  "date": "lundi 10 mars 2025",
+  "orderDate": {
+    "$date": "2025-10-02T22:00:00.000Z"
+  },
+  "start": {
+    "$date": "2025-03-10T15:20:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-10T15:50:00.000Z"
+  },
+  "color": "#FDFD96",
+  "__v": 0,
+  "generatedCode": "863146",
+  "proCodeConfirmed": true
+},
+{
+  "_id": {
+    "$oid": "67c0676e5642476b3f31792b"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1740392196722-1000023363.jpg",
+  "productName": "Coupe et brushing sur mesure",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "13.0725",
+  "shopEarnings": "71",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "67bc47044a1e6a59e267f628",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "100.22250000000001",
+  "commission": "10.65",
+  "date": "lundi 10 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-27T13:23:57.751Z"
+  },
+  "start": {
+    "$date": "2025-03-10T08:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-10T09:30:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67c094135642476b3f318449"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388069285-facial4.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 10 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-27T16:34:27.129Z"
+  },
+  "start": {
+    "$date": "2025-03-10T14:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-10T14:55:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67c094375642476b3f3184b0"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1740392196722-1000023363.jpg",
+  "productName": "Coupe et brushing sur mesure",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "13.0725",
+  "shopEarnings": "71",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "67bc47044a1e6a59e267f628",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "100.22250000000001",
+  "commission": "10.65",
+  "date": "lundi 17 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-27T16:35:02.946Z"
+  },
+  "start": {
+    "$date": "2025-03-17T13:50:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-17T15:20:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67c094595642476b3f318523"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 31 mars 2025",
+  "orderDate": {
+    "$date": "2025-02-27T16:35:37.619Z"
+  },
+  "start": {
+    "$date": "2025-03-31T13:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-31T13:55:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67c57d563c4f3df4a8a22d76"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "refused",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 3 mars 2025",
+  "orderDate": {
+    "$date": "2025-03-03T09:58:45.755Z"
+  },
+  "start": {
+    "$date": "2025-03-03T15:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-03T16:00:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3QyVloEDs001iAIL0vWSE72e",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67c57e473c4f3df4a8a22e4c"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "accepted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 3 mars 2025",
+  "orderDate": {
+    "$date": "2025-03-03T10:02:46.493Z"
+  },
+  "start": {
+    "$date": "2025-03-03T15:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-03T16:00:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3QyVphEDs001iAIL1CF0WH1z",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67dfdf8a4dde22164e1b06bf"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "no-show-pro",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "lundi 24 mars 2025",
+  "orderDate": {
+    "$date": "2025-03-23T10:16:42.354Z"
+  },
+  "start": {
+    "$date": "2025-03-24T15:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-24T16:00:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3R5la8EDs001iAIL0M5ArOIW",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67dff62d4dde22164e1b0d60"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388060938-coiffeur20.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "59.225",
+  "commission": "6",
+  "date": "mardi 25 mars 2025",
+  "orderDate": {
+    "$date": "2025-03-23T11:53:18.052Z"
+  },
+  "start": {
+    "$date": "2025-03-25T12:50:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-25T13:20:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3R5n5bEDs001iAIL0bhSrrxJ",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67dff6774dde22164e1b0e68"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1740392196722-1000023363.jpg",
+  "productName": "Coupe et brushing sur mesure",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "13.0725",
+  "shopEarnings": "71",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "67bc47044a1e6a59e267f628",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "100.22250000000001",
+  "commission": "10.65",
+  "date": "lundi 31 mars 2025",
+  "orderDate": {
+    "$date": "2025-03-23T11:54:31.543Z"
+  },
+  "start": {
+    "$date": "2025-03-31T12:50:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-31T14:20:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3R5n6nEDs001iAIL005QqVdB",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67dff6c34dde22164e1b0edb"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388060938-coiffeur20.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "no-show-pro",
+  "price": "59.225",
+  "commission": "6",
+  "date": "lundi 24 mars 2025",
+  "orderDate": {
+    "$date": "2025-03-23T11:55:48.075Z"
+  },
+  "start": {
+    "$date": "2025-03-24T08:50:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-24T09:20:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3R5n82EDs001iAIL1wcqQcGh",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67e179b74dde22164e1c84bc"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388053719-coiffeur10 - Copie.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "no-show-pro",
+  "price": "59.225",
+  "commission": "6",
+  "date": "lundi 24 mars 2025",
+  "orderDate": {
+    "$date": "2025-03-24T15:26:46.125Z"
+  },
+  "start": {
+    "$date": "2025-03-24T14:30:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-24T15:00:00.000Z"
+  },
+  "color": "#FDFD96",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3R6CtkEDs001iAIL1tDmn286",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67ea84140ef1572c17f711b1"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Monday 31 March 2025",
+  "orderDate": {
+    "$date": "2025-03-31T12:01:23.148Z"
+  },
+  "start": {
+    "$date": "2025-03-31T15:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-31T15:55:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67ea842f0ef1572c17f71243"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Monday 31 March 2025",
+  "orderDate": {
+    "$date": "2025-03-31T12:01:49.674Z"
+  },
+  "start": {
+    "$date": "2025-03-31T09:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-03-31T09:45:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67eb956a6db085a03e3f4d67"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Tuesday 1 April 2025",
+  "orderDate": {
+    "$date": "2025-04-01T07:27:38.434Z"
+  },
+  "start": {
+    "$date": "2025-04-01T14:05:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-01T14:50:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67eba1016db085a03e3f60b5"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "59.225",
+  "commission": "6",
+  "date": "Tuesday 1 April 2025",
+  "orderDate": {
+    "$date": "2025-04-01T08:17:04.763Z"
+  },
+  "start": {
+    "$date": "2025-04-01T13:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-01T13:30:00.000Z"
+  },
+  "color": "#FDFD96",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f4193edcad4e3978499bf3"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "59.225",
+  "commission": "6",
+  "date": "Monday 7 April 2025",
+  "orderDate": {
+    "$date": "2025-04-07T18:28:14.928Z"
+  },
+  "start": {
+    "$date": "2025-04-07T15:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-07T15:40:00.000Z"
+  },
+  "color": "#FDFD96",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f5099cdcad4e39784a42ac"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Coiffure élégante pour un grand événement",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "20.145",
+  "shopEarnings": "112",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "67bdc59937c7adc311500c85",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "154.44500000000002",
+  "commission": "16.8",
+  "date": "Tuesday 8 April 2025",
+  "orderDate": {
+    "$date": "2025-04-08T11:33:48.840Z"
+  },
+  "start": {
+    "$date": "2025-04-08T11:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-08T12:30:00.000Z"
+  },
+  "color": "#E8BBE3",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f62cd7dcad4e39784a5cf1"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "Monday 14 April 2025",
+  "orderDate": {
+    "$date": "2025-04-09T08:16:23.850Z"
+  },
+  "start": {
+    "$date": "2025-04-14T14:20:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-14T14:50:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f77fa86ee98a0c04d6eb8e"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "Monday 14 April 2025",
+  "orderDate": {
+    "$date": "2025-04-10T08:22:00.731Z"
+  },
+  "start": {
+    "$date": "2025-04-14T14:20:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-14T14:50:00.000Z"
+  },
+  "color": "#FDFD96",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f7832e6ee98a0c04d6ef81"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388060938-coiffeur20.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "lundi 14 avril 2025",
+  "orderDate": {
+    "$date": "2025-04-10T08:37:00.191Z"
+  },
+  "start": {
+    "$date": "2025-04-14T13:30:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-14T14:00:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RCGbWEDs001iAIL0tRCif6m",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f786716ee98a0c04d6f3cc"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388069285-facial4.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "accepted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Monday 14 April 2025",
+  "orderDate": {
+    "$date": "2025-04-10T08:50:57.177Z"
+  },
+  "start": {
+    "$date": "2025-04-14T12:05:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-14T12:50:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f7869a6ee98a0c04d6f59b"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388069285-facial4.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Tuesday 15 April 2025",
+  "orderDate": {
+    "$date": "2025-04-10T08:51:38.647Z"
+  },
+  "start": {
+    "$date": "2025-04-15T11:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-15T11:45:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "proCodeConfirmed": false,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f7ae875474e242606432d4"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388045401-coiffeur12.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Monday 14 April 2025",
+  "orderDate": {
+    "$date": "2025-04-10T11:41:59.039Z"
+  },
+  "start": {
+    "$date": "2025-04-14T14:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-14T15:00:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RCJUVEDs001iAIL0Mp6eO26",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f7c3555474e2426064759b"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388069285-facial4.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Monday 21 April 2025",
+  "orderDate": {
+    "$date": "2025-04-10T13:10:45.088Z"
+  },
+  "start": {
+    "$date": "2025-04-21T14:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-21T15:00:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RCKsPEDs001iAIL0tvbLIhe",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f8d9105474e2426064f579"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Francis M.",
+  "image": "/uploads/images/articles/1744361715487-DALLÂ·E 2024-12-22 12.58.11 - A futuristic and minimalist logo design inspired by technology and mythology, with an Apple-like aesthetic. The logo features a clean and sleek design.webp",
+  "productName": "Réflexologie plantaire détente totale",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "12.555",
+  "shopEarnings": "68",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "67f8d8f35474e2426064f4bf",
+  "shopId": "671b58db436000f2d9a64fd1",
+  "status": "pending",
+  "price": "96.255",
+  "commission": "10.2",
+  "date": "Monday 14 April 2025",
+  "orderDate": {
+    "$date": "2025-04-11T08:55:44.698Z"
+  },
+  "start": {
+    "$date": "2025-04-14T08:05:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-14T08:50:00.000Z"
+  },
+  "color": "#A0D8F1",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RCdNDEDs001iAIL1xMhZTTe",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f96204c42c71b44e50e87e"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388069285-facial4.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Monday 14 April 2025",
+  "orderDate": {
+    "$date": "2025-04-11T18:40:04.096Z"
+  },
+  "start": {
+    "$date": "2025-04-14T14:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-14T15:00:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RCmUfEDs001iAIL0HEaluzM",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "67f9620dc42c71b44e50e933"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/articles/1728388069285-facial4.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Monday 14 April 2025",
+  "orderDate": {
+    "$date": "2025-04-11T18:40:13.943Z"
+  },
+  "start": {
+    "$date": "2025-04-14T13:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-14T13:55:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RCmUpEDs001iAIL1gUgGDqV",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68021bf054e87fc077f50fb6"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "izyShop",
+  "image": "/uploads/images/logo.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "accepted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "Tuesday 22 April 2025",
+  "orderDate": {
+    "$date": "2025-04-18T09:31:28.477Z"
+  },
+  "start": {
+    "$date": "2025-04-22T11:50:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-22T12:20:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RFBGdEDs001iAIL1tufwqop",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6804ab4f0de158d9c96d4f55"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Morgane D.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Acroyoga fun et acrobatique",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "37.567499999999995",
+  "shopEarnings": "213",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "67ca077858dca58f1d92e499",
+  "serviceId": "6800c823fa3ec46ee311d413",
+  "shopId": "66d0ddf7ac2fe1ec4ebd9763",
+  "status": "pending",
+  "price": "288.0175",
+  "commission": "31.95",
+  "date": "Monday 21 April 2025",
+  "orderDate": {
+    "$date": "2025-04-20T08:07:01.578Z"
+  },
+  "start": {
+    "$date": "2025-04-21T10:20:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-21T11:20:00.000Z"
+  },
+  "color": "#ff4081",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RFsufEDs001iAIL0nCK9YaI",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6804d4b30de158d9c96d5ed9"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Roxane P.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Shampoing + Brushing",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "67c8671c58dca58f1d92e492",
+  "serviceId": "6801462c810994b3a0d308df",
+  "shopId": "66983bd3ab6bb2a89fe86472",
+  "status": "pending",
+  "price": "59.225",
+  "commission": "6",
+  "date": "Tuesday 22 April 2025",
+  "orderDate": {
+    "$date": "2025-04-20T11:04:19.087Z"
+  },
+  "start": {
+    "$date": "2025-04-22T15:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-22T15:40:00.000Z"
+  },
+  "color": "#ff4081",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RFvfZEDs001iAIL0wkEMoD9",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6808b197ef60c8331681a446"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.8625",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "52.6125",
+  "commission": "5.25",
+  "date": "Monday 28 April 2025",
+  "orderDate": {
+    "$date": "2025-04-23T09:23:35.985Z"
+  },
+  "start": {
+    "$date": "2025-04-28T14:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-28T15:00:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RGzWjEDs001iAIL0OVqj1J9",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6809ec31b469764b6aa71e26"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.725",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "accepted",
+  "price": "59.225",
+  "commission": "6",
+  "date": "Monday 5 May 2025",
+  "orderDate": {
+    "$date": "2025-04-24T07:45:53.664Z"
+  },
+  "start": {
+    "$date": "2025-05-05T14:20:00.000Z"
+  },
+  "end": {
+    "$date": "2025-05-05T14:50:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RHKTkEDs001iAIL1bgvtYrF",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680a001fb469764b6aa73215"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "5.7749999999999995",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "44.275",
+  "commission": "3.5",
+  "date": "Monday 28 April 2025",
+  "orderDate": {
+    "$date": "2025-04-24T09:10:55.306Z"
+  },
+  "start": {
+    "$date": "2025-04-28T13:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-28T13:55:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RHLo2EDs001iAIL08Dlnt98",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680a0328b469764b6aa7344a"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "6.6",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "50.6",
+  "commission": "4",
+  "date": "Monday 28 April 2025",
+  "orderDate": {
+    "$date": "2025-04-24T09:23:52.855Z"
+  },
+  "start": {
+    "$date": "2025-04-28T15:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-28T15:40:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RHM0ZEDs001iAIL15CM1Ocr",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680a0389b469764b6aa735a1"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "5.7749999999999995",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "deleted",
+  "price": "44.275",
+  "commission": "3.5",
+  "date": "Monday 28 April 2025",
+  "orderDate": {
+    "$date": "2025-04-24T09:25:29.116Z"
+  },
+  "start": {
+    "$date": "2025-04-28T09:10:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-28T09:55:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RHM27EDs001iAIL09LTHh9c",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680a08b8b469764b6aa73c1e"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.7",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "46.2",
+  "commission": "3.5",
+  "date": "Monday 28 April 2025",
+  "orderDate": {
+    "$date": "2025-04-24T09:47:36.824Z"
+  },
+  "start": {
+    "$date": "2025-04-28T12:05:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-28T12:50:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RHMNXEDs001iAIL00AN6Bys",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680a4a1db469764b6aa7421c"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "8.8",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.8",
+  "commission": "4",
+  "date": "Monday 28 April 2025",
+  "orderDate": {
+    "$date": "2025-04-24T14:26:37.612Z"
+  },
+  "start": {
+    "$date": "2025-04-28T11:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-28T11:30:00.000Z"
+  },
+  "color": "#FDFD96",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RHQjYEDs001iAIL1IKG3zcK",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680a669cb469764b6aa7504d"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "8.8",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.8",
+  "commission": "4",
+  "date": "Tuesday 29 April 2025",
+  "orderDate": {
+    "$date": "2025-04-24T16:28:12.525Z"
+  },
+  "start": {
+    "$date": "2025-04-29T13:30:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-29T14:00:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RHSdDEDs001iAIL16vIQvei",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680a704db469764b6aa75c35"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Laura V.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Acroyoga fun et acrobatique",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "46.86000000000001",
+  "shopEarnings": "213",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "67c8671c58dca58f1d92e492",
+  "serviceId": "67ff9a2ffa3ec46ee311a36e",
+  "shopId": "66983bd3ab6bb2a89fe86478",
+  "status": "pending",
+  "price": "281.16",
+  "commission": "21.3",
+  "date": "Tuesday 6 May 2025",
+  "orderDate": {
+    "$date": "2025-04-24T17:09:33.280Z"
+  },
+  "start": {
+    "$date": "2025-05-06T11:00:00.000Z"
+  },
+  "end": {
+    "$date": "2025-05-06T12:00:00.000Z"
+  },
+  "color": "#ff4081",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RHTHEEDs001iAIL17IX9Ikm",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680cfcfee2d46d8a097d6c57"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "8.8",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.8",
+  "commission": "4",
+  "date": "Tuesday 20 May 2025",
+  "orderDate": {
+    "$date": "2025-04-26T15:34:22.629Z"
+  },
+  "start": {
+    "$date": "2025-05-20T11:50:00.000Z"
+  },
+  "end": {
+    "$date": "2025-05-20T12:20:00.000Z"
+  },
+  "color": "#FFD1A9",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RIAkCEDs001iAIL1FVdeNEi",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680e4241e2d46d8a097d85c0"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Maquillage de jour",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "8.8",
+  "shopEarnings": "40",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9df0",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "52.8",
+  "commission": "4",
+  "date": "Tuesday 29 April 2025",
+  "orderDate": {
+    "$date": "2025-04-27T14:42:09.892Z"
+  },
+  "start": {
+    "$date": "2025-04-29T11:50:00.000Z"
+  },
+  "end": {
+    "$date": "2025-04-29T12:20:00.000Z"
+  },
+  "color": "#FDFD96",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RIWPEEDs001iAIL0jWIBRii",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "680e43ebe2d46d8a097d871f"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Robert P.",
+  "image": "url_image_acroyoga",
+  "productName": "Suivi Nutritionnel",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "11",
+  "shopEarnings": "50",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "680153eb810994b3a0d30904",
+  "shopId": "67e7e3a231fc935ac8dc6cc2",
+  "status": "pending",
+  "price": "66",
+  "commission": "5",
+  "date": "Tuesday 20 May 2025",
+  "orderDate": {
+    "$date": "2025-04-27T14:49:15.906Z"
+  },
+  "start": {
+    "$date": "2025-05-20T12:20:00.000Z"
+  },
+  "end": {
+    "$date": "2025-05-20T13:20:00.000Z"
+  },
+  "color": "#ff4081",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RIWW6EDs001iAIL1mBBBwVf",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6810a843bdf29271aecd430a"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/articles/1745766573619-test654.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.7",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d9cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "46.2",
+  "commission": "3.5",
+  "date": "Monday 12 May 2025",
+  "orderDate": {
+    "$date": "2025-04-29T10:21:55.090Z"
+  },
+  "start": {
+    "$date": "2025-05-12T12:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-05-12T13:00:00.000Z"
+  },
+  "color": "#D4A4F7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RJBIREDs001iAIL0YbzpuXe",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6819b3466385da730f9d39e7"
+  },
+  "reviewAdded": false,
+  "title": "M. Mot Franc",
+  "establishmentName": "Charly M.",
+  "image": "/uploads/images/logo.png",
+  "productName": "Soin capillaire nourrissant",
+  "address": "123 Main St, 75001, Paris, France",
+  "phoneNumber": "0619742564",
+  "tva": "7.7",
+  "shopEarnings": "35",
+  "clientId": "669ee9a38db173e538d0659b",
+  "userProId": "669ee9a38db173e538d0659b",
+  "serviceId": "66c5a1b209327c7d8cde9def",
+  "shopId": "66d0f320ac2fe1ec4ebd976c",
+  "status": "pending",
+  "price": "46.2",
+  "commission": "3.5",
+  "date": "Tuesday 13 May 2025",
+  "orderDate": {
+    "$date": "2025-05-06T06:59:18.737Z"
+  },
+  "start": {
+    "$date": "2025-05-13T12:15:00.000Z"
+  },
+  "end": {
+    "$date": "2025-05-13T13:00:00.000Z"
+  },
+  "color": "#D1FAD7",
+  "proCodeConfirmed": false,
+  "paymentIntentId": "pi_3RLfTEEDs001iAIL0TNzFLb7",
+  "__v": 0
+}]

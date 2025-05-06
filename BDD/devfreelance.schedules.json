@@ -1,0 +1,798 @@
+[{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560cd"
+  },
+  "date": "2024-08-23T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560ce"
+  },
+  "date": "2024-08-24T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560cf"
+  },
+  "date": "2024-08-25T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d0"
+  },
+  "date": "2024-08-26T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d1"
+  },
+  "date": "2024-08-27T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d2"
+  },
+  "date": "2024-08-28T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d3"
+  },
+  "date": "2024-08-29T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d4"
+  },
+  "date": "2024-08-30T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d5"
+  },
+  "date": "2024-08-31T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": false
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d6"
+  },
+  "date": "2024-09-01T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d7"
+  },
+  "date": "2024-09-02T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d8"
+  },
+  "date": "2024-09-03T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560d9"
+  },
+  "date": "2024-09-04T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560da"
+  },
+  "date": "2024-09-05T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": false
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560db"
+  },
+  "date": "2024-09-06T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": true,
+        "clientId": null
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+},
+{
+  "_id": {
+    "$oid": "66c72ed16378ea34440560dc"
+  },
+  "date": "2024-09-07T00:00:00Z",
+  "coiffeuseId": "coiffeuse_1",
+  "boutiqueId": "66983bd3ab6bb2a89fe86473",
+  "schedule": {
+    "morningSlots": [
+      {
+        "startTime": "10:00",
+        "endTime": "10:20",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:20",
+        "endTime": "10:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "10:40",
+        "endTime": "11:00",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      }
+    ],
+    "afternoonSlots": [
+      {
+        "startTime": "12:00",
+        "endTime": "12:20",
+        "available": false,
+        "clientId": "669ee9a38db173e538d0659c"
+      },
+      {
+        "startTime": "12:20",
+        "endTime": "12:40",
+        "available": true,
+        "clientId": null
+      },
+      {
+        "startTime": "12:40",
+        "endTime": "13:00",
+        "available": true,
+        "clientId": null
+      }
+    ]
+  }
+}]
