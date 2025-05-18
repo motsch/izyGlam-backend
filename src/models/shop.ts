@@ -1,6 +1,18 @@
 import mongoose from "mongoose";
 import { iUser } from "./user";
 
+type DaySchedule = {
+  morning: {
+    start: string;
+    end: string;
+  };
+  afternoon: {
+    start: string;
+    end: string;
+  };
+  closed: boolean;
+};
+
 export interface iShop extends mongoose.Document {
   name: string;
   description: string;
@@ -11,22 +23,22 @@ export interface iShop extends mongoose.Document {
   type: string;
   ville: string;
   district: string;
-  // Ajout de reviews ici
   reviews: [
     {
       user: {
         type: string;
-        required: true,
+        required: true;
       },
-      rating: { type: Number, required: true },
-      comment: { type: String, required: true },
-    },
-  ],
+      rating: { type: Number; required: true };
+      comment: { type: String; required: true };
+    }
+  ];
   maxDistance: number;
   idUser: string;
   services: string[];
   deliveryPostalCodes: string[];
   trad: string;
+  ondaybooking:boolean;
   galleryImages: string[];
   promo?: {
     active: boolean;
@@ -37,24 +49,36 @@ export interface iShop extends mongoose.Document {
     longitude: number;
   };
   hours: {
-    morning: {
-      start: string;
-      end: string;
-    };
-    afternoon: {
-      start: string;
-      end: string;
-    };
+    [key in
+      | "monday"
+      | "tuesday"
+      | "wednesday"
+      | "thursday"
+      | "friday"
+      | "saturday"
+      | "sunday"]: DaySchedule;
   };
-  // ✅ Ajout des nouvelles stats
   impressions: number;
   clics: number;
   taux_conversion: number;
   affichage_prioritaire: Boolean;
   temps_affichage_total: number;
   nombre_affichages_valides: number;
-  temps_affichage_moyen: number; // Ce champ reste ici pour TypeScript, mais il est virtuel en base
+  temps_affichage_moyen: number;
 }
+
+// Fonction pour générer un bloc d'horaire avec des valeurs par défaut
+const defaultDaySchedule = {
+  morning: {
+    start: "09:00",
+    end: "12:00",
+  },
+  afternoon: {
+    start: "13:00",
+    end: "18:00",
+  },
+  closed: false,
+};
 
 const shopSchema = new mongoose.Schema<iShop>({
   name: { type: String, required: true },
@@ -63,9 +87,10 @@ const shopSchema = new mongoose.Schema<iShop>({
   note: { type: String, required: true },
   deliveryPostalCodes: { type: [String], required: false },
   averagePrice: { type: String, required: false },
-  minimumDelay: { type: String, required: false },
+  minimumDelay: { type: String, required: false, default: "30" },
   type: { type: String, required: true },
   ville: { type: String, required: true },
+  ondaybooking: { type: Boolean, required: false, default: false },
   district: { type: String, required: false },
   trad: { type: String, required: true },
   galleryImages: { type: [String], required: false },
@@ -81,13 +106,8 @@ const shopSchema = new mongoose.Schema<iShop>({
     },
   ],
   maxDistance: { type: Number, required: true },
-  idUser: {
-    type: String,
-    required: true,
-  },
-  services: [
-    { type: String, required: true },
-  ],
+  idUser: { type: String, required: true },
+  services: [{ type: String, required: true }],
   promo: {
     active: { type: Boolean, required: true },
     type: { type: String, required: true },
@@ -97,24 +117,91 @@ const shopSchema = new mongoose.Schema<iShop>({
     longitude: { type: Number, required: true },
   },
   hours: {
-    morning: {
-      start: { type: String, required: true },
-      end: { type: String, required: true },
+    monday: {
+      morning: {
+        start: { type: String, default: "09:00" },
+        end: { type: String, default: "12:00" },
+      },
+      afternoon: {
+        start: { type: String, default: "13:00" },
+        end: { type: String, default: "18:00" },
+      },
+      closed: { type: Boolean, default: false },
     },
-    afternoon: {
-      start: { type: String, required: true },
-      end: { type: String, required: true },
+    tuesday: {
+      morning: {
+        start: { type: String, default: "09:00" },
+        end: { type: String, default: "12:00" },
+      },
+      afternoon: {
+        start: { type: String, default: "13:00" },
+        end: { type: String, default: "18:00" },
+      },
+      closed: { type: Boolean, default: false },
+    },
+    wednesday: {
+      morning: {
+        start: { type: String, default: "09:00" },
+        end: { type: String, default: "12:00" },
+      },
+      afternoon: {
+        start: { type: String, default: "13:00" },
+        end: { type: String, default: "18:00" },
+      },
+      closed: { type: Boolean, default: false },
+    },
+    thursday: {
+      morning: {
+        start: { type: String, default: "09:00" },
+        end: { type: String, default: "12:00" },
+      },
+      afternoon: {
+        start: { type: String, default: "13:00" },
+        end: { type: String, default: "18:00" },
+      },
+      closed: { type: Boolean, default: false },
+    },
+    friday: {
+      morning: {
+        start: { type: String, default: "09:00" },
+        end: { type: String, default: "12:00" },
+      },
+      afternoon: {
+        start: { type: String, default: "13:00" },
+        end: { type: String, default: "18:00" },
+      },
+      closed: { type: Boolean, default: false },
+    },
+    saturday: {
+      morning: {
+        start: { type: String, default: "09:00" },
+        end: { type: String, default: "12:00" },
+      },
+      afternoon: {
+        start: { type: String, default: "13:00" },
+        end: { type: String, default: "18:00" },
+      },
+      closed: { type: Boolean, default: false },
+    },
+    sunday: {
+      morning: {
+        start: { type: String, default: "09:00" },
+        end: { type: String, default: "12:00" },
+      },
+      afternoon: {
+        start: { type: String, default: "13:00" },
+        end: { type: String, default: "18:00" },
+      },
+      closed: { type: Boolean, default: false },
     },
   },
-  // ✅ Ajout des stats
-  impressions: { type: Number, default: 0 }, // Nombre d'affichages
-  clics: { type: Number, default: 0 }, // Nombre de clics
-  taux_conversion: { type: Number, default: 0 }, // Clics / Impressions
-  affichage_prioritaire: { type: Boolean, default: false }, // Vérifie que l'hex est un code valide
-  // ✅ Nouveaux champs pour le suivi du temps moyen d'affichage
-  temps_affichage_total: { type: Number, default: 0 }, // Temps total d'affichage en secondes
-  nombre_affichages_valides: { type: Number, default: 0 }, // Nombre de fois où la pub a été vue suffisamment
-  temps_affichage_moyen: { type: Number, default: 0 } // Ce champ reste ici pour TypeScript, mais il est virtuel en base
+  impressions: { type: Number, default: 0 },
+  clics: { type: Number, default: 0 },
+  taux_conversion: { type: Number, default: 0 },
+  affichage_prioritaire: { type: Boolean, default: false },
+  temps_affichage_total: { type: Number, default: 0 },
+  nombre_affichages_valides: { type: Number, default: 0 },
+  temps_affichage_moyen: { type: Number, default: 0 },
 });
 
 const shopModel = mongoose.model<iShop>("Shop", shopSchema);

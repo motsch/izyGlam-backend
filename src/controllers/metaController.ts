@@ -216,7 +216,6 @@ export const exchangeCodeForToken = async (req: Request, res: Response) => {
     const redirectUri = process.env.META_REDIRECT_URI as string;
     const code = req.body.code;
 
-    // Validation du code reçu
     if (!code) {
       return res.status(400).json({ message: "Code manquant dans la requête." });
     }
@@ -231,54 +230,22 @@ export const exchangeCodeForToken = async (req: Request, res: Response) => {
       },
     });
 
-    // Validation des données du token
     if (!tokenResponse.data.access_token || !tokenResponse.data.expires_in) {
       return res.status(500).json({ message: "Données du token invalides." });
     }
 
     const accessToken = tokenResponse.data.access_token;
-    const tokenExpiresAt = new Date(Date.now() + tokenResponse.data.expires_in * 1000);
+    const expiresIn = tokenResponse.data.expires_in;
 
-    // Récupération des informations utilisateur depuis Facebook
-    const userInfoResponse = await axios.get('https://graph.facebook.com/v17.0/me', {
-      params: { access_token: accessToken, fields: 'id,name,email' },
-    });
+    // ⚠️ NE PAS MODIFIER L’UTILISATEUR ICI
 
-    const { id, name, email } = userInfoResponse.data;
-
-    // Validation des données utilisateur
-    if (!id || !name) {
-      return res.status(500).json({ message: "Informations utilisateur Facebook invalides." });
-    }
-
-    // Gestion des noms (prénom et nom)
-    const nameParts = name.split(" ");
-    const firstname = nameParts[0] || "Inconnu";
-    const lastname = nameParts.slice(1).join(" ") || "Inconnu";
-
-    // Mise à jour ou création de l'utilisateur
-    const user = await UserModel.findOneAndUpdate(
-      { "facebook.userId": id }, // Recherche basée sur l'ID Facebook
-      {
-        "facebook.accessToken": accessToken,
-        "facebook.tokenExpiresAt": tokenExpiresAt,
-        "facebook.userId": id,
-        firstname,
-        lastname,
-        email: email || "email_non_disponible@facebook.com", // Gestion d'email manquant
-      },
-      { upsert: true, new: true }
-    );
-
-    // Réponse au frontend
+    // Répondre simplement avec le token pour que `facebook-login` gère la suite
     res.json({
-      message: "Utilisateur connecté avec succès.",
-      user,
-      accessToken, // Ajout de l'accessToken dans la réponse
-      expires_in: tokenResponse.data.expires_in, // Ajout de expires_in dans la réponse
+      message: "AccessToken récupéré avec succès",
+      accessToken,
+      expires_in: expiresIn,
     });
   } catch (error: any) {
-    // Logs détaillés pour débogage
     console.error("Erreur lors de l'échange du code :", error);
     res.status(500).json({
       message: "Erreur lors de l'échange du code.",
@@ -286,6 +253,7 @@ export const exchangeCodeForToken = async (req: Request, res: Response) => {
     });
   }
 };
+
 
 // Fonction pour valider le token d'accès
 export const validateAccessToken = async (req: Request, res: Response) => {

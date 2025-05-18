@@ -3,6 +3,7 @@ import ServiceTemplateModel from "../models/serviceTemplate";
 import ServiceModel from "../models/service";
 import * as express from "express";
 import { Request, Response } from 'express';
+import axios from 'axios';
 
 // Étendre l'interface Request pour inclure la propriété 'files'
 interface MulterRequest extends Request {
@@ -81,6 +82,57 @@ const createShop = async (req: express.Request, res: express.Response) => {
   }
 };
 
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// Créer une nouvelle boutique (shop)
+export const getIzyGlamDescription = async (req: express.Request, res: express.Response) => {
+  try {
+    console.log("IN DESCRIPTION IZYGLAM");
+
+    const { type, userDescription } = req.body;
+
+    if (!type) {
+      return res.status(400).json({ message: "Le type de salon est requis." });
+    }
+
+    const prompt = userDescription
+      ? `Tu es un expert en communication pour une plateforme de salons de beauté comme IzyGlam. Voici une description donnée par un utilisateur pour un salon de type "${type}" : "${userDescription}". Reformule-la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain.`
+      : `Tu es un expert en communication pour une plateforme de salons de beauté comme IzyGlam. Génére une description originale, professionnelle, engageante et sympathique pour un salon de type "${type}". Ajoute une touche de personnalité unique à chaque fois.`;
+
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'Tu es un expert en rédaction pour une plateforme comme IzyGlam, spécialisée dans les salons de beauté.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.8,
+        max_tokens: 300,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const formattedDescription = response.data.choices[0].message?.content?.trim() || '';
+
+    res.status(200).json({ formattedDescription });
+  } catch (error:any) {
+    console.error("Erreur dans getIzyGlamDescription :", error?.response?.data || error);
+    res.status(500).json({ message: "Impossible de générer la description." });
+  }
+};
+
+
 // Récupérer toutes les boutiques
 const getAllShops = async (req: express.Request, res: express.Response) => {
   try {
@@ -90,7 +142,6 @@ const getAllShops = async (req: express.Request, res: express.Response) => {
     res.status(500).json({ message: "Impossible de récupérer les boutiques" });
   }
 };
-
 
 // Fonction de calcul de distance (formule de Haversine)
 const calculateDistance = (
@@ -540,4 +591,5 @@ module.exports = {
   updateShopDisplayTime,
   bulkUpdateShopStats,
   searchShopsWithServices,
+  getIzyGlamDescription,
 };

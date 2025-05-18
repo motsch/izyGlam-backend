@@ -21,6 +21,8 @@ const upload = multer({ storage: storage });
 router.post("/shop", authMiddleware, shopController.createShop);
 
 // Route to retrieve all shops
+router.post("/shop-description", authMiddleware, shopController.getIzyGlamDescription);
+// Route to retrieve all shops
 router.get("/shop", shopController.getAllShops);
 
 // Nouvelle route pour récupérer les shops à proximité

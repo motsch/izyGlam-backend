@@ -643,62 +643,98 @@ export const handleFacebookLogin = async (req: any, res: express.Response) => {
     const { accessToken } = req.body;
 
     if (!accessToken) {
+      console.log("Access token manquant dans la requête");
       return res.status(400).json({ message: "Access token manquant." });
     }
 
-    // Étape 1 : Récupérer les informations utilisateur depuis l'API Graph
+    // Récupération du profil Facebook
     const userProfileResponse = await axios.get(
       `https://graph.facebook.com/me?fields=id,email,first_name,last_name&access_token=${accessToken}`
     );
-
     const { id: facebookId, email, first_name, last_name } = userProfileResponse.data;
+    console.log("Données Facebook:", userProfileResponse.data);
 
-    // Étape 2 : Vérifier si l'utilisateur existe déjà dans la base
     let user = await UserModel.findOne({ email });
+    console.log("User récupéré AVANT TOUTE MODIF :", JSON.stringify(user, null, 2));
 
     if (!user) {
-      console.log("IN CREATE");
-      // Si l'utilisateur n'existe pas, le créer
+      // Création utilisateur si non existant
       user = await UserModel.create({
         firstname: first_name,
         lastname: last_name,
         email,
-        password: '', // Laisse le champ vide pour les connexions Facebook
+        password: '',
         role: "user",
         facebook: {
-          id: facebookId,
+          userId: facebookId,
           accessToken,
-          tokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 heure
+          tokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
         },
+        phone: "",
+        conversationId: "",
+        sex: "male", // Valeur par défaut obligatoire d'après ton modèle
+        fidelity: {
+          stars: 0,
+          card_expiration: new Date(),
+          rewards_history: [],
+        }
       });
+      console.log("Utilisateur créé:", user);
     } else {
-      console.log("IN SAVE");
-      // Si l'utilisateur existe, mettre à jour le token Facebook
+      // CLONER les valeurs d’origine pour ne pas perdre les infos avant modif
+      const originalFirstname = user.firstname;
+      const originalLastname = user.lastname;
+
+      console.log("Avant modif: firstname =", originalFirstname, "lastname =", originalLastname);
+      console.log("Données Facebook: firstname =", first_name, "lastname =", last_name);
+
+      // Ne pas modifier si déjà présent
+      if (!originalFirstname || originalFirstname.trim() === '') {
+        user.firstname = first_name;
+        console.log("Mise à jour du prénom via Facebook");
+      } else {
+        console.log("Prénom conservé");
+      }
+
+      if (!originalLastname || originalLastname.trim() === '') {
+        user.lastname = last_name;
+        console.log("Mise à jour du nom via Facebook");
+      } else {
+        console.log("Nom conservé");
+      }
+
+      // Mise à jour token FB
       user.facebook.accessToken = accessToken;
-      user.facebook.tokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 heure
+      user.facebook.tokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      user.facebook.userId = facebookId;
+
       await user.save();
+      console.log("Utilisateur mis à jour:", user);
     }
 
-    // Générer un token JWT pour la session
     const jwtToken = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.SECRET_KEY,
       { expiresIn: "7d" }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Connexion réussie.",
       token: jwtToken,
       user,
     });
-  } catch (error:any) {
-    console.error("Erreur lors de la connexion Facebook :", error);
-    res.status(500).json({
+  } catch (error: any) {
+    console.error("Erreur Facebook login:", error);
+    return res.status(500).json({
       message: "Erreur lors de la connexion via Facebook.",
       error: error.message,
     });
   }
 };
+
+
+
+
 // Récupérer un utilisateur par son ID
 const getUsersByCompanyId = async (req: any, res: express.Response) => {
   try {

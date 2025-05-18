@@ -139,7 +139,7 @@ const getBookingsByClient = async (req: express.Request, res: express.Response) 
 
     // On ajoute { status: { $ne: "deleted" } } à la condition de recherche
     const bookings = await BookingModel.find({ clientId: id, status: { $ne: "deleted" } });
-    
+
     if (bookings.length > 0) {
       res.json(bookings);
     } else {
@@ -150,110 +150,106 @@ const getBookingsByClient = async (req: express.Request, res: express.Response) 
   }
 };
 
-
-const getAvailableSlots = async (req: express.Request, res: express.Response) => {
+export const getAvailableSlots = async (req: express.Request, res: express.Response) => {
   try {
     const { serviceId, shopId } = req.params;
 
-    // Obtenir les détails du service
     const service = await serviceModel.findById(serviceId);
-    if (!service) {
-      return res.status(404).json({ message: "Service non trouvé" });
-    }
-    const duration = service.duration; // Durée du service en minutes
+    if (!service) return res.status(404).json({ message: "Service non trouvé" });
+    const duration = service.duration;
 
-    // Obtenir les détails de la boutique
-    const shop = await shopModel.findById(shopId);
-    if (!shop) {
-      return res.status(404).json({ message: "Boutique non trouvée" });
-    }
+    const shop:any = await shopModel.findById(shopId);
+    if (!shop) return res.status(404).json({ message: "Boutique non trouvée" });
 
-    const margin = 30; // Marge de sécurité entre deux rendez-vous
-
-    // Récupérer le professionnel
     const professional = await userModel.findById(shop.idUser);
-    if (!professional) {
-      return res.status(404).json({ message: "Professionnel non trouvé" });
-    }
+    if (!professional) return res.status(404).json({ message: "Professionnel non trouvé" });
 
-    // Récupérer toutes les réservations existantes sauf deleted
+    const ondaybooking = shop.ondaybooking;
+    const margin = 30;
+    const minimumDelay = moment.duration(shop.minimumDelay || "30", "minutes").asMinutes();
+
     const startDate = moment().startOf("day");
     const endDate = moment().add(6, "weeks").endOf("day");
 
     const bookings = await BookingModel.find({
       userProId: professional._id,
       start: { $gte: startDate.toDate(), $lte: endDate.toDate() },
-      status: { $ne: "deleted" } // NE PAS prendre en compte seulement pending/accepted, mais tout sauf deleted
+      status: { $ne: "deleted" },
     });
 
-    // Vérifier si le professionnel a des disponibilités configurées
-    if (!professional.availability || professional.availability.length === 0) {
-      return res.status(200).json([]); // Pas de disponibilité
-    }
+    const now = moment();
+    const today = now.format("YYYY-MM-DD");
+    const allAvailableSlots: any[] = [];
 
-    const allAvailableSlots = [];
+    for (let date = startDate.clone(); date.isBefore(endDate); date.add(1, "days")) {
+      const dayKey = date.format("dddd").toLowerCase();
+      const daySchedule = shop.hours?.[dayKey];
 
-    // Boucler sur chaque jour de la période
-    for (let date = startDate.clone(); date.isBefore(endDate); date.add(1, 'days')) {
-      const dayOfWeek = date.format('dddd');
+      if (!daySchedule || daySchedule.closed) continue;
 
-      // Chercher les périodes disponibles pour ce jour
-      const availablePeriods = professional.availability.find(avail => avail.day === dayOfWeek);
-      if (!availablePeriods) {
-        continue;
-      }
-
-      // Vérifier s'il est indisponible ce jour-là
       const isUnavailable = professional.unavailability?.some(unavail => {
         const unavailableStart = moment(unavail.start);
         const unavailableEnd = moment(unavail.end);
-        return date.isBetween(unavailableStart, unavailableEnd, 'day', '[]');
+        return date.isBetween(unavailableStart, unavailableEnd, "day", "[]");
       });
-      if (isUnavailable) {
-        continue;
-      }
+      if (isUnavailable) continue;
 
-      // Calcul des créneaux disponibles
-      for (const period of availablePeriods.periods) {
-        let periodStart = date.clone().hour(Number(period.start.split(":")[0])).minute(Number(period.start.split(":")[1]));
-        let periodEnd = date.clone().hour(Number(period.end.split(":")[0])).minute(Number(period.end.split(":")[1]));
+      const addSlots = (label: string, startStr: string, endStr: string) => {
+        let periodStart = date.clone().hour(Number(startStr.split(":")[0])).minute(Number(startStr.split(":")[1]));
+        let periodEnd = date.clone().hour(Number(endStr.split(":")[0])).minute(Number(endStr.split(":")[1]));
 
         let currentTime = periodStart.clone();
 
-        while (currentTime.clone().add(duration, 'minutes').isSameOrBefore(periodEnd)) {
-          const slotStart = currentTime.clone();
-          const slotEnd = currentTime.clone().add(duration, 'minutes');
+        // Si on est aujourd'hui et ondaybooking = false, on saute
+        if (!ondaybooking && date.isSame(today, "day")) return;
 
-          // Vérification de chevauchement avec une réservation existante
+        // Si on est aujourd'hui, on doit appliquer minimumDelay à now
+        const minAvailableTime = now.clone().add(minimumDelay, "minutes");
+        if (date.isSame(today, "day")) {
+          if (minAvailableTime.isAfter(periodEnd)) return; // trop tard
+          if (currentTime.isBefore(minAvailableTime)) {
+            currentTime = minAvailableTime.clone();
+          }
+        }
+
+        while (currentTime.clone().add(duration, "minutes").isSameOrBefore(periodEnd)) {
+          const slotStart = currentTime.clone();
+          const slotEnd = currentTime.clone().add(duration, "minutes");
+
           const isOverlapping = bookings.some(booking => {
             const bookingStart = moment(booking.start);
-            const bookingEnd = moment(booking.end);
+            const bookingEnd = moment(booking.end).add(minimumDelay, "minutes");
             return slotStart.isBefore(bookingEnd) && slotEnd.isAfter(bookingStart);
           });
 
           if (!isOverlapping) {
             allAvailableSlots.push({
-              date: date.format('YYYY-MM-DD'),
-              start: slotStart.format('HH:mm'),
-              end: slotEnd.format('HH:mm'),
+              date: date.format("YYYY-MM-DD"),
+              start: slotStart.format("HH:mm"),
+              end: slotEnd.format("HH:mm"),
             });
-
-            // Avancer de la durée + marge si un créneau est trouvé
-            currentTime = slotEnd.clone().add(margin, 'minutes');
+            currentTime = slotEnd.clone().add(margin, "minutes");
           } else {
-            // Sinon avancer progressivement
-            currentTime.add(5, 'minutes');
+            currentTime.add(5, "minutes");
           }
         }
+      };
+
+      if (daySchedule.morning?.start && daySchedule.morning?.end) {
+        addSlots("matin", daySchedule.morning.start, daySchedule.morning.end);
+      }
+      if (daySchedule.afternoon?.start && daySchedule.afternoon?.end) {
+        addSlots("après-midi", daySchedule.afternoon.start, daySchedule.afternoon.end);
       }
     }
 
     res.json(allAvailableSlots);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Impossible de calculer les créneaux disponibles" });
+    console.error("Erreur lors du calcul des créneaux:", error);
+    res.status(500).json({ message: "Erreur lors du calcul des créneaux disponibles" });
   }
 };
+
 
 
 
