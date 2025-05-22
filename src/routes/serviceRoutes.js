@@ -3,6 +3,8 @@ const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const router = express.Router();
 
+const upload = require("../middlewares/multer");
+
 const multer = require("multer"); // Importer Multer pour gérer les fichiers
 
 // Configurer Multer pour stocker les images dans le dossier "uploads/images/gallery"
@@ -14,8 +16,6 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + "-" + file.originalname); // Nom unique pour chaque fichier
   },
 });
-
-const upload = multer({ storage: storage });
 
 // Route to create a new service
 router.post("/service", authMiddleware, serviceController.createService);
