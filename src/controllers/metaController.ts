@@ -254,7 +254,6 @@ export const exchangeCodeForToken = async (req: Request, res: Response) => {
   }
 };
 
-
 // Fonction pour valider le token d'accès
 export const validateAccessToken = async (req: Request, res: Response) => {
   try {
