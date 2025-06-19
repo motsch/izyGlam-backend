@@ -80,4 +80,29 @@ router.post('/bluesky/connect/:userId', usersController.connectToBluesky); // Co
 router.post('/bluesky/post/:userId', authMiddleware, usersController.postToBluesky); // Publier un post sur Bluesky
 router.delete('/bluesky/revoke/:userId', authMiddleware, usersController.revokeBlueskyAccess); // Révoquer l'accès à Bluesky
 
+
+
+
+
+
+
+
+
+
+// 👑 Récupérer les employés d’un boss
+router.get("/boss/employees", authMiddleware, usersController.getBossEmployees);
+
+// 👑 Ajouter un employé à un boss (et vérifier les limites d’abonnement)
+router.post("/boss/add-employee", authMiddleware, usersController.addEmployeeToBoss);
+
+// 👑 Supprimer un employé du boss (désassocier l’employé du patron)
+router.post("/boss/remove-employee", authMiddleware, usersController.removeEmployeeFromBoss);
+
+router.post("/boss/create-and-add-employee", authMiddleware, usersController.createAndAddEmployeeToBoss);
+
+
+router.post("/users-subscribe", authMiddleware, usersController.subscribeToPlan);
+router.get("/users-subscription", authMiddleware, usersController.getSubscriptionInfo);
+
+
 module.exports = router;

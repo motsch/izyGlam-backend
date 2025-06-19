@@ -39,6 +39,7 @@ const getUserInfo = async (
       proches: any[];
       favoriteShops: any[];
       fidelity: any[];
+      abonnement: string;
     }) => void;
   }
 ) => {
@@ -54,6 +55,7 @@ const getUserInfo = async (
       conversationId: string;
       sex: string;
       customerId: string;
+      abonnement: string;
       address: any[];
       proches: any[];
       favoriteShops: any[];
@@ -97,6 +99,8 @@ const getUserInfo = async (
             _id,
             favoriteShops,
             fidelity,
+
+            abonnement,
             conversationId,
           } = user;
           res.json({
@@ -109,6 +113,7 @@ const getUserInfo = async (
             phone,
             conversationId,
             sex,
+            abonnement,
             customerId,
             companyId,
             favoriteShops,
@@ -575,7 +580,7 @@ const geolocation = async (req: any, res: any) => {
   try {
     const response = await axios.get(`https://ipapi.co/${userIP}/json/`);
     res.json(response.data);
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Erreur lors de la récupération de la localisation :', error.message);
     res.status(500).json({ message: 'Erreur lors de la récupération de la localisation.' });
   }
@@ -583,12 +588,12 @@ const geolocation = async (req: any, res: any) => {
 
 const getUserIP = (req: any) => {
   let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  
+
   // Si l'application tourne en local, utiliser une IP fictive
   if (ip === '::1' || ip === '127.0.0.1') {
     ip = '8.8.8.8'; // Exemple : IP publique de test (Google DNS)
   }
-  
+
   return Array.isArray(ip) ? ip[0] : ip; // Récupérer uniquement l'adresse IP
 };
 
@@ -631,7 +636,7 @@ const getUserById = async (req: any, res: express.Response) => {
     if (user) {
       res.json(user);
     } else {
-      res.status(404).json({ message: "Utilisateur non trouvé" });
+      res.status(404).json({ message: "Utilisateur non trouvé 333" });
     }
   } catch (error) {
     res.status(500).json({ message: "Impossible de récupérer l'utilisateur" });
@@ -768,7 +773,7 @@ const addUserAddress = async (
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
+      return res.status(404).json({ message: "Utilisateur non trouvé 444" });
     }
 
     res.json(updatedUser);
@@ -793,7 +798,7 @@ const updateUserPassword = async (
       await user.save();
       res.json(user);
     } else {
-      res.status(404).json({ message: "Utilisateur non trouvé" });
+      res.status(404).json({ message: "Utilisateur non trouvé 555" });
     }
   } catch (error) {
     console.error(error); // Ajout d'une console.error pour afficher les erreurs dans la console
@@ -806,10 +811,10 @@ const updateUserById = async (req: any, res: express.Response) => {
   try {
     const { id } = req.params;
     const updates = { ...req.body }; // Récupère tout ce qui est dans req.body
-    
+
     // Sécurité : On interdit de modifier certains champs sensibles
-    delete updates.password; 
-    delete updates._id; 
+    delete updates.password;
+    delete updates._id;
     delete updates.email; // <-- selon ta politique de modification d'email
 
     const token = req.header("Authorization");
@@ -832,7 +837,7 @@ const updateUserById = async (req: any, res: express.Response) => {
         );
 
         if (!updatedUser) {
-          return res.status(404).json({ message: "Utilisateur non trouvé" });
+          return res.status(404).json({ message: "Utilisateur non trouvé 666" });
         }
 
         res.json(updatedUser);
@@ -906,7 +911,7 @@ const deleteUserById = async (
         if (deletedUser) {
           res.json({ message: "Utilisateur supprimé avec succès" });
         } else {
-          res.status(404).json({ message: "Utilisateur non trouvé" });
+          res.status(404).json({ message: "Utilisateur non trouvé 777" });
         }
       }
     );
@@ -947,7 +952,7 @@ export const updateUserFavorites = async (req: any, res: express.Response) => {
     // Vérifier si l'utilisateur existe
     const user = await UserModel.findById(id);
     if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
+      return res.status(404).json({ message: "Utilisateur non trouvé 888" });
     }
 
     // Mettre à jour les favoris de l'utilisateur
@@ -972,30 +977,30 @@ const connectToBluesky = async (req: express.Request, res: express.Response) => 
   const userId = req.params.userId;
 
   try {
-      // URL correcte pour se connecter via ATProto
-      const response = await axios.post('https://bsky.social/xrpc/com.atproto.server.createSession', {
-          identifier: handle,
-          password: password,
-      });
+    // URL correcte pour se connecter via ATProto
+    const response = await axios.post('https://bsky.social/xrpc/com.atproto.server.createSession', {
+      identifier: handle,
+      password: password,
+    });
 
-      const accessToken = response.data.accessJwt; // Jeton d'accès
-      const refreshToken = response.data.refreshJwt || null; // Jeton de rafraîchissement
+    const accessToken = response.data.accessJwt; // Jeton d'accès
+    const refreshToken = response.data.refreshJwt || null; // Jeton de rafraîchissement
 
-      // Mettre à jour l'utilisateur avec le token obtenu
-      await UserModel.findByIdAndUpdate(userId, {
-          'bluesky.accessToken': accessToken,
-          'bluesky.tokenExpiresAt': new Date(Date.now() + 3600 * 1000), // Exemple : expiration dans 1h
-          ...(refreshToken && { 'bluesky.refreshToken': refreshToken }),
-      });
+    // Mettre à jour l'utilisateur avec le token obtenu
+    await UserModel.findByIdAndUpdate(userId, {
+      'bluesky.accessToken': accessToken,
+      'bluesky.tokenExpiresAt': new Date(Date.now() + 3600 * 1000), // Exemple : expiration dans 1h
+      ...(refreshToken && { 'bluesky.refreshToken': refreshToken }),
+    });
 
-      return res.status(200).json({
-          message: 'Connexion réussie et jeton sauvegardé.',
-          accessToken,
-          tokenExpiresAt: new Date(Date.now() + 3600 * 1000),
-      });
+    return res.status(200).json({
+      message: 'Connexion réussie et jeton sauvegardé.',
+      accessToken,
+      tokenExpiresAt: new Date(Date.now() + 3600 * 1000),
+    });
   } catch (error) {
-      console.error('Erreur lors de la connexion à Bluesky :', error);
-      return res.status(500).json({ error: 'Connexion échouée.' });
+    console.error('Erreur lors de la connexion à Bluesky :', error);
+    return res.status(500).json({ error: 'Connexion échouée.' });
   }
 };
 
@@ -1004,32 +1009,32 @@ const postToBluesky = async (req: express.Request, res: express.Response) => {
   const userId = req.params.userId;
 
   try {
-      // Récupérer l'utilisateur et son token
-      const user = await UserModel.findById(userId);
-      if (!user || !user.bluesky || !user.bluesky.accessToken) {
-          return res.status(401).json({ error: 'Utilisateur non connecté à Bluesky.' });
+    // Récupérer l'utilisateur et son token
+    const user = await UserModel.findById(userId);
+    if (!user || !user.bluesky || !user.bluesky.accessToken) {
+      return res.status(401).json({ error: 'Utilisateur non connecté à Bluesky.' });
+    }
+
+    // Publier un post via ATProto
+    const response = await axios.post(
+      'https://bsky.social/xrpc/com.atproto.repo.createRecord',
+      {
+        repo: user.bluesky.userId,
+        collection: 'app.bsky.feed.post',
+        record: {
+          text: content,
+          createdAt: new Date().toISOString(),
+        },
+      },
+      {
+        headers: { Authorization: `Bearer ${user.bluesky.accessToken}` },
       }
+    );
 
-      // Publier un post via ATProto
-      const response = await axios.post(
-          'https://bsky.social/xrpc/com.atproto.repo.createRecord',
-          {
-              repo: user.bluesky.userId,
-              collection: 'app.bsky.feed.post',
-              record: {
-                  text: content,
-                  createdAt: new Date().toISOString(),
-              },
-          },
-          {
-              headers: { Authorization: `Bearer ${user.bluesky.accessToken}` },
-          }
-      );
-
-      return res.status(200).json({ message: 'Post publié avec succès.', data: response.data });
+    return res.status(200).json({ message: 'Post publié avec succès.', data: response.data });
   } catch (error) {
-      console.error('Erreur lors de la publication sur Bluesky :', error);
-      return res.status(500).json({ error: 'Impossible de publier le post.' });
+    console.error('Erreur lors de la publication sur Bluesky :', error);
+    return res.status(500).json({ error: 'Impossible de publier le post.' });
   }
 };
 
@@ -1037,13 +1042,13 @@ const revokeBlueskyAccess = async (req: express.Request, res: express.Response) 
   const userId = req.params.userId;
 
   try {
-      await UserModel.findByIdAndUpdate(userId, {
-          $unset: { bluesky: '' },
-      });
-      return res.status(200).json({ message: 'Accès Bluesky révoqué.' });
+    await UserModel.findByIdAndUpdate(userId, {
+      $unset: { bluesky: '' },
+    });
+    return res.status(200).json({ message: 'Accès Bluesky révoqué.' });
   } catch (error) {
-      console.error('Erreur lors de la révocation :', error);
-      return res.status(500).json({ error: 'Impossible de révoquer l\'accès.' });
+    console.error('Erreur lors de la révocation :', error);
+    return res.status(500).json({ error: 'Impossible de révoquer l\'accès.' });
   }
 };
 
@@ -1060,6 +1065,285 @@ async function incrementStars(userId: string) {
   }
   await user!.save();
 }
+
+
+const getBossEmployees = async (req: any, res: express.Response) => {
+  try {
+    const token = req.header("Authorization");
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const bossId = decoded.userId;
+
+    const boss = await UserModel.findById(bossId);
+    if (!boss || boss.role !== "boss") {
+      return res.status(403).json({ message: "Accès interdit" });
+    }
+
+    const employees = await UserModel.find({ _id: { $in: boss.employeesIds } });
+    res.status(200).json(employees);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur lors de la récupération des employés" });
+  }
+};
+
+const addEmployeeToBoss = async (req: any, res: express.Response) => {
+  try {
+    const token = req.header("Authorization");
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const bossId = decoded.userId;
+
+    const { employeeId } = req.body;
+
+    const boss = await UserModel.findById(bossId);
+    const employee = await UserModel.findById(employeeId);
+
+    if (!boss || boss.role !== "boss") {
+      return res.status(403).json({ message: "Seuls les patrons peuvent ajouter des employés." });
+    }
+
+    if (!employee || employee.role !== "professionnel") {
+      return res.status(400).json({ message: "L'utilisateur n'est pas un professionnel valide." });
+    }
+
+    // Vérifie la limite selon l’abonnement
+    const abonnementLimits: any = {
+      free: 1,
+      basic: 3,
+      pro: 10,
+      custom: Infinity,
+    };
+
+    if ((boss.employeesIds || []).length >= abonnementLimits[boss.abonnement]) {
+      return res.status(403).json({
+        message: "Limite d’employés atteinte pour votre abonnement.",
+      });
+    }
+
+    if (!(boss.employeesIds || []).includes(employeeId)) {
+      boss.employeesIds = boss.employeesIds || [];
+      boss.employeesIds.push(employeeId);
+      await boss.save();
+    }
+
+
+    // Lien employé → patron
+    employee.managerId = bossId;
+    await employee.save();
+
+    res.status(200).json({ message: "Employé ajouté avec succès au patron." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur lors de l’ajout de l’employé au patron" });
+  }
+};
+
+const removeEmployeeFromBoss = async (req: any, res: express.Response) => {
+  try {
+    const token = req.header("Authorization");
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const bossId = decoded.userId;
+
+    const { employeeId } = req.body;
+
+    const boss = await UserModel.findById(bossId);
+    const employee = await UserModel.findById(employeeId);
+
+    if (!boss || boss.role !== "boss") {
+      return res.status(403).json({ message: "Seuls les patrons peuvent supprimer des employés." });
+    }
+
+    if (!employee || employee.managerId !== bossId) {
+      return res.status(400).json({ message: "Cet employé n'est pas rattaché à vous." });
+    }
+
+    // Suppression du lien boss → employé
+    boss.employeesIds = (boss.employeesIds || []).filter((id: string) => id !== employeeId);
+    await boss.save();
+
+    // Suppression du lien employé → boss
+    employee.managerId = undefined;
+    await employee.save();
+
+    res.status(200).json({ message: "Employé retiré avec succès du patron." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur lors de la suppression de l’employé du patron" });
+  }
+};
+
+const createAndAddEmployeeToBoss = async (req: any, res: express.Response) => {
+  try {
+    console.log("🔥 Début createAndAddEmployeeToBoss");
+
+    const token = req.header("Authorization");
+    console.log("📨 Token reçu :", token);
+
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const bossId = decoded.userId;
+    console.log("✅ Token décodé. ID du boss :", bossId);
+
+    const { email, firstname, lastname } = req.body;
+    console.log("📩 Données reçues :", { email, firstname, lastname });
+
+    const boss = await UserModel.findById(bossId);
+    if (!boss || boss.role !== "boss") {
+      console.warn("⛔ Utilisateur non trouvé ou non boss :", boss);
+      return res.status(403).json({ message: "Seuls les patrons peuvent ajouter des employés." });
+    }
+
+    console.log("✅ Boss trouvé :", boss.email, "| Abonnement :", boss.abonnement);
+
+    const abonnementLimits: any = {
+      free: 1,
+      basic: 3,
+      pro: 10,
+      custom: Infinity,
+    };
+
+    const currentEmployees = boss.employeesIds || [];
+    console.log("📊 Employés actuels :", currentEmployees.length, "/", abonnementLimits[boss.abonnement]);
+
+    if (currentEmployees.length >= abonnementLimits[boss.abonnement]) {
+      console.warn("⛔ Limite d’employés atteinte");
+      return res.status(403).json({
+        message: "Limite d’employés atteinte pour votre abonnement.",
+      });
+    }
+
+    let employee = await UserModel.findOne({ email });
+    if (employee) {
+      console.log("👀 Utilisateur avec cet email déjà existant :", employee.email);
+
+      if (employee.managerId) {
+        console.warn("⚠️ Déjà rattaché à un patron :", employee.managerId);
+        return res.status(400).json({ message: "Cet utilisateur est déjà rattaché à un autre patron." });
+      }
+
+      if (employee.role !== "professionnel") {
+        console.warn("⚠️ Utilisateur existant mais rôle invalide :", employee.role);
+        return res.status(400).json({ message: "L'utilisateur existe mais n’est pas un professionnel." });
+      }
+
+    } else {
+      console.log("🚧 Aucun utilisateur trouvé. Création d’un nouveau professionnel...");
+
+      const tempPassword = "izyGlam2026!";
+      employee = new UserModel({
+        email,
+        firstname,
+        lastname,
+        role: "professionnel",
+        password: tempPassword,
+        managerId: bossId,
+        phone: "0000000000", // champ requis
+        conversationId: "pending_" + Date.now(), // champ requis
+        sex: "female", // valeur temporaire obligatoire (adapter si possible)
+        fidelity: {
+          stars: 0,
+          card_expiration: new Date(),
+          rewards_history: [],
+        },
+      });
+
+      await employee.save();
+      console.log("✅ Employé créé :", employee.email);
+    }
+    // 🛠️ Assure-toi que employeesIds est un tableau
+    boss.employeesIds = boss.employeesIds || [];
+    // Ajout du lien boss → employé
+    if (!boss.employeesIds.includes(employee._id)) {
+      boss.employeesIds.push(employee._id);
+      await boss.save();
+      console.log("🔗 Employé ajouté à la liste du boss");
+    } else {
+      console.log("ℹ️ Employé déjà dans la liste du boss");
+    }
+
+    // Vérification et sauvegarde du lien employé → boss
+    employee.managerId = bossId;
+    await employee.save();
+    console.log("✅ Lien employé → boss mis à jour");
+
+    res.status(200).json({ message: "Employé ajouté/créé avec succès", employee });
+
+  } catch (error: any) {
+    console.error("❌ Erreur dans createAndAddEmployeeToBoss :", error);
+    res.status(500).json({ message: "Erreur lors de l’ajout ou création de l’employé", error: error.message });
+  }
+};
+
+// Get subscription info
+const getSubscriptionInfo = async (req: any, res: express.Response) => {
+  try {
+
+    const token = req.header("Authorization");
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Token d'authentification manquant" });
+    }
+
+    jwt.verify(
+      token,
+      process.env.SECRET_KEY,
+      async (err: any, decodedToken: { userId: any }) => {
+        if (err) {
+          return res
+            .status(403)
+            .json({ message: "Token d'authentification invalide" });
+        }
+
+        console.log("Token => " + JSON.stringify(decodedToken))
+        const userId = decodedToken.userId;
+        const user = await UserModel.findById(userId);
+        if (!user) return res.status(404).json({ message: "Utilisateur non trouvé 111" });
+        //const user = await UserModel.findById(req.user._id).select("abonnement abonnement_end");
+        const isExpired = user.abonnement_end ? new Date(user.abonnement_end) < new Date() : false;
+
+        res.json({
+          abonnement: user.abonnement,
+          abonnement_end: user.abonnement_end,
+          isExpired,
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+};
+
+// Subscribe to new plan
+const subscribeToPlan = async (req: any, res: express.Response) => {
+  const { newPlan, durationInMonths } = req.body;
+
+  if (!["free", "basic", "pro", "custom"].includes(newPlan)) {
+    return res.status(400).json({ message: "Type d'abonnement invalide" });
+  }
+
+  try {
+    const user = await UserModel.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "Utilisateur non trouvé 222" });
+
+    // Met à jour l'abonnement
+    user.abonnement = newPlan;
+
+    // Calcule la nouvelle date de fin d'abonnement
+    if (newPlan === "free") {
+      user.abonnement_end = null;
+    } else {
+      const now = new Date();
+      const currentEnd = user.abonnement_end && user.abonnement_end > now ? user.abonnement_end : now;
+      user.abonnement_end = new Date(currentEnd.setMonth(currentEnd.getMonth() + durationInMonths));
+    }
+
+    await user.save();
+
+    res.json({ message: `Abonnement mis à jour vers ${newPlan}`, abonnement_end: user.abonnement_end });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+};
 
 module.exports = {
   getAllByAdminOptions,
@@ -1087,4 +1371,11 @@ module.exports = {
   forgotPassword,
   resetPassword,
   addUserAddress,
+  getBossEmployees,
+  addEmployeeToBoss,
+  incrementStars,
+  subscribeToPlan,
+  getSubscriptionInfo,
+  removeEmployeeFromBoss,
+  createAndAddEmployeeToBoss,
 };

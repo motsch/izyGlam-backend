@@ -4,6 +4,8 @@ import ServiceModel from "../models/service";
 import * as express from "express";
 import { Request, Response } from 'express';
 import axios from 'axios';
+import UserModel from "../models/user"; // Assure-toi d’avoir bien importé ça en haut
+
 
 // Étendre l'interface Request pour inclure la propriété 'files'
 interface MulterRequest extends Request {
@@ -285,16 +287,34 @@ const updateShopById = async (req: express.Request, res: express.Response) => {
 const deleteShopById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+
     const deletedShop = await ShopModel.findByIdAndDelete(id);
-    if (deletedShop) {
-      res.json({ message: "Boutique supprimée avec succès" });
-    } else {
-      res.status(404).json({ message: "Boutique non trouvée" });
+
+    if (!deletedShop) {
+      return res.status(404).json({ message: "Boutique non trouvée" });
     }
+
+    const employeeId = deletedShop.idUser;
+    const employee = await UserModel.findById(employeeId);
+
+    if (employee && employee.managerId) {
+      // Suppression du lien boss → employé
+      await UserModel.findByIdAndUpdate(employee.managerId, {
+        $pull: { employeesIds: employee._id },
+      });
+
+      // Suppression du lien employé → boss
+      employee.managerId = undefined;
+      await employee.save();
+    }
+
+    res.json({ message: "Boutique supprimée avec succès" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Impossible de supprimer la boutique" });
   }
 };
+
 
 // Récupérer tous les services proposés par une boutique
 const getServicesByShop = async (req: express.Request, res: express.Response) => {
@@ -569,10 +589,40 @@ const searchShopsWithServices = async (req: express.Request, res: express.Respon
   }
 };
 
+const getShopsByBoss = async (req: express.Request, res: express.Response) => {
+  try {
+    const token = req.header("Authorization");
+    if (!token) {
+      return res.status(401).json({ message: "Token manquant" });
+    }
+
+    const decoded: any = require("jsonwebtoken").verify(token, process.env.SECRET_KEY);
+    const bossId = decoded.userId;
+
+    // Récupérer le boss
+    const boss = await UserModel.findById(bossId);
+    if (!boss || boss.role !== "boss") {
+      return res.status(403).json({ message: "Accès interdit : rôle non autorisé" });
+    }
+
+    // Si pas d'employés
+    if (!boss.employeesIds || boss.employeesIds.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // Récupérer les shops des employés
+    const shops = await ShopModel.find({ idUser: { $in: boss.employeesIds } });
+    res.status(200).json(shops);
+  } catch (error) {
+    console.error("Erreur dans getShopsByBoss :", error);
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+};
 
 
 
 module.exports = {
+  getShopsByBoss,
   getShopsAllCount,
   createShop,
   getAllShops,

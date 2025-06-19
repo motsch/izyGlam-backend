@@ -1,53 +1,36 @@
 import mongoose from "mongoose";
 
-// Interface définissant la structure d'un document Subscription
 export interface iSubscription extends mongoose.Document {
-  userId: string;
-  startDate: Date;
-  endDate: Date;
-  active: boolean;
-  planType: string;
-  isExpired(): boolean;
+  name: string;                     // Nom technique ex: "apprentie"
+  label: string;                    // Label affiché ex: "APPRENTIE"
+  icon: string;                     // Emoji ou icône ex: "🌱"
+  price: number;                    // Prix en euros
+  currency: string;                 // "EUR", "USD"...
+  country: string;                  // Code pays ISO ex: "FR"
+  maxSalons: number | null;         // ex: 1, 3, 10, null (= illimité)
+  features: string[];               // Liste des bullet points
+  supportLevel?: string;           // "standard", "email", "prioritaire"
+  isCustom: boolean;                // Pour l'offre Déesse
+  trialAvailable: boolean;          // 1 mois gratuit ?
+  order: number;                    // Pour l’ordre d’affichage
+  stripePriceId?: string;           // Lien avec Stripe (ex: prix_1N...)
 }
 
-// Schéma Mongoose pour le modèle Subscription
 const subscriptionSchema = new mongoose.Schema<iSubscription>({
-  userId: { 
-    type: String, 
-    required: true 
-  },
-  startDate: { 
-    type: Date, 
-    required: true, 
-    default: Date.now 
-  },
-  endDate: { 
-    type: Date, 
-    required: true 
-  },
-  active: { 
-    type: Boolean, 
-    required: true, 
-    default: true 
-  },
-  planType: { 
-    type: String, 
-    enum: ["basic", "premium", "pro"], 
-    required: true 
-  },
+  name: { type: String, required: true, unique: true },
+  label: { type: String, required: true },
+  icon: { type: String, required: true },
+  price: { type: Number, required: true },
+  currency: { type: String, required: true, default: "EUR" },
+  country: { type: String, required: true },
+  maxSalons: { type: Number, default: null }, // null = illimité
+  features: { type: [String], default: [] },
+  supportLevel: { type: String, enum: ["standard", "email", "prioritaire"], default: "standard" },
+  isCustom: { type: Boolean, default: false },
+  trialAvailable: { type: Boolean, default: false },
+  order: { type: Number, default: 0 },
+  stripePriceId: { type: String }, // Peut être undefined au départ
 });
 
-// Méthode pour vérifier si l'abonnement est expiré
-subscriptionSchema.methods.isExpired = function() {
-  return this.endDate < new Date();
-};
-
-// Middleware pour mettre à jour automatiquement le statut actif
-subscriptionSchema.pre("save", function(next) {
-  this.active = !this.isExpired();
-  next();
-});
-
-// Création du modèle Subscription basé sur le schéma
-const SubscriptionModel = mongoose.model<iSubscription>("Subscription", subscriptionSchema);
-export default SubscriptionModel;
+const subscriptionModel = mongoose.model<iSubscription>("Subscription", subscriptionSchema);
+export default subscriptionModel;

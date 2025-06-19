@@ -27,10 +27,10 @@ export interface iUser extends Document {
   password: string;
   phone: string;
   companyId: string;
-  abonnement: string;
+  abonnement: "free" | "basic" | "pro" | "custom";
   abonnement_end: Date | null;
   credit: number;
-  favoriteShops: Array<string>;  // Modification pour que ce soit un array de strings
+  favoriteShops: Array<string>;
   sex: "male" | "female";
   proches: Array<{
     lastname: string;
@@ -46,7 +46,9 @@ export interface iUser extends Document {
     floor: string;
     main: boolean;
   }>;
-  role: "user" | "entreprise" | "professionnel" | "admin";
+  role: "user" | "entreprise" | "professionnel" | "admin" | "boss";
+  managerId?: string; // ID du patron si ce user est un employé
+  employeesIds?: string[]; // Liste des IDs des employés si ce user est un boss
   shopCompany?: {
     name: string;
     adresse: string;
@@ -76,126 +78,135 @@ export interface iUser extends Document {
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   customerId?: string;
-  
-  // Nouveau système de fidélité
   fidelity: Fidelity;
   comparePassword(password: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<iUser>({
   lastname: { type: String, required: true },
-  abonnement: { type: String, required: false, default: "free" },
-  facebook: {
-    accessToken: { type: String, required: false },
-    tokenExpiresAt: { type: Date, required: false },
-    userId: { type: String, required: false }, // Facebook User ID
-  },
-  instagram: {
-    accessToken: { type: String, required: false },
-    tokenExpiresAt: { type: Date, required: false },
-    businessAccountId: { type: String, required: false }, // Pour Instagram Business
-  },
-  linkedin: {
-    accessToken: { type: String, required: false },
-    tokenExpiresAt: { type: Date, required: false },
-    userId: { type: String, required: false },
-    email: { type: String, required: false },
-  },
-  tiktok: {
-    accessToken: { type: String, required: false },
-    tokenExpiresAt: { type: Date, required: false },
-    userId: { type: String, required: false },
-  },
-  x: {
-    accessToken: { type: String, required: false },
-    tokenExpiresAt: { type: Date, required: false },
-    userId: { type: String, required: false },
-  },
-  thread: {
-    accessToken: { type: String, required: false },
-    tokenExpiresAt: { type: Date, required: false },
-    userId: { type: String, required: false },
-  },
-  bluesky: {
-    handle: { type: String, required: false },
-    accessToken: { type: String, required: false },
-    refreshToken: { type: String, required: false },
-    tokenExpiresAt: { type: Date, required: false },
-  },  
-  abonnement_end: { type: Date, required: false },
   firstname: { type: String, required: true },
-  favoriteShops: { type: [String], default: [] },  // Modification ici pour stocker des strings
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  phone: { type: String, required: true },
+  conversationId: { type: String, required: true },
+  companyId: { type: String, required: false },
+  abonnement: {
+    type: String,
+    required: false,
+    enum: ["free", "basic", "pro", "custom"],
+    default: "free",
+  },
+  abonnement_end: { type: Date, required: false },
+  credit: { type: Number, default: 0 },
+  favoriteShops: { type: [String], default: [] },
   sex: {
     type: String,
     required: true,
     enum: ["male", "female"],
   },
-  fidelity: {                             // Ajout du système fidélité ici 👇
-    stars: { type: Number, default: 0 },  // Compteur étoiles
-    card_expiration: { type: Date },      // Date expiration carte
+  fidelity: {
+    stars: { type: Number, default: 0 },
+    card_expiration: { type: Date },
     rewards_history: [
       {
+        type: { type: String },
         reward_name: { type: String, required: true },
         reward_date: { type: Date, required: true },
       },
     ],
   },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  phone: { type: String, required: true },
-  shopCompany: { type: Object, required: false },
-  companyId: { type: String, required: false },
-  conversationId: { type: String, required: true },
-  credit: { type: Number, required: false, default: 0 },
   proches: [
     {
-      lastname: { type: String, required: false },
-      firstname: { type: String, required: false },
-      email: { type: String, required: false },
-      phone: { type: String, required: false },
+      lastname: { type: String },
+      firstname: { type: String },
+      email: { type: String },
+      phone: { type: String },
     },
   ],
   address: [
     {
-      street: { type: String, required: false },
-      city: { type: String, required: false },
-      code_postal: { type: String, required: false },
-      country: { type: String, required: false },
-      floor: { type: String, required: false },
-      main: { type: Boolean, required: false, default: false },
+      street: { type: String },
+      city: { type: String },
+      code_postal: { type: String },
+      country: { type: String },
+      floor: { type: String },
+      main: { type: Boolean, default: false },
     },
   ],
   role: {
     type: String,
     required: true,
-    enum: ["user", "entreprise", "professionnel", "admin"],
+    enum: ["user", "entreprise", "professionnel", "admin", "boss"],
+  },
+  managerId: { type: String, required: false },
+  employeesIds: { type: [String], default: [] },
+  shopCompany: {
+    type: Object,
+    required: false,
   },
   availability: [
     {
-      day: { type: String, required: false },
+      day: { type: String },
       periods: [
         {
-          start: { type: String, required: false },
-          end: { type: String, required: false },
+          start: { type: String },
+          end: { type: String },
         },
       ],
     },
   ],
-  customerId: { type: String, required: false },
   unavailability: [
     {
-      start: { type: Date, required: false },
-      end: { type: Date, required: false },
+      start: { type: Date },
+      end: { type: Date },
     },
   ],
   breaks: {
-    duration: { type: String, required: false },
+    duration: { type: String },
   },
-  resetPasswordToken: { type: String, required: false },
-  resetPasswordExpires: { type: Date, required: false },
+  customerId: { type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
+  facebook: {
+    accessToken: { type: String },
+    tokenExpiresAt: { type: Date },
+    userId: { type: String },
+  },
+  instagram: {
+    accessToken: { type: String },
+    tokenExpiresAt: { type: Date },
+    businessAccountId: { type: String },
+  },
+  linkedin: {
+    accessToken: { type: String },
+    tokenExpiresAt: { type: Date },
+    userId: { type: String },
+    email: { type: String },
+  },
+  tiktok: {
+    accessToken: { type: String },
+    tokenExpiresAt: { type: Date },
+    userId: { type: String },
+  },
+  x: {
+    accessToken: { type: String },
+    tokenExpiresAt: { type: Date },
+    userId: { type: String },
+  },
+  thread: {
+    accessToken: { type: String },
+    tokenExpiresAt: { type: Date },
+    userId: { type: String },
+  },
+  bluesky: {
+    handle: { type: String },
+    accessToken: { type: String },
+    refreshToken: { type: String },
+    tokenExpiresAt: { type: Date },
+  },
 });
 
-// Hashing password before saving it to the database
+// Hash le mot de passe avant sauvegarde
 userSchema.pre<iUser>("save", async function (next) {
   try {
     if (!this.isModified("password")) return next();
@@ -207,18 +218,14 @@ userSchema.pre<iUser>("save", async function (next) {
   }
 });
 
-// Method for comparing entered password during login
+// Méthode de comparaison du mot de passe
 userSchema.methods.comparePassword = async function (password: string) {
   try {
-    console.log(password)
-    console.log(this.password)
     return await bcrypt.compare(password, this.password);
   } catch (error: any) {
     throw new Error(error);
   }
 };
-
-
 
 const UserModel = mongoose.model<iUser>("Users", userSchema);
 export default UserModel;

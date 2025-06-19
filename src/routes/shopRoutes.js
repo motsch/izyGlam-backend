@@ -73,5 +73,6 @@ router.put("/shop-stats/:id/display-time", authMiddleware, shopController.update
 router.put("/shop-stats/bulk-update", authMiddleware, shopController.bulkUpdateShopStats);
 
 router.get('/shops-search', shopController.searchShopsWithServices);
+router.get("/shops-by-boss", authMiddleware, shopController.getShopsByBoss);
 
 module.exports = router;
