@@ -11,12 +11,20 @@ interface Fidelity {
     reward_date: Date;
   }>;
 }
+interface BankInformation {
+  iban?: string;
+  bic?: string;
+  bank_name?: string;
+  holder_name?: string;
+  country?: string;
+}
 
 export interface iUser extends Document {
   lastname: string;
   firstname: string;
   facebook: any;
   instagram: any;
+  bank?: BankInformation;
   linkedin: any;
   bluesky: any;
   x: any;
@@ -82,12 +90,25 @@ export interface iUser extends Document {
   comparePassword(password: string): Promise<boolean>;
 }
 
+// Sous-schema pour les infos bancaires
+const BankInformationSchema = new Schema(
+  {
+    iban: { type: String },
+    bic: { type: String },
+    bank_name: { type: String },
+    holder_name: { type: String },
+    country: { type: String },
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema<iUser>({
   lastname: { type: String, required: true },
   firstname: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String, required: true },
+  bank: { type: BankInformationSchema, required: false },
   conversationId: { type: String, required: true },
   companyId: { type: String, required: false },
   abonnement: {

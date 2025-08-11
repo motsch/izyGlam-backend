@@ -24,4 +24,7 @@ router.get("/ca-count-all", authMiddleware, bookingController.getAllCACount);
 // Route pour confirmer le code d'un booking
 router.post("/bookings-confirm-code", authMiddleware, bookingController.confirmBookingCode);
 
+// KPI Dashboard par salon
+router.get("/booking-dashboard/:shopId", authMiddleware, bookingController.getDashboardStatsByShop);
+
 module.exports = router;

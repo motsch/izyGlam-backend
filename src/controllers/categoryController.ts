@@ -111,16 +111,13 @@ const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
 
     // Extraction des catégories depuis les shops. 
     // Ici on suppose que le champ "type" dans Shop correspond au nom de la catégorie.
-    const categoryNames = shops.map((shop) => shop.type);
-    console.log("Catégories extraites des shops:", categoryNames);
 
-    const uniqueCategoryNames = [...new Set(categoryNames)];
-    console.log("Catégories uniques:", uniqueCategoryNames);
+    const tradKeys = [...new Set(shops.map(s => s.trad).filter(Boolean))];
 
-    // Recherche insensible à la casse grâce aux expressions régulières
-    const regexNames = uniqueCategoryNames.map(name => new RegExp(`^${name}$`, 'i'));
     const categories = await CategoryModel.find({
-      name: { $in: regexNames },
+      trad: { $in: tradKeys },
+      // optionnel si tu veux filtrer seulement les catégories actives :
+      // active: true,
     });
     console.log(`Nombre de catégories trouvées: ${categories.length}`);
 

@@ -4,6 +4,7 @@ import moment from "moment"; // moment.js pour faciliter les calculs de temps
 import shopModel from "../models/shop";
 import serviceModel from "../models/service";
 import userModel from "../models/user";
+import { sendSepaTransferToPro } from "../services/paymentService"; // à créer
 
 
 const getAllCACount = async (
@@ -158,7 +159,7 @@ export const getAvailableSlots = async (req: express.Request, res: express.Respo
     if (!service) return res.status(404).json({ message: "Service non trouvé" });
     const duration = service.duration;
 
-    const shop:any = await shopModel.findById(shopId);
+    const shop: any = await shopModel.findById(shopId);
     if (!shop) return res.status(404).json({ message: "Boutique non trouvée" });
 
     const professional = await userModel.findById(shop.idUser);
@@ -279,34 +280,136 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
  * Controller pour confirmer le code du booking.
  * Expects { bookingId: string, code: string } dans req.body.
  */
+
 const confirmBookingCode = async (req: express.Request, res: express.Response) => {
   try {
     const { bookingId, code } = req.body;
 
-    // Vérification des paramètres obligatoires
     if (!bookingId || !code) {
       return res.status(400).json({ message: "bookingId et code sont obligatoires" });
     }
 
-    // Recherche du booking par son ID
     const booking = await BookingModel.findById(bookingId);
-    if (!booking) {
-      return res.status(404).json({ message: "Booking non trouvé" });
-    }
+    if (!booking) return res.status(404).json({ message: "Booking non trouvé" });
 
-    // Vérification du code
     if (booking.generatedCode === code) {
-      // Mise à jour de proCodeConfirmed à true
       booking.proCodeConfirmed = true;
       await booking.save();
+
+      // ➕ Paiement au professionnel
+      const pro = await userModel.findById(booking.userProId);
+      if (!pro || !pro.bank || !pro.bank.iban || !pro.bank.bic) {
+        return res.status(400).json({ message: "Coordonnées bancaires manquantes" });
+      }
+
+      const amount = parseFloat(booking.shopEarnings || "0");
+      if (amount <= 0) {
+        return res.status(400).json({ message: "Montant invalide pour le paiement" });
+      }
+
+      await sendSepaTransferToPro({
+        iban: pro.bank.iban,
+        bic: pro.bank.bic,
+        amount,
+        label: `Prestation du ${booking.date} pour ${booking.productName}`,
+        recipient: `${pro.firstname} ${pro.lastname}`,
+      });
+
       return res.json({ confirmed: true });
     } else {
-      // Le code ne correspond pas
       return res.json({ confirmed: false });
     }
   } catch (error) {
     console.error("Erreur lors de la confirmation du code :", error);
     return res.status(500).json({ message: "Erreur interne du serveur" });
+  }
+};
+
+const getDashboardStatsByShop = async (req: express.Request, res: express.Response) => {
+  const { shopId } = req.params;
+
+  try {
+    const allBookings = await BookingModel.find({ shopId, status: "finished" });
+
+    const now = moment();
+    const startOfCurrentMonth = now.clone().startOf("month");
+    const startOfLastMonth = now.clone().subtract(1, "month").startOf("month");
+    const endOfLastMonth = startOfCurrentMonth.clone().subtract(1, "day").endOf("day");
+
+    // KPI 1 : CA
+    const totalRevenue = allBookings.reduce((sum, b) => sum + parseFloat(b.price || "0"), 0);
+
+    // KPI 2 : Commissions
+    const totalCommission = allBookings.reduce((sum, b) => sum + parseFloat(b.commission || "0"), 0);
+
+    // KPI 3 : Évolution M-1 → M
+    const currentMonthRevenue = allBookings
+      .filter(b => moment(b.orderDate).isSameOrAfter(startOfCurrentMonth))
+      .reduce((sum, b) => sum + parseFloat(b.price || "0"), 0);
+
+    const lastMonthRevenue = allBookings
+      .filter(b => moment(b.orderDate).isBetween(startOfLastMonth, endOfLastMonth))
+      .reduce((sum, b) => sum + parseFloat(b.price || "0"), 0);
+
+    const evolution =
+      lastMonthRevenue > 0
+        ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+        : null;
+
+    // KPI 4 : Revenu net à verser
+    const confirmedBookings = allBookings.filter(b => b.proCodeConfirmed);
+    const totalEarnings = confirmedBookings.reduce((sum, b) => sum + parseFloat(b.shopEarnings || "0"), 0);
+
+    // KPI 5 : Nombre de prestations
+    const totalBookings = allBookings.length;
+
+    // KPI 6 : Nb d’annulations
+    const cancelledBookings = await BookingModel.countDocuments({
+      shopId,
+      status: { $in: ["cancelled", "refused", "no-show-client", "no-show-pro"] },
+    });
+
+    // KPI 7 : Moyenne par prestation
+    const avgPrice = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+
+    // KPI 8 : % de bookings avec avis
+    const reviewsCount = allBookings.filter(b => b.reviewAdded).length;
+    const reviewRatio = totalBookings > 0 ? (reviewsCount / totalBookings) * 100 : 0;
+
+    // KPI 9 : Top prestations
+    const earningsByProduct: Record<string, number> = {};
+    allBookings.forEach(b => {
+      const name = b.productName || "Inconnu";
+      earningsByProduct[name] = (earningsByProduct[name] || 0) + parseFloat(b.price || "0");
+    });
+    const topProducts = Object.entries(earningsByProduct)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([product, total]) => ({ product, total: total.toFixed(2) }));
+
+    // KPI 10 : Durée moyenne
+    const totalDurations = allBookings.reduce((sum, b) => {
+      const start = moment(b.start);
+      const end = moment(b.end);
+      return sum + end.diff(start, "minutes");
+    }, 0);
+    const avgDuration = totalBookings > 0 ? totalDurations / totalBookings : 0;
+
+    return res.status(200).json({
+      totalRevenue: totalRevenue.toFixed(2),
+      totalCommission: totalCommission.toFixed(2),
+      evolution: evolution !== null ? evolution.toFixed(2) : null,
+      totalEarnings: totalEarnings.toFixed(2),
+      totalBookings,
+      cancelledBookings,
+      avgPrice: avgPrice.toFixed(2),
+      reviewRatio: reviewRatio.toFixed(2),
+      topProducts,
+      avgDuration: Math.round(avgDuration), // en minutes
+    });
+  } catch (error) {
+    console.error("Erreur dans getDashboardStatsByShop :", error);
+    return res.status(500).json({ message: "Erreur lors du calcul des stats" });
   }
 };
 
@@ -325,4 +428,5 @@ module.exports = {
   getAvailableSlots,
   updateBookingStatusById,
   confirmBookingCode,
+  getDashboardStatsByShop,
 };

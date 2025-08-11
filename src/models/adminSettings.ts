@@ -8,6 +8,12 @@ export interface iAdminSettings extends mongoose.Document {
   cancellationPolicy48h: number; // Politique d'annulation à moins de 48h (frais de service)
   minimumBookingNotice: number; // Délai minimum de réservation (en heures)
   taxRate: number; // Taux de TVA
+  pubActivated: boolean; // Activer la publicité
+  companyActivated: boolean; // Activer le commerce avec les entreprises
+  fidelityActivated: boolean; // Activer la fidélisation
+  multiShopsActivated: boolean; // Activer le multi-boutique
+  promoActivated: boolean; // Activer les promotion pour les boutiques
+  sponsorsActivated: boolean; // Activer la partie sponsors sur la landing page
 }
 
 const adminSettingsSchema = new mongoose.Schema<iAdminSettings>({
@@ -45,6 +51,36 @@ const adminSettingsSchema = new mongoose.Schema<iAdminSettings>({
     type: Number,
     default: 20, // Taux de TVA initial (modifiable)
     required: true,
+  },
+  pubActivated: {
+    type: Boolean,
+    default: false, // Activation de l'inerface publicitaire
+    required: false,
+  },
+  companyActivated: {
+    type: Boolean,
+    default: false, // Activation de l'inerface publicitaire
+    required: false,
+  },
+  fidelityActivated: {
+    type: Boolean,
+    default: false, // Activation de l'inerface publicitaire
+    required: false,
+  },
+  multiShopsActivated: {
+    type: Boolean,
+    default: false, // Activation de l'inerface publicitaire
+    required: false,
+  },
+  sponsorsActivated: {
+    type: Boolean,
+    default: false, // Activation de l'inerface publicitaire
+    required: false,
+  },
+  promoActivated: {
+    type: Boolean,
+    default: false, // Activation de l'inerface publicitaire
+    required: false,
   },
 });
 

@@ -4,7 +4,10 @@ import ServiceModel from "../models/service";
 import * as express from "express";
 import { Request, Response } from 'express';
 import axios from 'axios';
+import path from "path";
+import fs from "fs";
 import UserModel from "../models/user"; // Assure-toi d’avoir bien importé ça en haut
+import serviceModel from "../models/service";
 
 
 // Étendre l'interface Request pour inclure la propriété 'files'
@@ -27,7 +30,7 @@ const getShopsAllCount = async (
 const getShopsByIds = async (req: any, res: express.Response) => {
   try {
     // const { shopIds } = req.params;
-    
+
     const shopIds = req.body.shopIds;
     console.log("shopIds : " + shopIds);
     const shops = await ShopModel.find({ _id: { $in: shopIds } });
@@ -85,6 +88,72 @@ const createShop = async (req: express.Request, res: express.Response) => {
 };
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+// Créer une nouvelle boutique (shop)
+export const getIzyGlamProductDescription = async (req: express.Request, res: express.Response) => {
+  try {
+    console.log("IN PRODUCT DESCRIPTION IZYGLAM");
+
+    const { product } = req.body;
+
+    if (!product.type) {
+      return res.status(400).json({ message: "Le type de salon est requis." });
+    }
+    if (!product._id) {
+      return res.status(400).json({ message: "L'ID du produit est requis." });
+    }
+
+    const prompt = product.description
+      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Pour la prestation ${product.name}, on souhaite revoir la description: "${product.description}". Si une description est viable, reformule-la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon, crée-la de 0.`
+      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description de prestation originale, professionnelle, engageante et sympathique pour une prestation portant ce nom: "${product.name}". Ajoute une touche de personnalité unique à chaque fois.`;
+
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'Le salon est toujours géré par une seule personne. Les descriptions ne parlent donc pas d\'une équipe, mais d\'un professionnel.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.8,
+        max_tokens: 300,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    let formattedDescription = response.data.choices[0].message?.content?.trim() || '';
+    // Retire les guillemets simples ou doubles en début et fin
+    formattedDescription = formattedDescription.replace(/^["']|["']$/g, '');
+    // 1️⃣ Récupérer le produit dans MongoDB
+    const existingProduct = await serviceModel.findById(product._id);
+    if (!existingProduct) {
+      return res.status(404).json({ message: "Produit introuvable." });
+    }
+
+    // 2️⃣ Mettre à jour la description
+    existingProduct.description = formattedDescription;
+
+    // 3️⃣ Sauvegarder en base
+    await existingProduct.save();
+
+    res.status(200).json({ formattedDescription });
+  } catch (error: any) {
+    console.error("Erreur dans getIzyGlamDescription :", error?.response?.data || error);
+    res.status(500).json({ message: "Impossible de générer la description." });
+  }
+};
+
 // Créer une nouvelle boutique (shop)
 export const getIzyGlamDescription = async (req: express.Request, res: express.Response) => {
   try {
@@ -97,8 +166,8 @@ export const getIzyGlamDescription = async (req: express.Request, res: express.R
     }
 
     const prompt = userDescription
-      ? `Tu es un expert en communication pour une plateforme de salons de beauté comme IzyGlam. Voici une description donnée par un utilisateur pour un salon de type "${type}" : "${userDescription}". Reformule-la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain.`
-      : `Tu es un expert en communication pour une plateforme de salons de beauté comme IzyGlam. Génére une description originale, professionnelle, engageante et sympathique pour un salon de type "${type}". Ajoute une touche de personnalité unique à chaque fois.`;
+      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domcile. Voici une description pour ce salon de type "${type}". La description est : "${userDescription}". Si une description est viable, refomule la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon créer là de 0. C'est une description à la premiere personne (On utilise le "je")`
+      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description originale, professionnelle, engageante et sympathique pour un salon de type "${type}". Ajoute une touche de personnalité unique à chaque fois. C'est une description à la premiere personne (On utilise le "je")`;
 
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -128,11 +197,125 @@ export const getIzyGlamDescription = async (req: express.Request, res: express.R
     const formattedDescription = response.data.choices[0].message?.content?.trim() || '';
 
     res.status(200).json({ formattedDescription });
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Erreur dans getIzyGlamDescription :", error?.response?.data || error);
     res.status(500).json({ message: "Impossible de générer la description." });
   }
 };
+
+
+
+/**
+ * Remplace l'image d'un Service par une image générée via OpenAI.
+ * Body attendu: { product: { type: string, description?: string }, size?: "1024x1024"|"1792x1024"|"1024x1792" }
+ * Route suggérée: POST /services/:id/image/ai
+ */
+export const uploadServiceImageAI = async (req: Request, res: Response) => {
+  try {
+    const { product, size } = req.body || {};
+    const id = product?._id;
+
+    if (!id) return res.status(400).json({ message: "Paramètre id manquant." });
+    if (!product?.type) return res.status(400).json({ message: "product.type est requis." });
+    if (!OPENAI_API_KEY) return res.status(500).json({ message: "OPENAI_API_KEY manquant." });
+
+    const service = await ServiceModel.findById(id);
+    if (!service) return res.status(404).json({ message: "Service non trouvé." });
+
+    const clientGender = "femme"; // ou "homme"
+
+    const prompt = `
+Tu es un·e directeur·ice artistique. Crée une photo ultra réaliste et professionnelle pour représenter ce service de beauté à domicile, dans le style des visuels produits d'Uber Eats (présentation irrésistible, mise en avant claire du sujet, éclairage parfait, réalisme maximal).
+Produit: ${product.name}.
+Style: photo haute définition, éclairage naturel et harmonieux, ambiance chaleureuse et premium, couleurs fidèles, mise en scène soignée.
+La scène montre un professionnel en train de réaliser la prestation sur un·e client·e ${clientGender}, dans un intérieur cosy et lumineux.
+Une attention particulière doit être portée à la position et au réalisme des bras et des mains, avec une interaction naturelle et précise entre le professionnel et le/la client·e (aucune distorsion ou doigts supplémentaires).
+Sujet: "${product.type}" à domicile.
+${product.description ? `Description du produit: ${product.description}` : ""}
+`.trim();
+
+    const allowedSizes = ["1024x1024", "1024x1536", "1536x1024", "auto"];
+    const finalSize = allowedSizes.includes(size) ? size : "1536x1024";
+
+    // 1) Génération
+    let aiResp;
+    try {
+      aiResp = await axios.post(
+        "https://api.openai.com/v1/images/generations",
+        { model: "gpt-image-1", prompt, n: 1, size: finalSize },
+        {
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 180000,
+        }
+      );
+    } catch (e: any) {
+      console.error("OpenAI images error:", e?.response?.status, e?.response?.data || e?.message);
+      const status = e?.response?.status || 502;
+      const msg = e?.response?.data?.error?.message || e?.message || "Erreur OpenAI Images";
+      return res.status(status).json({ message: msg });
+    }
+
+    const item = aiResp?.data?.data?.[0];
+    if (!item) {
+      console.error("OpenAI images payload inattendu:", JSON.stringify(aiResp?.data, null, 2));
+      return res.status(502).json({ message: "Payload image invalide (data[0] manquant)." });
+    }
+
+    // 2) Écriture fichier : gère base64 OU URL
+    const dir = path.resolve(process.cwd(), "uploads", "images", "articles");
+    await fs.promises.mkdir(dir, { recursive: true });
+
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.png`;
+    const absPath = path.join(dir, filename);
+
+    if (item.b64_json) {
+      // Cas base64 (ce que tu vois dans tes logs)
+      const buffer = Buffer.from(item.b64_json, "base64");
+      await fs.promises.writeFile(absPath, buffer);
+    } else if (item.url) {
+      // Cas URL (ancien comportement)
+      const imgResp = await axios.get(item.url, { responseType: "arraybuffer" });
+      await fs.promises.writeFile(absPath, imgResp.data);
+    } else {
+      console.error("Ni b64_json ni url dans la réponse:", JSON.stringify(item, null, 2));
+      return res.status(502).json({ message: "OpenAI n'a pas retourné d'image (ni b64 ni url)." });
+    }
+
+    const publicPath = `/uploads/images/articles/${filename}`;
+
+    // 3) Supprime l’ancienne si interne
+    if (service.image?.startsWith("/uploads/images/articles/")) {
+      try {
+        const oldAbs = path.resolve(process.cwd(), service.image.slice(1));
+        await fs.promises.unlink(oldAbs);
+      } catch { /* ignore */ }
+    }
+
+    // 4) MAJ service
+    service.image = publicPath;
+    await service.save();
+
+    return res.status(200).json({
+      message: "Image générée et mise à jour avec succès",
+      image: publicPath,
+      service
+    });
+
+  } catch (error: any) {
+    console.error("Erreur uploadServiceImageAI :", error?.response?.data || error);
+    return res.status(500).json({
+      message: "Erreur génération image",
+      error: error?.message || "unknown",
+    });
+  }
+};
+
+
+
+
 
 
 // Récupérer toutes les boutiques
@@ -161,9 +344,9 @@ const calculateDistance = (
   const a =
     Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
     Math.cos(radLat1) *
-      Math.cos(radLat2) *
-      Math.sin(deltaLon / 2) *
-      Math.sin(deltaLon / 2);
+    Math.cos(radLat2) *
+    Math.sin(deltaLon / 2) *
+    Math.sin(deltaLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -181,7 +364,7 @@ const getShopsNearby = async (req: express.Request, res: express.Response) => {
     const shops = await ShopModel.find();
 
     // On filtre les boutiques selon la distance
-    const shopsNearby = shops.filter((shop:any) => {
+    const shopsNearby = shops.filter((shop: any) => {
       if (
         !shop.location ||
         shop.location.latitude === undefined ||
@@ -254,7 +437,7 @@ const getShopsByPostalCodes = async (req: Request, res: Response) => {
 const getShopById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    console.log("ID : "+ id)
+    console.log("ID : " + id)
     const shop = await ShopModel.findById(id);
     if (shop) {
       res.json(shop);
@@ -343,7 +526,7 @@ const getShopsByUserId = async (req: express.Request, res: express.Response) => 
     const shops = await ShopModel.find({ idUser: userId });
 
     if (shops.length > 0) {
-      console.log("shops to find 66666666666666      :::::::: "+shops)
+      console.log("shops to find 66666666666666      :::::::: " + shops)
       res.json(shops);
     } else {
       res.status(404).json({ message: "Aucune boutique trouvée pour cet utilisateur" });
@@ -434,76 +617,76 @@ const addShopReview = async (req: express.Request, res: express.Response) => {
 
 const bulkUpdateShopStats = async (req: express.Request, res: express.Response) => {
   try {
-      const { stats } = req.body; // stats = [{ shopId, impressions: X, duree_affichage: Y }, ...]
+    const { stats } = req.body; // stats = [{ shopId, impressions: X, duree_affichage: Y }, ...]
 
-      if (!Array.isArray(stats) || stats.length === 0) {
-          return res.status(400).json({ message: "Données invalides" });
-      }
+    if (!Array.isArray(stats) || stats.length === 0) {
+      return res.status(400).json({ message: "Données invalides" });
+    }
 
-      const bulkOps = stats.map(({ shopId, impressions, duree_affichage }) => ({
-          updateOne: {
-              filter: { _id: shopId },
-              update: {
-                  $inc: {
-                      impressions: impressions || 0,
-                      nombre_affichages_valides: impressions ? 1 : 0,
-                      temps_affichage_total: duree_affichage || 0,
-                  }
-              }
+    const bulkOps = stats.map(({ shopId, impressions, duree_affichage }) => ({
+      updateOne: {
+        filter: { _id: shopId },
+        update: {
+          $inc: {
+            impressions: impressions || 0,
+            nombre_affichages_valides: impressions ? 1 : 0,
+            temps_affichage_total: duree_affichage || 0,
           }
-      }));
+        }
+      }
+    }));
 
-      await ShopModel.bulkWrite(bulkOps);
-      res.json({ message: "Mises à jour des statistiques effectuées" });
+    await ShopModel.bulkWrite(bulkOps);
+    res.json({ message: "Mises à jour des statistiques effectuées" });
 
   } catch (error) {
-      res.status(500).json({ message: "Erreur lors de la mise à jour des stats", error });
+    res.status(500).json({ message: "Erreur lors de la mise à jour des stats", error });
   }
 };
 
 const incrementImpression = async (req: express.Request, res: express.Response) => {
   try {
-      const { id } = req.params;
-      console.log(`📢 Tentative d'incrémentation d'impression pour la boutique ${id}`);
+    const { id } = req.params;
+    console.log(`📢 Tentative d'incrémentation d'impression pour la boutique ${id}`);
 
-      const shop = await ShopModel.findById(id);
-      if (!shop) {
-          console.error(`❌ Boutique introuvable : ${id}`);
-          return res.status(404).json({ message: "Boutique non trouvée" });
-      }
+    const shop = await ShopModel.findById(id);
+    if (!shop) {
+      console.error(`❌ Boutique introuvable : ${id}`);
+      return res.status(404).json({ message: "Boutique non trouvée" });
+    }
 
-      shop.impressions += 1;
-      await shop.save();
+    shop.impressions += 1;
+    await shop.save();
 
-      console.log(`✅ Impression mise à jour avec succès pour ${id}`);
-      res.json({ message: "Impression mise à jour", shop });
+    console.log(`✅ Impression mise à jour avec succès pour ${id}`);
+    res.json({ message: "Impression mise à jour", shop });
   } catch (error) {
-      console.error("❌ Erreur dans incrementImpression :", error);
-      res.status(500).json({ message: "Erreur lors de la mise à jour des impressions", error });
+    console.error("❌ Erreur dans incrementImpression :", error);
+    res.status(500).json({ message: "Erreur lors de la mise à jour des impressions", error });
   }
 };
 
 
 const updateShopDisplayTime = async (req: express.Request, res: express.Response) => {
   try {
-      const { id } = req.params;
-      const { duree_affichage } = req.body;
+    const { id } = req.params;
+    const { duree_affichage } = req.body;
 
-      if (!duree_affichage || duree_affichage <= 0) {
-          return res.status(400).json({ message: "Durée d'affichage invalide" });
-      }
+    if (!duree_affichage || duree_affichage <= 0) {
+      return res.status(400).json({ message: "Durée d'affichage invalide" });
+    }
 
-      const shop = await ShopModel.findById(id);
-      if (!shop) {
-          return res.status(404).json({ message: "Boutique non trouvée" });
-      }
+    const shop = await ShopModel.findById(id);
+    if (!shop) {
+      return res.status(404).json({ message: "Boutique non trouvée" });
+    }
 
-      shop.temps_affichage_total += duree_affichage;
-      shop.nombre_affichages_valides += 1;
-      await shop.save();
-      res.json({ message: "Temps d'affichage mis à jour", shop });
+    shop.temps_affichage_total += duree_affichage;
+    shop.nombre_affichages_valides += 1;
+    await shop.save();
+    res.json({ message: "Temps d'affichage mis à jour", shop });
   } catch (error) {
-      res.status(500).json({ message: "Erreur lors de la mise à jour du temps d'affichage", error });
+    res.status(500).json({ message: "Erreur lors de la mise à jour du temps d'affichage", error });
   }
 };
 
@@ -642,4 +825,6 @@ module.exports = {
   bulkUpdateShopStats,
   searchShopsWithServices,
   getIzyGlamDescription,
+  uploadServiceImageAI,
+  getIzyGlamProductDescription,
 };
