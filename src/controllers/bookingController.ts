@@ -1,11 +1,16 @@
 import BookingModel from "../models/booking";
 import * as express from "express";
-import moment from "moment"; // moment.js pour faciliter les calculs de temps
-import shopModel from "../models/shop";
+// import moment from "moment"; // moment.js pour faciliter les calculs de temps
+// import shopModel from "../models/shop";
 import serviceModel from "../models/service";
 import userModel from "../models/user";
 import { sendSepaTransferToPro } from "../services/paymentService"; // à créer
-
+import moment from "moment-timezone";
+import ServiceModel from "../models/service";      // ajuste le chemin si besoin
+import ShopModel from "../models/shop";
+import UserModel from "../models/user";
+// import shopModel from "../models/shop";
+import { iShop } from "../models/shop"; // adapte le chemin si besoin
 
 const getAllCACount = async (
   req: express.Request,
@@ -151,7 +156,7 @@ const getBookingsByClient = async (req: express.Request, res: express.Response) 
   }
 };
 
-export const getAvailableSlots = async (req: express.Request, res: express.Response) => {
+export const getAvailableSlotsV2 = async (req: express.Request, res: express.Response) => {
   try {
     const { serviceId, shopId } = req.params;
 
@@ -159,7 +164,7 @@ export const getAvailableSlots = async (req: express.Request, res: express.Respo
     if (!service) return res.status(404).json({ message: "Service non trouvé" });
     const duration = service.duration;
 
-    const shop: any = await shopModel.findById(shopId);
+    const shop: any = await ShopModel.findById(shopId);
     if (!shop) return res.status(404).json({ message: "Boutique non trouvée" });
 
     const professional = await userModel.findById(shop.idUser);
@@ -413,7 +418,199 @@ const getDashboardStatsByShop = async (req: express.Request, res: express.Respon
   }
 };
 
+// ----- CONFIG METIER -----
+const GRID_MINUTES = 15;            // alignement Doctolib-like
+const MAX_SLOTS_PER_DAY = 10;       // “10 pile”
+const WINDOW_WEEKS = 6;             // 6 semaines
+const BLOCKING_STATUSES = ["pending", "accepted"] as const;
 
+// ----- UTILS -----
+const toMinutes = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+};
+
+// arrondit vers le haut sur la grille (ex. 15 min)
+const roundUpToGrid = (m: moment.Moment, gridMin: number) => {
+  const minutes = m.minutes();
+  const remainder = minutes % gridMin;
+  if (remainder === 0) return m.clone().seconds(0).milliseconds(0);
+  return m.clone().add(gridMin - remainder, "minutes").seconds(0).milliseconds(0);
+};
+
+const dayKeyFromMoment = (d: moment.Moment) => {
+  // moment().format('dddd') dépend de la locale; on normalise :
+  const map = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  // return map[d.day()] as keyof ShopModel["hours"];
+  return map[d.day()] as keyof iShop["hours"];
+
+};
+
+// overlap avec buffer bilatéral :
+// slot [S,E] interdit si (S < bookingEnd+buffer) && (E > bookingStart-buffer)
+const overlapsWithBuffer = (
+  slotStart: moment.Moment,
+  slotEnd: moment.Moment,
+  bookingStart: moment.Moment,
+  bookingEnd: moment.Moment,
+  bufferMin: number
+) => {
+  const bookingStartMinus = bookingStart.clone().subtract(bufferMin, "minutes");
+  const bookingEndPlus = bookingEnd.clone().add(bufferMin, "minutes");
+  return slotStart.isBefore(bookingEndPlus) && slotEnd.isAfter(bookingStartMinus);
+};
+
+// étalement “humain” : on prend 10 slots répartis sur la liste triée
+const pickSpread = <T>(items: T[], count: number): T[] => {
+  if (items.length <= count) return items;
+  const picked: T[] = [];
+  for (let i = 0; i < count; i++) {
+    const idx = Math.round((i * (items.length - 1)) / (count - 1));
+    picked.push(items[idx]);
+  }
+  return picked;
+};
+
+// ----- CONTROLLER -----
+export const getAvailableSlots = async (req: express.Request, res: express.Response) => {
+  try {
+    const { serviceId, shopId } = req.params;
+
+    // 1) Charge service/shop/pro
+    const service = await ServiceModel.findById(serviceId);
+    if (!service) return res.status(404).json({ message: "Service non trouvé" });
+    const durationMin = Number(service.duration); // en minutes
+
+    const shop: any = await ShopModel.findById(shopId);
+    if (!shop) return res.status(404).json({ message: "Boutique non trouvée" });
+
+    const professional = await UserModel.findById(shop.idUser);
+    if (!professional) return res.status(404).json({ message: "Professionnel non trouvé" });
+
+    // 2) Timezone
+    const tz = shop.timeZone || "Europe/Paris"; // prêt pour l’international
+    const now = moment.tz(tz);
+
+    // 3) Paramètres métier
+    const ondaybooking: boolean = !!shop.ondaybooking;
+    const minimumDelayMin = Number(shop.minimumDelay || "30"); // buffer global avant ET après
+    const startDate = now.clone().startOf("day");
+    const endDate = now.clone().add(WINDOW_WEEKS, "weeks").endOf("day");
+
+    // 4) Récupère les bookings bloquants sur la fenêtre (pending + accepted)
+    const bookings = await BookingModel.find({
+      userProId: professional._id.toString(),
+      start: { $gte: startDate.toDate(), $lte: endDate.toDate() },
+      status: { $in: BLOCKING_STATUSES },
+    }).lean();
+
+    // (Optionnel) Récupérer aussi les "holds" non expirés pour 5 min de verrou doux (voir section 3)
+    // const holds = await SlotHoldModel.find({
+    //   userProId: professional._id.toString(),
+    //   start: { $lte: endDate.toDate() },
+    //   end:   { $gte: startDate.toDate() },
+    //   expiresAt: { $gt: new Date() },
+    // }).lean();
+
+    const allAvailableSlots: Array<{ date: string; start: string; end: string }> = [];
+
+    // 5) Boucle par jour
+    for (let d = startDate.clone(); d.isSameOrBefore(endDate, "day"); d.add(1, "day")) {
+      const dayKey = dayKeyFromMoment(d);
+      const daySchedule = shop.hours?.[dayKey];
+
+      if (!daySchedule || daySchedule.closed) continue;
+
+      // 5.1 indisponibilités pro (inclusives + délai)
+      const hasUnavailability = (professional.unavailability || []).some((u: any) => {
+        const uStart = moment(u.start).tz(tz).subtract(minimumDelayMin, "minutes");
+        const uEnd = moment(u.end).tz(tz).add(minimumDelayMin, "minutes");
+        // si le jour d est touché par l’indispo élargie
+        return d.clone().endOf("day").isAfter(uStart) && d.clone().startOf("day").isBefore(uEnd);
+      });
+      if (hasUnavailability) continue;
+
+      // 5.2 Construit les deux périodes du jour
+      const periods: Array<{ pStart: moment.Moment; pEnd: moment.Moment }> = [];
+      const addPeriod = (startStr?: string, endStr?: string) => {
+        if (!startStr || !endStr) return;
+        const pStart = d.clone().hour(Number(startStr.split(":")[0])).minute(Number(startStr.split(":")[1])).second(0).millisecond(0);
+        const pEnd = d.clone().hour(Number(endStr.split(":")[0])).minute(Number(endStr.split(":")[1])).second(0).millisecond(0);
+        if (pEnd.isAfter(pStart)) periods.push({ pStart, pEnd });
+      };
+      addPeriod(daySchedule.morning?.start, daySchedule.morning?.end);
+      addPeriod(daySchedule.afternoon?.start, daySchedule.afternoon?.end);
+
+      // 5.3 Slots candidats sur chaque période
+      const dayCandidates: Array<{ date: string; start: string; end: string; _msStart: number }> = [];
+
+      for (const { pStart, pEnd } of periods) {
+        // Règle “buffer avant la première du jour” : on ne peut pas démarrer avant pStart + minimumDelay
+        let cur = pStart.clone().add(minimumDelayMin, "minutes");
+
+        // Today rules
+        if (d.isSame(now, "day")) {
+          if (!ondaybooking) continue; // aucun slot aujourd’hui
+          const earliestToday = roundUpToGrid(now.clone().add(minimumDelayMin, "minutes"), GRID_MINUTES);
+          if (earliestToday.isAfter(cur)) cur = earliestToday.clone();
+        }
+
+        // aligne sur la grille 15 min
+        cur = roundUpToGrid(cur, GRID_MINUTES);
+
+        while (true) {
+          const slotStart = cur.clone();
+          const slotEnd = cur.clone().add(durationMin, "minutes");
+
+          // Le slot doit tenir ENTIEREMENT dans la période (pas de chevauchement pause)
+          if (slotEnd.isAfter(pEnd)) break; // on dépasse, on passe à la période suivante
+
+          // Test overlap vs bookings (buffer bilatéral)
+          const collidesBooking = bookings.some((b: any) => {
+            const bStart = moment(b.start).tz(tz);
+            const bEnd = moment(b.end).tz(tz);
+            return overlapsWithBuffer(slotStart, slotEnd, bStart, bEnd, minimumDelayMin);
+          });
+
+          // // (Optionnel) Test overlap vs holds
+          // const collidesHold = holds?.some((h: any) => {
+          //   const hStart = moment(h.start).tz(tz);
+          //   const hEnd = moment(h.end).tz(tz);
+          //   return overlapsWithBuffer(slotStart, slotEnd, hStart, hEnd, minimumDelayMin);
+          // }) ?? false;
+
+          if (!collidesBooking /* && !collidesHold */) {
+            dayCandidates.push({
+              date: d.format("YYYY-MM-DD"),
+              start: slotStart.format("HH:mm"),
+              end: slotEnd.format("HH:mm"),
+              _msStart: slotStart.valueOf(),
+            });
+          }
+
+          // Option A : on avance de la grille (15 min), même si bloqué
+          cur.add(GRID_MINUTES, "minutes");
+        }
+      }
+
+      // Tri, limitation à 10, étalement
+      dayCandidates.sort((a, b) => a._msStart - b._msStart);
+      const picked = pickSpread(dayCandidates, MAX_SLOTS_PER_DAY);
+      picked.forEach(({ date, start, end }) => allAvailableSlots.push({ date, start, end }));
+    }
+
+    // Tri global (date + heure)
+    allAvailableSlots.sort((a, b) => {
+      if (a.date === b.date) return a.start.localeCompare(b.start);
+      return a.date.localeCompare(b.date);
+    });
+
+    return res.json(allAvailableSlots);
+  } catch (err) {
+    console.error("Erreur getAvailableSlots:", err);
+    return res.status(500).json({ message: "Erreur lors du calcul des créneaux disponibles" });
+  }
+};
 
 module.exports = {
   getAllCACount,

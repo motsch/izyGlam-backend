@@ -130,24 +130,24 @@ export const getIzyGlamProductDescription = async (req: express.Request, res: ex
           'Content-Type': 'application/json',
         },
       }
-    );
-
-    let formattedDescription = response.data.choices[0].message?.content?.trim() || '';
+    ); let formattedDescription = response.data.choices[0].message?.content?.trim() || '';
     // Retire les guillemets simples ou doubles en début et fin
     formattedDescription = formattedDescription.replace(/^["']|["']$/g, '');
+
     // 1️⃣ Récupérer le produit dans MongoDB
-    const existingProduct = await serviceModel.findById(product._id);
-    if (!existingProduct) {
+    const newProduct = await serviceModel.findById(product._id);
+    if (!newProduct) {
       return res.status(404).json({ message: "Produit introuvable." });
     }
 
     // 2️⃣ Mettre à jour la description
-    existingProduct.description = formattedDescription;
+    newProduct.description = formattedDescription;
 
     // 3️⃣ Sauvegarder en base
-    await existingProduct.save();
+    await newProduct.save();
 
-    res.status(200).json({ formattedDescription });
+    // 🔹 Retourner directement le document
+    res.status(200).json(newProduct);
   } catch (error: any) {
     console.error("Erreur dans getIzyGlamDescription :", error?.response?.data || error);
     res.status(500).json({ message: "Impossible de générer la description." });
@@ -159,15 +159,15 @@ export const getIzyGlamDescription = async (req: express.Request, res: express.R
   try {
     console.log("IN DESCRIPTION IZYGLAM");
 
-    const { type, userDescription } = req.body;
+    const { product } = req.body;
 
-    if (!type) {
+    if (!product.type) {
       return res.status(400).json({ message: "Le type de salon est requis." });
     }
 
-    const prompt = userDescription
-      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domcile. Voici une description pour ce salon de type "${type}". La description est : "${userDescription}". Si une description est viable, refomule la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon créer là de 0. C'est une description à la premiere personne (On utilise le "je")`
-      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description originale, professionnelle, engageante et sympathique pour un salon de type "${type}". Ajoute une touche de personnalité unique à chaque fois. C'est une description à la premiere personne (On utilise le "je")`;
+    const prompt = product.description
+      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domcile. Voici une description pour ce salon de type "${product.type}". La description est : "${product.description}". Si une description est viable, refomule la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon créer là de 0. C'est une description à la premiere personne (On utilise le "je")`
+      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description originale, professionnelle, engageante et sympathique pour un salon de type "${product.type}". Ajoute une touche de personnalité unique à chaque fois. C'est une description à la premiere personne (On utilise le "je")`;
 
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -312,9 +312,6 @@ ${product.description ? `Description du produit: ${product.description}` : ""}
     });
   }
 };
-
-
-
 
 
 
