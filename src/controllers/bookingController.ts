@@ -335,7 +335,6 @@ const getDashboardStatsByShop = async (req: express.Request, res: express.Respon
 
   try {
     const allBookings = await BookingModel.find({ shopId, status: "finished" });
-
     const now = moment();
     const startOfCurrentMonth = now.clone().startOf("month");
     const startOfLastMonth = now.clone().subtract(1, "month").startOf("month");
@@ -440,7 +439,7 @@ const roundUpToGrid = (m: moment.Moment, gridMin: number) => {
 
 const dayKeyFromMoment = (d: moment.Moment) => {
   // moment().format('dddd') dépend de la locale; on normalise :
-  const map = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  const map = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
   // return map[d.day()] as keyof ShopModel["hours"];
   return map[d.day()] as keyof iShop["hours"];
 

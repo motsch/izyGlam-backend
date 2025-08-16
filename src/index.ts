@@ -4,13 +4,13 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require('path');
 import fs from 'fs';
-import { seedDatabase } from "./seeder";
 import CityModel from "./models/city";
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import ConversationModel from './models/conversation';
 import AdvertisementModel from './models/advertisement';
 import ShopModel from './models/shop';
+import { seedDatabase } from './seeds/seeder';
 require('dotenv').config();
 
 const app = express();

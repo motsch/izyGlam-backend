@@ -104,8 +104,8 @@ export const getIzyGlamProductDescription = async (req: express.Request, res: ex
     }
 
     const prompt = product.description
-      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Pour la prestation ${product.name}, on souhaite revoir la description: "${product.description}". Si une description est viable, reformule-la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon, crée-la de 0.`
-      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description de prestation originale, professionnelle, engageante et sympathique pour une prestation portant ce nom: "${product.name}". Ajoute une touche de personnalité unique à chaque fois.`;
+      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Pour la prestation ${product.name}, on souhaite revoir la description: "${product.description}". Si une description est viable, reformule-la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon, crée-la de 0. Maximum 40 mots. Pas de symboles bizarres, d'étoile ou autre.`
+      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description de prestation originale, professionnelle, engageante et sympathique pour une prestation portant ce nom: "${product.name}". Ajoute une touche de personnalité unique à chaque fois. Maximum 40 mots. Pas de symboles bizarres, d'étoile ou autre.`;
 
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -166,8 +166,8 @@ export const getIzyGlamDescription = async (req: express.Request, res: express.R
     }
 
     const prompt = product.description
-      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domcile. Voici une description pour ce salon de type "${product.type}". La description est : "${product.description}". Si une description est viable, refomule la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon créer là de 0. C'est une description à la premiere personne (On utilise le "je")`
-      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description originale, professionnelle, engageante et sympathique pour un salon de type "${product.type}". Ajoute une touche de personnalité unique à chaque fois. C'est une description à la premiere personne (On utilise le "je")`;
+      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domcile. Voici une description pour ce salon de type "${product.type}". La description est : "${product.description}". Si une description est viable, refomule la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon créer là de 0. C'est une description à la premiere personne (On utilise le "je"). Maximum 60 mots. Pas de symboles bizarres, d'étoile ou autre.`
+      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description originale, professionnelle, engageante et sympathique pour un salon de type "${product.type}". Ajoute une touche de personnalité unique à chaque fois. C'est une description à la premiere personne (On utilise le "je"). Maximum 60 mots. Pas de symboles bizarres, d'étoile ou autre.`;
 
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',

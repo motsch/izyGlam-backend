@@ -1,5 +1,6 @@
-import VilleModel from "./models/ville";
-import LanguageModel from "./models/language";
+import LanguageModel from "../models/language";
+import VilleModel from "../models/ville";
+
 
 // Liste des villes avec code_postal et nb_habitnts
 const villes = [

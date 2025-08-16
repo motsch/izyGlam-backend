@@ -20,10 +20,13 @@ const villeSchema = new mongoose.Schema<iVille>({
   pays: { type: String, required: true },
   city: { type: String, required: true },
   code_postal: { type: String, required: true }, // Champ code_postal ajouté
-  active: { type: Boolean, default: false, required: true },
+  active: { type: Boolean, default: true, required: true },
   nb_habitnts: { type: Number, required: true },
 });
 
 // Création du modèle Ville basé sur le schéma
-const villeModel = mongoose.model<iVille>("Ville", villeSchema);
-export default villeModel;
+const VilleModel = mongoose.model<iVille>("Ville", villeSchema);
+export default VilleModel;
+
+
+
