@@ -11,6 +11,9 @@ import ShopModel from "../models/shop";
 import UserModel from "../models/user";
 // import shopModel from "../models/shop";
 import { iShop } from "../models/shop"; // adapte le chemin si besoin
+import { notifyBookingCodeConfirmed, notifyBookingStatusChanged, notifyProNewBooking } from "../services/notify";
+import ConversationModel from "../models/conversation";
+import mongoose from "mongoose";
 
 const getAllCACount = async (
   req: express.Request,
@@ -31,18 +34,23 @@ const getAllCACount = async (
   }
 };
 
-
 // Créer une nouvelle réservation
 const createBooking = async (req: express.Request, res: express.Response) => {
   try {
-    const newBooking = new BookingModel(req.body);
-    console.log(req.body)
+    const { lang = "fr", ...data } = req.body; // 👈 on sort "lang" du body
+
+    const newBooking = new BookingModel(data);
     await newBooking.save();
+
+    // 🔔 Notifier le prestataire
+    await notifyProNewBooking(newBooking, lang);
+
     res.status(201).json(newBooking);
   } catch (error) {
     res.status(500).json({ message: "Impossible de créer la réservation" });
   }
 };
+
 
 // Récupérer toutes les réservations
 const getAllBookings = async (req: express.Request, res: express.Response) => {
@@ -256,28 +264,72 @@ export const getAvailableSlotsV2 = async (req: express.Request, res: express.Res
   }
 };
 
-
-
-
 // Annuler une réservation en mettant à jour son statut à "cancelled"
+// Mettre à jour le statut d'une réservation
 const updateBookingStatusById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
     const status = req.body.status;
-    // Mettre à jour la réservation avec le statut "cancelled"
+    const langue = req.body.langue;
+
+    console.log("📩 [updateBookingStatusById] Called with:", { id, status, langue });
+
     const updatedBooking = await BookingModel.findByIdAndUpdate(
       id,
-      { status: status },
+      { status },
       { new: true }
     );
 
-    if (updatedBooking) {
-      res.json({ message: "Réservation annulée avec succès", booking: updatedBooking });
-    } else {
-      res.status(404).json({ message: "Réservation non trouvée" });
+    if (!updatedBooking) {
+      console.log("❌ Booking not found:", id);
+      return res.status(404).json({ message: "Réservation non trouvée" });
     }
+
+    console.log("✅ Booking updated:", updatedBooking._id, "→", updatedBooking.status);
+
+    // 🔔 fire & forget
+    notifyBookingStatusChanged(updatedBooking, langue).catch(console.error);
+
+    // 👉 Cas 1 : Création de conversation quand "accepted"
+    if (status === "accepted") {
+      console.log("🔍 Booking accepted, checking for existing conversation...");
+
+      const conversationExists = await ConversationModel.findOne({
+        participants: {
+          $all: [
+            new mongoose.Types.ObjectId(updatedBooking.clientId),
+            new mongoose.Types.ObjectId(updatedBooking.userProId),
+          ],
+        },
+      });
+
+      if (conversationExists) {
+        console.log("⚠️ Conversation already exists:", conversationExists._id);
+      } else {
+        console.log("🆕 Creating new conversation...");
+        const conversation = new ConversationModel({
+          participants: [
+            new mongoose.Types.ObjectId(updatedBooking.clientId),
+            new mongoose.Types.ObjectId(updatedBooking.userProId),
+          ],
+          name: `Conversation entre ${updatedBooking.clientId} et ${updatedBooking.userProId}`,
+          messages: [],
+        });
+
+        await conversation.save();
+        console.log("✅ Conversation created successfully:", conversation._id);
+      }
+    }
+
+    // 👉 Cas 2 : plus besoin de fermer les conversations
+    // elles vivent indépendamment du booking maintenant
+    // (donc on supprime ce bloc)
+
+    return res.json({ message: "Statut mis à jour", booking: updatedBooking });
+
   } catch (error) {
-    res.status(500).json({ message: "Impossible d'annuler la réservation" });
+    console.error("🔥 Error in updateBookingStatusById:", error);
+    return res.status(500).json({ message: "Impossible de mettre à jour la réservation" });
   }
 };
 
@@ -289,7 +341,6 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
 const confirmBookingCode = async (req: express.Request, res: express.Response) => {
   try {
     const { bookingId, code } = req.body;
-
     if (!bookingId || !code) {
       return res.status(400).json({ message: "bookingId et code sont obligatoires" });
     }
@@ -301,17 +352,15 @@ const confirmBookingCode = async (req: express.Request, res: express.Response) =
       booking.proCodeConfirmed = true;
       await booking.save();
 
-      // ➕ Paiement au professionnel
+      // ➕ Paiement au pro (ta logique)
       const pro = await userModel.findById(booking.userProId);
       if (!pro || !pro.bank || !pro.bank.iban || !pro.bank.bic) {
         return res.status(400).json({ message: "Coordonnées bancaires manquantes" });
       }
-
       const amount = parseFloat(booking.shopEarnings || "0");
       if (amount <= 0) {
         return res.status(400).json({ message: "Montant invalide pour le paiement" });
       }
-
       await sendSepaTransferToPro({
         iban: pro.bank.iban,
         bic: pro.bank.bic,
@@ -319,6 +368,9 @@ const confirmBookingCode = async (req: express.Request, res: express.Response) =
         label: `Prestation du ${booking.date} pour ${booking.productName}`,
         recipient: `${pro.firstname} ${pro.lastname}`,
       });
+
+      // 🔔 notifier le client
+      notifyBookingCodeConfirmed(booking).catch(console.error);
 
       return res.json({ confirmed: true });
     } else {

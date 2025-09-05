@@ -109,7 +109,7 @@ const userSchema = new Schema<iUser>({
   password: { type: String, required: true },
   phone: { type: String, required: true },
   bank: { type: BankInformationSchema, required: false },
-  conversationId: { type: String, required: true },
+  conversationId: { type: String, required: false },
   companyId: { type: String, required: false },
   abonnement: {
     type: String,

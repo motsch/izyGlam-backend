@@ -4,6 +4,7 @@ import axios from "axios";
 import ConversationModel, { iConversation, IMessage } from "../models/conversation";
 import UserModel from "../models/user";
 import * as express from "express";
+import { notifyNewMessage } from "../services/notify";
 
 const SUPPORT_USER_ID = process.env.SUPPORT_USER_ID;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -90,28 +91,24 @@ const getConversationById = async (
 /**
  * Ajouter un message à une conversation
  */
-const addMessage = async (
-  req: express.Request,
-  res: express.Response
-) => {
+const addMessage = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params; // ID de la conversation
     const { sender, content, messageType, mediaUrl, language } = req.body;
+
     if (!sender) {
       return res.status(400).json({ message: "L'expéditeur est requis" });
     }
+
     const conversation = await ConversationModel.findById(id);
     if (!conversation) {
       return res.status(404).json({ message: "Conversation non trouvée" });
     }
 
-    console.log(language);
     let translatedContent = content;
     if (language !== "fr" && conversation.name === "Support") {
-      console.log("Langue pas française ====> " + language)
       translatedContent = await translateMessage(content, language, "fr");
     }
-
 
     const newMessage: IMessage = {
       sender,
@@ -120,19 +117,22 @@ const addMessage = async (
       messageType: messageType || "text",
       mediaUrl: mediaUrl || "",
       createdAt: new Date(),
-      deleted: false
+      deleted: false,
     };
 
     conversation.messages.push(newMessage);
     await conversation.save();
 
-    // Pour du temps réel, on pourra émettre via socket.io ici.
+    // 🔥 Envoi des notifs push
+    await notifyNewMessage(conversation, newMessage);
+
     res.status(200).json(conversation);
   } catch (error) {
     console.error("Erreur lors de l'ajout d'un message :", error);
     res.status(500).json({ message: "Impossible d'ajouter le message", error });
   }
 };
+
 
 /**
  * Supprimer (complètement) une conversation par ID
@@ -484,6 +484,7 @@ const translateMessage = async (content: any, sourceLang: string, targetLang: st
 module.exports = {
   createConversation,
   getAllConversations,
+
   getConversationById,
   addMessage,
   deleteConversationById,

@@ -25,6 +25,8 @@ export interface iBooking extends mongoose.Document {
   generatedCode: string;
   proCodeConfirmed: boolean;
   paymentIntentId?: string; // ID du paymentIntent Stripe
+  closed: boolean;   // 👈 ajouté
+  closedAt: Date,                    // 👈 ajouté
 }
 
 const bookingSchema = new mongoose.Schema<iBooking>({
@@ -41,6 +43,8 @@ const bookingSchema = new mongoose.Schema<iBooking>({
   userProId: { type: String, required: true },
   serviceId: { type: String, required: false },
   shopId: { type: String, required: true },
+  closed: { type: Boolean, default: false },   // 👈 ajouté
+  closedAt: { type: Date },                    // 👈 ajouté
   status: {
     type: String,
     enum: ["pending", "refused", "accepted", "deleted", "cancelled", "finished", "no-show-client", "no-show-pro"],
