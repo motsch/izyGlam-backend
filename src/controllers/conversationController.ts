@@ -4,7 +4,7 @@ import axios from "axios";
 import ConversationModel, { iConversation, IMessage } from "../models/conversation";
 import UserModel from "../models/user";
 import * as express from "express";
-import { notifyNewMessage } from "../services/notify";
+import mongoose from "mongoose";
 
 const SUPPORT_USER_ID = process.env.SUPPORT_USER_ID;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -91,24 +91,28 @@ const getConversationById = async (
 /**
  * Ajouter un message à une conversation
  */
-const addMessage = async (req: express.Request, res: express.Response) => {
+const addMessage = async (
+  req: express.Request,
+  res: express.Response
+) => {
   try {
     const { id } = req.params; // ID de la conversation
     const { sender, content, messageType, mediaUrl, language } = req.body;
-
     if (!sender) {
       return res.status(400).json({ message: "L'expéditeur est requis" });
     }
-
     const conversation = await ConversationModel.findById(id);
     if (!conversation) {
       return res.status(404).json({ message: "Conversation non trouvée" });
     }
 
+    console.log(language);
     let translatedContent = content;
     if (language !== "fr" && conversation.name === "Support") {
+      console.log("Langue pas française ====> " + language)
       translatedContent = await translateMessage(content, language, "fr");
     }
+
 
     const newMessage: IMessage = {
       sender,
@@ -117,22 +121,19 @@ const addMessage = async (req: express.Request, res: express.Response) => {
       messageType: messageType || "text",
       mediaUrl: mediaUrl || "",
       createdAt: new Date(),
-      deleted: false,
+      deleted: false
     };
 
     conversation.messages.push(newMessage);
     await conversation.save();
 
-    // 🔥 Envoi des notifs push
-    await notifyNewMessage(conversation, newMessage);
-
+    // Pour du temps réel, on pourra émettre via socket.io ici.
     res.status(200).json(conversation);
   } catch (error) {
     console.error("Erreur lors de l'ajout d'un message :", error);
     res.status(500).json({ message: "Impossible d'ajouter le message", error });
   }
 };
-
 
 /**
  * Supprimer (complètement) une conversation par ID
@@ -396,17 +397,16 @@ const getSupportMessages = async (
 
 
 // Ajouter un message à la conversation Support
-const addSupportMessage = async (
-  req: express.Request,
-  res: express.Response) => {
+const SUPPORT_AGENT_URL = process.env.SUPPORT_AGENT_URL || "http://support-agent:9000/support/reply";
+
+// Ajouter un message à la conversation Support
+export const addSupportMessage = async (req: express.Request, res: express.Response) => {
   try {
     console.log("ADD SUPPORT MESSAGE :")
     const { content, messageType, mediaUrl } = req.body;
-
     const { userId, language } = req.params;
-    // const userId = req.user.id; // Utilisateur connecté
 
-    let conversation: any = await ConversationModel.findOne({
+    let conversation = await ConversationModel.findOne({
       participants: { $all: [userId, SUPPORT_USER_ID] },
       name: "Support",
     });
@@ -414,17 +414,12 @@ const addSupportMessage = async (
     if (!conversation) {
       return res.status(404).json({ message: "Conversation Support non trouvée" });
     }
-    console.log(language);
-    let translatedContent = content;
-    if (language !== "fr" && userId === SUPPORT_USER_ID) {
-      console.log("Langue pas française ====> " + language)
-      translatedContent = await translateMessage(content, language, "fr");
-    }
 
-    const newMessage = {
-      sender: userId,
+    // 1) On pousse le message client
+    const newMessage: any = {
+      sender: new mongoose.Types.ObjectId(userId),
       content: content,
-      contentFr: translatedContent,
+      contentFr: language !== "fr" ? undefined : content,
       messageType: messageType || "text",
       mediaUrl: mediaUrl || "",
       createdAt: new Date(),
@@ -432,8 +427,53 @@ const addSupportMessage = async (
 
     conversation.messages.push(newMessage);
     await conversation.save();
+    const lastMsg = conversation.messages[conversation.messages.length - 1] as IMessage | undefined;
 
+    if (!lastMsg || !lastMsg._id) {
+      throw new Error("Impossible de récupérer le dernier message (lastMsg introuvable ou sans _id).");
+    }
+
+    const lastMessageId = lastMsg._id.toString();
+
+    // 2) Appel de l’agent (on ne répond qu'au DERNIER message)
+    const payload = {
+      conversationId: conversation._id.toString(),
+      lastMessageId,
+      lastMessageText: content,
+      language: language || "fr",
+      userId
+    };
+
+    let agent;
+    try {
+      const r = await axios.post(SUPPORT_AGENT_URL, payload, { timeout: 60_000 });
+      agent = r.data; // { action, reply?, intent, flags, severity, reasons }
+    } catch (e: any) {
+      console.error("support-agent error:", e?.response?.data || e.message);
+      agent = { action: "escalate", intent: "other", reasons: ["agent_unavailable"] };
+    }
+
+    // 3) Agir selon la décision
+    if (agent.action === "reply" && agent.reply) {
+      // Réponse du support AUTOMATIQUE dans la même conversation
+      const replyMessage: any = {
+        sender: new mongoose.Types.ObjectId(SUPPORT_USER_ID),
+        content: agent.reply,           // réponse dans la langue du client
+        contentFr: language === "fr" ? agent.reply : undefined,
+        messageType: "text",
+        createdAt: new Date(),
+      };
+      conversation.messages.push(replyMessage);
+      await conversation.save();
+    } else if (agent.action === "escalate") {
+      // On flag la conversation pour que tu prennes la main
+      conversation.flagged = true;
+      await conversation.save();
+    }
+
+    // On renvoie la conversation à jour
     res.status(200).json(conversation);
+
   } catch (error) {
     console.error("Erreur lors de l'ajout d'un message Support:", error);
     res.status(500).json({ message: "Impossible d'ajouter le message", error });
@@ -458,7 +498,7 @@ const translateMessage = async (content: any, sourceLang: string, targetLang: st
         messages: [
           {
             role: "system",
-            content: `Tu es un traducteur précis. Traduis ce texte de ${sourceLang} vers ${targetLang}.`
+            content: 'Tu es un traducteur précis. Traduis ce texte de ${sourceLang} vers ${targetLang}.'
           },
           {
             role: "user",
@@ -469,7 +509,7 @@ const translateMessage = async (content: any, sourceLang: string, targetLang: st
       },
       {
         headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+          "Authorization": 'Bearer ${OPENAI_API_KEY}',
           "Content-Type": "application/json"
         }
       }
@@ -478,13 +518,12 @@ const translateMessage = async (content: any, sourceLang: string, targetLang: st
     return response.data.choices[0].message.content.trim();
   } catch (error: any) {
     console.error("Erreur de traduction OpenAI :", error.response?.data || error.message);
-    return content;
-  }
+    return content;
+  }
 };
 module.exports = {
   createConversation,
   getAllConversations,
-
   getConversationById,
   addMessage,
   deleteConversationById,

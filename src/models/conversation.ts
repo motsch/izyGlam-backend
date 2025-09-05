@@ -23,6 +23,7 @@ export interface iConversation extends Document {
   messages: IMessage[];
   createdAt: Date;
   updatedAt: Date;
+  flagged: boolean;
   user: any;
 }
 
@@ -44,6 +45,7 @@ const conversationSchema = new Schema<iConversation>({
   messages: { type: [messageSchema], default: [] },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  flagged: { type: Boolean, default: false },
   user: { type: Object, required: false  },
 });
 
