@@ -58,8 +58,8 @@ const advertisementRoutes = require('./routes/advertisementRoutes');
 const adParkRoutes = require("./routes/adParkRoutes");
 const cityRoutes = require("./routes/cityRoutes");
 const subscriptionRoutes = require("./routes/subscription");
-const notifyRoutes = require('./routes/notify'); 
-const devicesRoutes = require('./routes/devices'); 
+const notifyRoutes = require('./routes/notify');
+const devicesRoutes = require('./routes/devices');
 
 // Utilisation des routes
 app.use("/api", bookingRoutes);
@@ -118,7 +118,6 @@ wss.on('connection', (ws) => {
       const parsed = JSON.parse(raw.toString());
       const { action, topic, message } = parsed;
 
-      // Abonnement à une conversation
       if (action === 'subscribe') {
         if (!rooms[topic]) rooms[topic] = new Set();
         rooms[topic].add(ws);
@@ -126,7 +125,6 @@ wss.on('connection', (ws) => {
         return;
       }
 
-      // Publication d'un message dans une conversation
       if (action === 'publish' && topic.endsWith('/new')) {
         const convId = topic.split('/')[1];
         const conv = await ConversationModel.findById(convId);
@@ -137,14 +135,19 @@ wss.on('connection', (ws) => {
           content: message.content,
           messageType: message.messageType || 'text',
           createdAt: new Date(),
+          mediaUrl: message.mediaUrl || '',
+          clientId: message.clientId || undefined // ✅
         };
 
         conv.messages.push(newMsg);
         await conv.save();
 
+        // ✅ renvoyer la vraie version sauvegardée
+        const savedMsg = conv.messages[conv.messages.length - 1];
+
         const payload = JSON.stringify({
           topic: `conversation/${convId}`,
-          message: newMsg,
+          message: savedMsg,
         });
 
         rooms[`conversation/${convId}`]?.forEach(client => {
@@ -160,13 +163,12 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    for (const room in rooms) {
-      rooms[room].delete(ws);
-    }
+    for (const room in rooms) rooms[room].delete(ws);
   });
 
   ws.send('👋 Bienvenue sur le WebSocket Server !');
 });
+
 
 // Connexion à la base de données
 mongoose

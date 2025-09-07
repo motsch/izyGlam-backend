@@ -80,7 +80,7 @@ const getConversationById = async (req: express.Request, res: express.Response) 
 const addMessage = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    const { sender, content, messageType, mediaUrl } = req.body;
+    const { sender, content, messageType, mediaUrl, clientId } = req.body;
 
     if (!sender) return res.status(400).json({ message: "L'expéditeur est requis" });
 
@@ -93,19 +93,24 @@ const addMessage = async (req: express.Request, res: express.Response) => {
       messageType: messageType || "text",
       mediaUrl: mediaUrl || "",
       createdAt: new Date(),
-      deleted: false
+      deleted: false,
+      clientId // ✅
     };
 
     conversation.messages.push(newMessage);
     await conversation.save();
 
-    const payload = JSON.stringify({ topic: `conversation/${id}`, message: newMessage });
+    // ✅ Récupérer la vraie version sauvegardée (avec _id)
+    const savedMsg = conversation.messages[conversation.messages.length - 1];
+
+    const payload = JSON.stringify({ topic: `conversation/${id}`, message: savedMsg });
 
     rooms[`conversation/${id}`]?.forEach((client: any) => {
       if (client.readyState === WebSocket.OPEN) client.send(payload);
     });
 
-    return res.status(200).json(newMessage);
+    // ✅ Retourner la vraie version
+    return res.status(200).json(savedMsg);
   } catch (error) {
     res.status(500).json({ message: "Impossible d'ajouter le message", error });
   }
@@ -280,7 +285,7 @@ const getSupportMessages = async (req: express.Request, res: express.Response) =
  */
 const addSupportMessage = async (req: express.Request, res: express.Response) => {
   try {
-    const { content, messageType, mediaUrl } = req.body;
+    const { content, messageType, mediaUrl, clientId } = req.body;
     const { userId, language } = req.params;
 
     let conversation = await ConversationModel.findOne({
@@ -295,25 +300,27 @@ const addSupportMessage = async (req: express.Request, res: express.Response) =>
     const newMessage: IMessage = {
       sender: new mongoose.Types.ObjectId(userId),
       content,
-      contentFr: language === "fr" ? content : undefined,
       messageType: messageType || "text",
       mediaUrl: mediaUrl || "",
-      createdAt: new Date()
+      createdAt: new Date(),
+      clientId // ✅
     };
 
     conversation.messages.push(newMessage);
     await conversation.save();
 
+    const savedMsg = conversation.messages[conversation.messages.length - 1];
+
     const payload = JSON.stringify({
       topic: `conversation/${conversation._id}`,
-      message: newMessage
+      message: savedMsg
     });
 
     rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
       if (client.readyState === WebSocket.OPEN) client.send(payload);
     });
 
-    res.status(200).json(newMessage);
+    res.status(200).json(savedMsg);
   } catch (error) {
     res.status(500).json({ message: "Impossible d'ajouter le message Support", error });
   }

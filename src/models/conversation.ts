@@ -14,6 +14,8 @@ export interface IMessage {
   deleted?: boolean;       // Soft-delete (pour masquer aux utilisateurs classiques)
   deletedAt?: Date;
   deletedBy?: Types.ObjectId; // Référence à l'admin ayant supprimé le message
+  clientId?: string;
+
 }
 
 // Interface pour la conversation
@@ -36,7 +38,8 @@ const messageSchema = new Schema<IMessage>({
   createdAt: { type: Date, default: Date.now },
   deleted: { type: Boolean, default: false },
   deletedAt: { type: Date },
-  deletedBy: { type: Schema.Types.ObjectId, ref: "User" }
+  deletedBy: { type: Schema.Types.ObjectId, ref: "User" },
+  clientId: { type: String, index: true }
 });
 
 const conversationSchema = new Schema<iConversation>({
