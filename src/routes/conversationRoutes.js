@@ -1,4 +1,4 @@
-// src/routes/conversationRoutes.ts
+// src/routes/conversationRoutes.js
 
 const express = require("express");
 const router = express.Router();
@@ -40,13 +40,25 @@ router.post(
   conversationController.inviteUser
 );
 
-// Récupérer ou créer une conversation pour un utilisateur donné (exemple pour conversation privée)
-router.get("/conversation-user/:userId", authMiddleware, conversationController.getOrCreateConversationByUserId);
+// Récupérer ou créer une conversation pour un utilisateur donné
+router.get(
+  "/conversation-user/:userId",
+  authMiddleware,
+  conversationController.getOrCreateConversationByUserId
+);
 
-// Nouvelle route pour créer une conversation à partir d'un email
-router.put("/conversation-email/:email", authMiddleware, conversationController.createConversationByEmail);
+// Créer une conversation à partir d'un email
+router.put(
+  "/conversation-email/:email",
+  authMiddleware,
+  conversationController.createConversationByEmail
+);
 
+// Récupérer toutes les conversations Support
+router.get(
+  "/support-conversation",
+  authMiddleware,
+  conversationController.getSupportMessages
+);
 
-// Récupérer toutes les conversations
-router.get("/support-conversation", authMiddleware, conversationController.getSupportMessages);
 module.exports = router;

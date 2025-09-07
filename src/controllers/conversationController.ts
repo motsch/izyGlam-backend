@@ -1,7 +1,7 @@
 // src/controllers/conversationController.ts
 
 import axios from "axios";
-import ConversationModel, { iConversation, IMessage } from "../models/conversation";
+import ConversationModel, { IMessage } from "../models/conversation";
 import UserModel from "../models/user";
 import * as express from "express";
 import mongoose from "mongoose";
@@ -9,6 +9,8 @@ import { rooms, WebSocket } from "../index";
 
 const SUPPORT_USER_ID = process.env.SUPPORT_USER_ID;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const SUPPORT_AGENT_URL =
+  process.env.SUPPORT_AGENT_URL || "http://support-agent:9000/support/reply";
 
 /**
  * Créer une nouvelle conversation
@@ -20,7 +22,6 @@ const createConversation = async (req: express.Request, res: express.Response) =
       return res.status(400).json({ message: "Participants requis" });
     }
 
-    // Si c'est un chat privé (2 participants), on vérifie qu'il n'existe pas déjà
     if (participants.length === 2) {
       const existingConversation = await ConversationModel.findOne({
         participants: { $all: participants },
@@ -44,12 +45,11 @@ const createConversation = async (req: express.Request, res: express.Response) =
  */
 const getAllConversations = async (req: express.Request, res: express.Response) => {
   try {
-    const conversations = await ConversationModel.find()
-      .populate({
-        path: "participants",
-        model: UserModel,
-        select: "firstname lastname email"
-      });
+    const conversations = await ConversationModel.find().populate({
+      path: "participants",
+      model: UserModel,
+      select: "firstname lastname email"
+    });
     res.json(conversations);
   } catch (error) {
     res.status(500).json({ message: "Impossible de récupérer les conversations", error });
@@ -62,12 +62,11 @@ const getAllConversations = async (req: express.Request, res: express.Response) 
 const getConversationById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    const conversation = await ConversationModel.findById(id)
-      .populate({
-        path: "participants",
-        model: UserModel,
-        select: "firstname lastname email"
-      });
+    const conversation = await ConversationModel.findById(id).populate({
+      path: "participants",
+      model: UserModel,
+      select: "firstname lastname email"
+    });
     if (!conversation) return res.status(404).json({ message: "Conversation non trouvée" });
     res.json(conversation);
   } catch (error) {
@@ -76,21 +75,17 @@ const getConversationById = async (req: express.Request, res: express.Response) 
 };
 
 /**
- * Ajouter un message à une conversation
+ * Ajouter un message
  */
 const addMessage = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
     const { sender, content, messageType, mediaUrl } = req.body;
 
-    if (!sender) {
-      return res.status(400).json({ message: "L'expéditeur est requis" });
-    }
+    if (!sender) return res.status(400).json({ message: "L'expéditeur est requis" });
 
     const conversation = await ConversationModel.findById(id);
-    if (!conversation) {
-      return res.status(404).json({ message: "Conversation non trouvée" });
-    }
+    if (!conversation) return res.status(404).json({ message: "Conversation non trouvée" });
 
     const newMessage: IMessage = {
       sender,
@@ -104,21 +99,14 @@ const addMessage = async (req: express.Request, res: express.Response) => {
     conversation.messages.push(newMessage);
     await conversation.save();
 
-    // ✅ Diffusion WebSocket
-    const payload = JSON.stringify({
-      topic: `conversation/${id}`,
-      message: newMessage,
-    });
+    const payload = JSON.stringify({ topic: `conversation/${id}`, message: newMessage });
 
     rooms[`conversation/${id}`]?.forEach((client: any) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(payload);
-      }
+      if (client.readyState === WebSocket.OPEN) client.send(payload);
     });
 
     return res.status(200).json(newMessage);
   } catch (error) {
-    console.error("Erreur lors de l'ajout d'un message :", error);
     res.status(500).json({ message: "Impossible d'ajouter le message", error });
   }
 };
@@ -148,9 +136,7 @@ const deleteMessage = async (req: express.Request, res: express.Response) => {
     const conversation = await ConversationModel.findById(conversationId);
     if (!conversation) return res.status(404).json({ message: "Conversation non trouvée" });
 
-    const message = conversation.messages.find(
-      (msg) => msg._id?.toString() === messageId
-    );
+    const message = conversation.messages.find((msg) => msg._id?.toString() === messageId);
     if (!message) return res.status(404).json({ message: "Message non trouvé" });
 
     message.deleted = true;
@@ -227,7 +213,113 @@ const inviteUser = async (req: express.Request, res: express.Response) => {
   }
 };
 
-module.exports = {
+/**
+ * Récupérer ou créer une conversation pour un utilisateur
+ */
+const getOrCreateConversationByUserId = async (req: express.Request, res: express.Response) => {
+  try {
+    const { userId } = req.params;
+    let conversation = await ConversationModel.findOne({ participants: userId });
+    if (!conversation) {
+      conversation = new ConversationModel({ participants: [userId], messages: [] });
+      await conversation.save();
+    }
+    res.status(200).json(conversation);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer ou créer la conversation", error });
+  }
+};
+
+/**
+ * Récupérer ou créer la conversation Support
+ */
+const getOrCreateSupportConversation = async (req: express.Request, res: express.Response) => {
+  try {
+    const { userId, language } = req.query;
+    if (!userId) return res.status(400).json({ message: "Utilisateur requis" });
+
+    let conversation = await ConversationModel.findOne({
+      participants: { $all: [userId, SUPPORT_USER_ID] },
+      name: "Support"
+    });
+
+    if (!conversation) {
+      conversation = new ConversationModel({
+        participants: [userId, SUPPORT_USER_ID],
+        name: "Support",
+        language: language || "fr"
+      });
+      await conversation.save();
+    }
+
+    res.status(200).json(conversation);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible d'obtenir la conversation Support", error });
+  }
+};
+
+/**
+ * Récupérer toutes les conversations Support
+ */
+const getSupportMessages = async (req: express.Request, res: express.Response) => {
+  try {
+    const conversations = await ConversationModel.find({ name: "Support" }).populate({
+      path: "participants",
+      model: UserModel,
+      select: "firstname lastname email"
+    });
+
+    res.status(200).json(conversations);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible de récupérer les messages Support", error });
+  }
+};
+
+/**
+ * Ajouter un message à la conversation Support
+ */
+const addSupportMessage = async (req: express.Request, res: express.Response) => {
+  try {
+    const { content, messageType, mediaUrl } = req.body;
+    const { userId, language } = req.params;
+
+    let conversation = await ConversationModel.findOne({
+      participants: { $all: [userId, SUPPORT_USER_ID] },
+      name: "Support"
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation Support non trouvée" });
+    }
+
+    const newMessage: IMessage = {
+      sender: new mongoose.Types.ObjectId(userId),
+      content,
+      contentFr: language === "fr" ? content : undefined,
+      messageType: messageType || "text",
+      mediaUrl: mediaUrl || "",
+      createdAt: new Date()
+    };
+
+    conversation.messages.push(newMessage);
+    await conversation.save();
+
+    const payload = JSON.stringify({
+      topic: `conversation/${conversation._id}`,
+      message: newMessage
+    });
+
+    rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
+      if (client.readyState === WebSocket.OPEN) client.send(payload);
+    });
+
+    res.status(200).json(newMessage);
+  } catch (error) {
+    res.status(500).json({ message: "Impossible d'ajouter le message Support", error });
+  }
+};
+
+export {
   createConversation,
   getAllConversations,
   getConversationById,
@@ -235,5 +327,9 @@ module.exports = {
   deleteConversationById,
   deleteMessage,
   inviteUser,
-  createConversationByEmail
+  createConversationByEmail,
+  getOrCreateConversationByUserId,
+  getOrCreateSupportConversation,
+  getSupportMessages,
+  addSupportMessage
 };
