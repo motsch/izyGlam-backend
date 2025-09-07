@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin';
 import mongoose, { Types } from 'mongoose';
 import { sendEmail } from '../utils/mailer';
 import UserModel from '../models/user';
+
 /** Traductions pour notification "nouvelle réservation" */
 const NEW_BOOKING_TITLES_I18N: Record<string, string> = {
   fr: "Nouvelle réservation 💌",
@@ -15,6 +16,49 @@ const NEW_BOOKING_TITLES_I18N: Record<string, string> = {
   sv: "Ny bokning 💌",
   da: "Ny reservation 💌",
   fi: "Uusi varaus 💌"
+};
+
+/** === I18N Chat messages === */
+const CHAT_TITLE_I18N: Record<string, string> = {
+  fr: "Nouveau message ✉️",
+  en: "New message ✉️",
+  es: "Nuevo mensaje ✉️",
+  de: "Neue Nachricht ✉️",
+  it: "Nuovo messaggio ✉️",
+  nl: "Nieuw bericht ✉️",
+  pt: "Nova mensagem ✉️",
+  pl: "Nowa wiadomość ✉️",
+  sv: "Nytt meddelande ✉️",
+  da: "Ny besked ✉️",
+  fi: "Uusi viesti ✉️"
+};
+
+const CHAT_PHOTO_BODY_I18N: Record<string, (sender: string) => string> = {
+  fr: (s) => `${s} vous a envoyé une photo`,
+  en: (s) => `${s} sent you a photo`,
+  es: (s) => `${s} te envió una foto`,
+  de: (s) => `${s} hat dir ein Foto gesendet`,
+  it: (s) => `${s} ti ha inviato una foto`,
+  nl: (s) => `${s} heeft je een foto gestuurd`,
+  pt: (s) => `${s} enviou-lhe uma foto`,
+  pl: (s) => `${s} wysłał(a) Ci zdjęcie`,
+  sv: (s) => `${s} skickade dig ett foto`,
+  da: (s) => `${s} sendte dig et foto`,
+  fi: (s) => `${s} lähetti sinulle kuvan`
+};
+
+const CHAT_TEXT_BODY_I18N: Record<string, (sender: string, preview: string) => string> = {
+  fr: (s, p) => `${s}: ${p}`,
+  en: (s, p) => `${s}: ${p}`,
+  es: (s, p) => `${s}: ${p}`,
+  de: (s, p) => `${s}: ${p}`,
+  it: (s, p) => `${s}: ${p}`,
+  nl: (s, p) => `${s}: ${p}`,
+  pt: (s, p) => `${s}: ${p}`,
+  pl: (s, p) => `${s}: ${p}`,
+  sv: (s, p) => `${s}: ${p}`,
+  da: (s, p) => `${s}: ${p}`,
+  fi: (s, p) => `${s}: ${p}`
 };
 
 // --- Firebase Admin (une seule init) ---
@@ -47,6 +91,25 @@ function toId(x: any): string | null {
   if (typeof x === 'string') return x;
   if ((x as Types.ObjectId)._id) return String((x as any)._id);
   try { return String(x); } catch { return null; }
+}
+
+async function getUserLang(userId: string | Types.ObjectId): Promise<string> {
+  try {
+    const u = await UserModel.findById(userId).lean();
+    const langRaw =
+      (u as any)?.language ||
+      (u as any)?.lang ||
+      (u as any)?.locale ||
+      (u as any)?.settings?.language ||
+      (u as any)?.profile?.language ||
+      'fr';
+
+    const lang = String(langRaw).toLowerCase().slice(0, 2);
+    if (CHAT_TITLE_I18N[lang]) return lang;
+    return 'en';
+  } catch {
+    return 'en';
+  }
 }
 
 export async function sendToUser(
@@ -95,7 +158,6 @@ function tNewBooking(lang: string): string {
   return NEW_BOOKING_TITLES_I18N[lang] || NEW_BOOKING_TITLES_I18N["en"];
 }
 
-
 /** Notifier le prestataire d'une nouvelle réservation */
 export async function notifyProNewBooking(booking: any, lang: string = "fr") {
   try {
@@ -110,7 +172,7 @@ export async function notifyProNewBooking(booking: any, lang: string = "fr") {
     // 🌍 Traduction du titre
     const title = tNewBooking(lang);
 
-    // 🌍 Corps du message (reste simple mais multilingue possible si tu veux aller plus loin)
+    // 🌍 Corps du message
     let body = `${prod} • ${when}`;
     if (client) body += ` • ${client}`;
     if (price) body += ` • ${price}`;
@@ -132,7 +194,7 @@ export async function notifyProNewBooking(booking: any, lang: string = "fr") {
   }
 }
 
-/** Notifier les destinataires d’un nouveau message de chat */
+/** Notifier les destinataires d’un nouveau message de chat — MULTILINGUE par destinataire */
 export async function notifyChatMessage(conversation: any, message: any) {
   try {
     // Participants sauf l’expéditeur
@@ -143,85 +205,60 @@ export async function notifyChatMessage(conversation: any, message: any) {
     if (!recipients.length) return;
 
     // Récupération de l’expéditeur (pour afficher son nom)
-    let senderName = "Un utilisateur";
+    let senderName = "Utilisateur";
     try {
       const sender = await UserModel.findById(message.sender).lean();
       if (sender) {
-        senderName = [sender.firstname, sender.lastname].filter(Boolean).join(" ") || sender.email || "Un utilisateur";
+        senderName = [ (sender as any).firstname, (sender as any).lastname ].filter(Boolean).join(" ")
+          || (sender as any).username
+          || (sender as any).email
+          || "Utilisateur";
       }
     } catch (err) {
       console.warn("[NOTIFY][chat] impossible de charger le sender", err);
     }
 
-    // Texte du message à afficher
-    const preview =
+    // Préview du message (limitée)
+    const rawPreview =
       message.messageType === "photo"
-        ? "📷 Vous a envoyé une photo"
-        : message.content?.trim()
-          ? message.content.slice(0, 80)
-          : "📩 Nouveau message";
+        ? null
+        : (message.contentFr || message.content || "").toString().trim();
 
-    // Construire le titre et le corps
-    const title = "Nouveau message ✉️";
-    const body = `${senderName}: ${preview}`;
+    const preview = rawPreview ? truncate(rawPreview, 80) : "";
 
+    // Envoi par destinataire, avec sa langue
     for (const userId of recipients) {
+      const lang = await getUserLang(userId);
+      const title = CHAT_TITLE_I18N[lang] || CHAT_TITLE_I18N.en;
+
+      const body =
+        message.messageType === "photo"
+          ? (CHAT_PHOTO_BODY_I18N[lang]?.(senderName) || CHAT_PHOTO_BODY_I18N.en(senderName))
+          : (preview
+              ? (CHAT_TEXT_BODY_I18N[lang]?.(senderName, preview) || CHAT_TEXT_BODY_I18N.en(senderName, preview))
+              : (CHAT_TEXT_BODY_I18N[lang]?.(senderName, "…") || CHAT_TEXT_BODY_I18N.en(senderName, "…")));
+
       await sendToUser(userId, {
-        notification: {
-          title,
-          body,
-        },
+        notification: { title, body },
         data: {
           type: "chat_message",
           screen: "conversation",
           conversationId: String(conversation._id),
           senderId: String(message.sender),
-          messageId: String(message._id || ""),
-        },
+          messageId: String(message._id || "")
+        }
       });
     }
 
-    console.log(`[NOTIFY][chat] envoi à ${recipients.length} destinataire(s): ${body}`);
+    console.log(`[NOTIFY][chat] envoyé à ${recipients.length} destinataire(s).`);
   } catch (e) {
     console.error("[NOTIFY][chat] error", e);
   }
 }
 
-
-
-
+/** Compat: ancienne fonction → délègue vers notifyChatMessage (garde la même signature) */
 export async function notifyNewMessage(conversation: any, message: any) {
-  try {
-    // Trouve les autres participants que l’expéditeur
-    const recipients = (conversation.participants || [])
-      .map((id: any) => String(id))
-      .filter((id: string) => id !== String(message.sender));
-
-    if (!recipients.length) return;
-
-    const preview =
-      message.messageType === 'photo'
-        ? '📷 Photo'
-        : (message.contentFr || message.content || '').slice(0, 60);
-
-    for (const userId of recipients) {
-      await sendToUser(userId, {
-        notification: {
-          title: conversation.name || 'Nouveau message',
-          body: preview,
-        },
-        data: {
-          type: 'chat_message',
-          screen: 'conversation',
-          conversationId: String(conversation._id),
-          senderId: String(message.sender),
-          messageId: String(message._id || ''),
-        },
-      });
-    }
-  } catch (e) {
-    console.error('[NOTIFY][conversation] error', e);
-  }
+  return notifyChatMessage(conversation, message);
 }
 
 // ---- cas métier ---------------------------------------------
@@ -289,7 +326,7 @@ export async function notifyBookingStatusChanged(booking: any, lang: string = 'f
     }
   });
 
-  // --- 2️⃣ Envoi Email --- F6 IMPORTANT
+  // --- 2️⃣ Envoi Email ---
   try {
     const user = await UserModel.findById(customerId).lean();
     if (user?.email) {
@@ -304,7 +341,6 @@ export async function notifyBookingStatusChanged(booking: any, lang: string = 'f
     console.error("Erreur lors de l'envoi de l'email de notification:", err);
   }
 }
-
 
 /** Map des titres par status (ajoute/ajuste librement) */
 const STATUS_TITLES_I18N: Record<string, Record<string, string>> = {

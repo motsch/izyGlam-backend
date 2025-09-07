@@ -11,6 +11,7 @@ interface Fidelity {
     reward_date: Date;
   }>;
 }
+
 interface BankInformation {
   iban?: string;
   bic?: string;
@@ -87,6 +88,7 @@ export interface iUser extends Document {
   resetPasswordExpires?: Date;
   customerId?: string;
   fidelity: Fidelity;
+  language: string; // ✅ langue préférée de l'utilisateur
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -224,6 +226,11 @@ const userSchema = new Schema<iUser>({
     accessToken: { type: String },
     refreshToken: { type: String },
     tokenExpiresAt: { type: Date },
+  },
+  language: {
+    type: String,
+    enum: ["fr", "en", "es", "de", "it", "nl", "pt", "pl", "sv", "da", "fi"],
+    default: "fr", // ✅ valeur par défaut
   },
 });
 
