@@ -132,6 +132,62 @@ export async function notifyProNewBooking(booking: any, lang: string = "fr") {
   }
 }
 
+/** Notifier les destinataires d’un nouveau message de chat */
+export async function notifyChatMessage(conversation: any, message: any) {
+  try {
+    // Participants sauf l’expéditeur
+    const recipients = (conversation.participants || [])
+      .map((id: any) => String(id))
+      .filter((id: string) => id !== String(message.sender));
+
+    if (!recipients.length) return;
+
+    // Récupération de l’expéditeur (pour afficher son nom)
+    let senderName = "Un utilisateur";
+    try {
+      const sender = await UserModel.findById(message.sender).lean();
+      if (sender) {
+        senderName = [sender.firstname, sender.lastname].filter(Boolean).join(" ") || sender.email || "Un utilisateur";
+      }
+    } catch (err) {
+      console.warn("[NOTIFY][chat] impossible de charger le sender", err);
+    }
+
+    // Texte du message à afficher
+    const preview =
+      message.messageType === "photo"
+        ? "📷 Vous a envoyé une photo"
+        : message.content?.trim()
+          ? message.content.slice(0, 80)
+          : "📩 Nouveau message";
+
+    // Construire le titre et le corps
+    const title = "Nouveau message ✉️";
+    const body = `${senderName}: ${preview}`;
+
+    for (const userId of recipients) {
+      await sendToUser(userId, {
+        notification: {
+          title,
+          body,
+        },
+        data: {
+          type: "chat_message",
+          screen: "conversation",
+          conversationId: String(conversation._id),
+          senderId: String(message.sender),
+          messageId: String(message._id || ""),
+        },
+      });
+    }
+
+    console.log(`[NOTIFY][chat] envoi à ${recipients.length} destinataire(s): ${body}`);
+  } catch (e) {
+    console.error("[NOTIFY][chat] error", e);
+  }
+}
+
+
 
 
 export async function notifyNewMessage(conversation: any, message: any) {

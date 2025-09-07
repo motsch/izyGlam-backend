@@ -1,11 +1,11 @@
-// src/controllers/conversationController.ts
-
 import axios from "axios";
 import ConversationModel, { IMessage } from "../models/conversation";
 import UserModel from "../models/user";
 import * as express from "express";
 import mongoose from "mongoose";
 import { rooms, WebSocket } from "../index";
+// ✅ Import notification (utilise ton fichier utilitaire fourni)
+import { notifyChatMessage } from "../services/notify";
 
 const SUPPORT_USER_ID = process.env.SUPPORT_USER_ID;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -94,7 +94,7 @@ const addMessage = async (req: express.Request, res: express.Response) => {
       mediaUrl: mediaUrl || "",
       createdAt: new Date(),
       deleted: false,
-      clientId // ✅
+      clientId // ✅ pour dédup côté front
     };
 
     conversation.messages.push(newMessage);
@@ -103,11 +103,20 @@ const addMessage = async (req: express.Request, res: express.Response) => {
     // ✅ Récupérer la vraie version sauvegardée (avec _id)
     const savedMsg = conversation.messages[conversation.messages.length - 1];
 
+    // ✅ Diffusion temps réel via WS
     const payload = JSON.stringify({ topic: `conversation/${id}`, message: savedMsg });
-
     rooms[`conversation/${id}`]?.forEach((client: any) => {
       if (client.readyState === WebSocket.OPEN) client.send(payload);
     });
+
+    // ✅ Notification push aux destinataires (pas l'expéditeur)
+    // Message clair, sympa et pro généré par notifyNewMessage (titre + preview).
+    try {
+      await notifyChatMessage(conversation, savedMsg);
+    } catch (e) {
+      console.error("[NOTIFY][chat] erreur envoi notification:", e);
+      // On ne bloque pas la réponse HTTP si la notif échoue
+    }
 
     // ✅ Retourner la vraie version
     return res.status(200).json(savedMsg);
@@ -252,7 +261,7 @@ const getOrCreateSupportConversation = async (req: express.Request, res: express
       conversation = new ConversationModel({
         participants: [userId, SUPPORT_USER_ID],
         name: "Support",
-        language: language || "fr"
+        language: (language as string) || "fr"
       });
       await conversation.save();
     }
@@ -303,7 +312,7 @@ const addSupportMessage = async (req: express.Request, res: express.Response) =>
       messageType: messageType || "text",
       mediaUrl: mediaUrl || "",
       createdAt: new Date(),
-      clientId // ✅
+      clientId // ✅ pour dédup côté front
     };
 
     conversation.messages.push(newMessage);
@@ -319,6 +328,13 @@ const addSupportMessage = async (req: express.Request, res: express.Response) =>
     rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
       if (client.readyState === WebSocket.OPEN) client.send(payload);
     });
+
+    // ✅ Notification push aux destinataires (Support ↔ Utilisateur)
+    try {
+      await notifyChatMessage(conversation, savedMsg);
+    } catch (e) {
+      console.error("[NOTIFY][support_chat] erreur envoi notification:", e);
+    }
 
     res.status(200).json(savedMsg);
   } catch (error) {
