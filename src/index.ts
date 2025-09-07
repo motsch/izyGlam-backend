@@ -216,3 +216,6 @@ const seedCities = async () => {
   await CityModel.insertMany(formattedCities);
   console.log(`✅ ${formattedCities.length} villes importées avec coordonnées`);
 };
+
+// ✅ Export rooms pour conversationController
+export { rooms, WebSocket };

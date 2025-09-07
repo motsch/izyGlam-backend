@@ -454,22 +454,34 @@ export const addSupportMessage = async (req: express.Request, res: express.Respo
     }
 
     // 3) Agir selon la décision
+    // 3) Agir selon la décision
     if (agent.action === "reply" && agent.reply) {
-      // Réponse du support AUTOMATIQUE dans la même conversation
       const replyMessage: any = {
         sender: new mongoose.Types.ObjectId(SUPPORT_USER_ID),
-        content: agent.reply,           // réponse dans la langue du client
+        content: agent.reply,
         contentFr: language === "fr" ? agent.reply : undefined,
         messageType: "text",
         createdAt: new Date(),
       };
       conversation.messages.push(replyMessage);
       await conversation.save();
+
+      // ✅ Diffusion temps réel
+      const payload = JSON.stringify({
+        topic: `conversation/${conversation._id}`,
+        message: replyMessage,
+      });
+      const { WebSocket } = require('ws');
+      const { rooms } = require('../server'); // ⚠️ il faut exporter rooms dans server.ts
+      rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
+        if (client.readyState === WebSocket.OPEN) client.send(payload);
+      });
+
     } else if (agent.action === "escalate") {
-      // On flag la conversation pour que tu prennes la main
       conversation.flagged = true;
       await conversation.save();
     }
+
 
     // On renvoie la conversation à jour
     res.status(200).json(conversation);
@@ -518,8 +530,8 @@ const translateMessage = async (content: any, sourceLang: string, targetLang: st
     return response.data.choices[0].message.content.trim();
   } catch (error: any) {
     console.error("Erreur de traduction OpenAI :", error.response?.data || error.message);
-    return content;
-  }
+    return content;
+  }
 };
 module.exports = {
   createConversation,
