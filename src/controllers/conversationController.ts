@@ -5,25 +5,22 @@ import ConversationModel, { iConversation, IMessage } from "../models/conversati
 import UserModel from "../models/user";
 import * as express from "express";
 import mongoose from "mongoose";
+import { rooms, WebSocket } from "../index";
 
 const SUPPORT_USER_ID = process.env.SUPPORT_USER_ID;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 /**
- * Créer une nouvelle conversation (générique).
- * Pour un chat privé (2 participants), on vérifie qu'il n'existe pas déjà.
+ * Créer une nouvelle conversation
  */
-const createConversation = async (
-  req: express.Request,
-  res: express.Response
-) => {
+const createConversation = async (req: express.Request, res: express.Response) => {
   try {
     const { participants, name } = req.body;
     if (!participants || !Array.isArray(participants) || participants.length === 0) {
       return res.status(400).json({ message: "Participants requis" });
     }
 
-    // Si c'est un chat privé (2 participants), on vérifie qu'il n'existe pas déjà.
+    // Si c'est un chat privé (2 participants), on vérifie qu'il n'existe pas déjà
     if (participants.length === 2) {
       const existingConversation = await ConversationModel.findOne({
         participants: { $all: participants },
@@ -43,12 +40,9 @@ const createConversation = async (
 };
 
 /**
- * Récupérer toutes les conversations (avec participants renseignés)
+ * Récupérer toutes les conversations
  */
-const getAllConversations = async (
-  req: express.Request,
-  res: express.Response
-) => {
+const getAllConversations = async (req: express.Request, res: express.Response) => {
   try {
     const conversations = await ConversationModel.find()
       .populate({
@@ -58,7 +52,6 @@ const getAllConversations = async (
       });
     res.json(conversations);
   } catch (error) {
-    console.error("Erreur lors de la récupération des conversations :", error);
     res.status(500).json({ message: "Impossible de récupérer les conversations", error });
   }
 };
@@ -66,10 +59,7 @@ const getAllConversations = async (
 /**
  * Récupérer une conversation par ID
  */
-const getConversationById = async (
-  req: express.Request,
-  res: express.Response
-) => {
+const getConversationById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
     const conversation = await ConversationModel.findById(id)
@@ -78,11 +68,8 @@ const getConversationById = async (
         model: UserModel,
         select: "firstname lastname email"
       });
-    if (conversation) {
-      res.json(conversation);
-    } else {
-      res.status(404).json({ message: "Conversation non trouvée" });
-    }
+    if (!conversation) return res.status(404).json({ message: "Conversation non trouvée" });
+    res.json(conversation);
   } catch (error) {
     res.status(500).json({ message: "Impossible de récupérer la conversation", error });
   }
@@ -91,33 +78,23 @@ const getConversationById = async (
 /**
  * Ajouter un message à une conversation
  */
-const addMessage = async (
-  req: express.Request,
-  res: express.Response
-) => {
+const addMessage = async (req: express.Request, res: express.Response) => {
   try {
-    const { id } = req.params; // ID de la conversation
-    const { sender, content, messageType, mediaUrl, language } = req.body;
+    const { id } = req.params;
+    const { sender, content, messageType, mediaUrl } = req.body;
+
     if (!sender) {
       return res.status(400).json({ message: "L'expéditeur est requis" });
     }
+
     const conversation = await ConversationModel.findById(id);
     if (!conversation) {
       return res.status(404).json({ message: "Conversation non trouvée" });
     }
 
-    console.log(language);
-    let translatedContent = content;
-    if (language !== "fr" && conversation.name === "Support") {
-      console.log("Langue pas française ====> " + language)
-      translatedContent = await translateMessage(content, language, "fr");
-    }
-
-
     const newMessage: IMessage = {
       sender,
       content: content || "",
-      contentFr: translatedContent || "",
       messageType: messageType || "text",
       mediaUrl: mediaUrl || "",
       createdAt: new Date(),
@@ -127,8 +104,19 @@ const addMessage = async (
     conversation.messages.push(newMessage);
     await conversation.save();
 
-    // Pour du temps réel, on pourra émettre via socket.io ici.
-    res.status(200).json(conversation);
+    // ✅ Diffusion WebSocket
+    const payload = JSON.stringify({
+      topic: `conversation/${id}`,
+      message: newMessage,
+    });
+
+    rooms[`conversation/${id}`]?.forEach((client: any) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(payload);
+      }
+    });
+
+    return res.status(200).json(newMessage);
   } catch (error) {
     console.error("Erreur lors de l'ajout d'un message :", error);
     res.status(500).json({ message: "Impossible d'ajouter le message", error });
@@ -136,403 +124,109 @@ const addMessage = async (
 };
 
 /**
- * Supprimer (complètement) une conversation par ID
+ * Supprimer une conversation
  */
-const deleteConversationById = async (
-  req: express.Request,
-  res: express.Response
-) => {
+const deleteConversationById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
     const deletedConversation = await ConversationModel.findByIdAndDelete(id);
-    if (deletedConversation) {
-      res.json({ message: "Conversation supprimée avec succès" });
-    } else {
-      res.status(404).json({ message: "Conversation non trouvée" });
-    }
+    if (!deletedConversation) return res.status(404).json({ message: "Conversation non trouvée" });
+    res.json({ message: "Conversation supprimée avec succès" });
   } catch (error) {
     res.status(500).json({ message: "Impossible de supprimer la conversation", error });
   }
 };
 
 /**
- * Suppression soft d'un message dans une conversation (accessible à tous)
+ * Soft delete d’un message
  */
 const deleteMessage = async (req: express.Request, res: express.Response) => {
   try {
     const { conversationId, messageId } = req.params;
-    const userId = req.body.userId; // On récupère l'ID de l'utilisateur depuis le body
+    const userId = req.body.userId;
 
     const conversation = await ConversationModel.findById(conversationId);
-    if (!conversation) {
-      return res.status(404).json({ message: "Conversation non trouvée" });
-    }
+    if (!conversation) return res.status(404).json({ message: "Conversation non trouvée" });
 
     const message = conversation.messages.find(
       (msg) => msg._id?.toString() === messageId
     );
-    if (!message) {
-      return res.status(404).json({ message: "Message non trouvé" });
-    }
+    if (!message) return res.status(404).json({ message: "Message non trouvé" });
 
     message.deleted = true;
     message.deletedAt = new Date();
     message.deletedBy = userId || null;
 
     await conversation.save();
-    res.status(200).json({
-      message: "Message supprimé (soft)",
-      conversation
-    });
+    res.status(200).json({ message: "Message supprimé", conversation });
   } catch (error) {
-    console.error("Erreur lors de la suppression du message :", error);
     res.status(500).json({ message: "Impossible de supprimer le message", error });
   }
 };
 
 /**
- * Créer une conversation à partir de l'email d'un utilisateur cible.
- * On reçoit dans les params : { email } et dans le body : { userEmail }.
- * userEmail correspond à l'email de l'utilisateur connecté.
+ * Créer une conversation via email
  */
-const createConversationByEmail = async (
-  req: express.Request,
-  res: express.Response
-) => {
+const createConversationByEmail = async (req: express.Request, res: express.Response) => {
   try {
-    console.log("=== Début de createConversationByEmail ===");
-
-    // Récupérer l'email cible depuis les params et l'email de l'utilisateur connecté depuis le body
     const { email } = req.params;
     const { userEmail } = req.body;
 
-    console.log("Email reçu dans les params :", email);
-    console.log("userEmail reçu dans le body :", userEmail);
-
-    if (!email) {
-      console.error("Aucun email fourni (params).");
-      return res.status(400).json({ message: "L'email (params) est requis" });
+    if (!email || !userEmail) {
+      return res.status(400).json({ message: "Email manquant" });
     }
 
-    if (!userEmail) {
-      console.error("Aucun userEmail fourni (body).");
-      return res.status(400).json({ message: "Le userEmail (body) est requis" });
-    }
-    console.log(userEmail)
-
-    console.log("Recherche de l'utilisateur cible par email...");
     const targetUser = await UserModel.findOne({ email });
-    console.log("Résultat de la recherche d'utilisateur cible :", targetUser);
-    if (!targetUser) {
-      console.error("Aucun utilisateur trouvé avec l'email :", email);
-      return res.status(404).json({ message: "Utilisateur non trouvé avec cet email" });
-    }
-
-    console.log("Recherche de l'utilisateur connecté par userEmail...");
     const currentUser = await UserModel.findOne({ email: userEmail });
-    console.log("Utilisateur connecté :", currentUser);
-    if (!currentUser || !currentUser._id) {
-      console.error("Utilisateur connecté non authentifié ou ID manquant.");
-      return res.status(401).json({ message: "Utilisateur non authentifié" });
+
+    if (!targetUser || !currentUser) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
-    console.log("Vérification de l'existence d'une conversation entre", currentUser._id, "et", targetUser._id);
     const existingConversation = await ConversationModel.findOne({
       participants: { $all: [currentUser._id, targetUser._id] },
       "participants.2": { $exists: false }
     });
-    console.log("Conversation existante :", existingConversation);
-    if (existingConversation) {
-      console.log("Une conversation existe déjà, renvoi de celle-ci.");
-      return res.status(200).json(existingConversation);
-    }
 
-    // Pour un chat privé, on peut ne pas définir de nom statique (l'affichage se fera côté front)
-    const conversationName = "";
-    console.log("Nom de la nouvelle conversation (vide pour chat privé) :", conversationName);
+    if (existingConversation) return res.status(200).json(existingConversation);
 
-    console.log("Création de la nouvelle conversation...");
     const newConversation = new ConversationModel({
       participants: [currentUser._id, targetUser._id],
-      name: conversationName,
+      name: "",
       messages: []
     });
 
-    console.log("Enregistrement de la nouvelle conversation en base de données...");
     await newConversation.save();
-    console.log("Nouvelle conversation enregistrée avec succès :", newConversation);
-
-    console.log("=== Fin de createConversationByEmail ===");
     res.status(201).json(newConversation);
   } catch (error) {
-    console.error("Erreur lors de la création de la conversation par email :", error);
     res.status(500).json({ message: "Erreur lors de la création de la conversation", error });
   }
 };
 
 /**
- * Inviter un utilisateur dans une conversation existante
+ * Inviter un utilisateur
  */
-const inviteUser = async (
-  req: express.Request,
-  res: express.Response
-) => {
+const inviteUser = async (req: express.Request, res: express.Response) => {
   try {
     const { conversationId } = req.params;
     const { userId } = req.body;
-    if (!userId) {
-      return res.status(400).json({ message: "L'ID utilisateur est requis" });
-    }
+    if (!userId) return res.status(400).json({ message: "ID utilisateur requis" });
+
     const conversation = await ConversationModel.findById(conversationId);
-    if (!conversation) {
-      return res.status(404).json({ message: "Conversation non trouvée" });
-    }
-    // Vérifier que l'utilisateur n'est pas déjà participant
+    if (!conversation) return res.status(404).json({ message: "Conversation non trouvée" });
+
     if (conversation.participants.includes(userId)) {
-      return res.status(400).json({ message: "Utilisateur déjà invité" });
+      return res.status(400).json({ message: "Utilisateur déjà présent" });
     }
+
     conversation.participants.push(userId);
     await conversation.save();
-    res.status(200).json({ message: "Utilisateur invité", conversation });
+    res.status(200).json(conversation);
   } catch (error) {
     res.status(500).json({ message: "Impossible d'inviter l'utilisateur", error });
   }
 };
 
-/**
- * Récupérer ou créer une conversation pour un utilisateur donné
- * (exemple pour conversation privée : si participants = 1)
- */
-const getOrCreateConversationByUserId = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    const { userId } = req.params;
-    let conversation = await ConversationModel.findOne({ participants: userId });
-    if (!conversation) {
-      conversation = new ConversationModel({
-        participants: [userId],
-        messages: []
-      });
-      await conversation.save();
-
-      const user = await UserModel.findById(userId);
-      if (user) {
-        user.conversationId = conversation._id.toString();
-        await user.save();
-      } else {
-        return res.status(404).json({ message: "Utilisateur non trouvé" });
-      }
-    }
-    res.status(200).json(conversation);
-  } catch (error) {
-    console.error("Erreur lors de la récupération/création de la conversation :", error);
-    res.status(500).json({ message: "Impossible de récupérer ou créer la conversation", error });
-  }
-};
-
-// Récupérer ou créer la conversation Support pour un utilisateur
-const getOrCreateSupportConversation = async (
-  req: express.Request,
-  res: express.Response) => {
-  try {
-    // Récupération depuis req.query car les paramètres sont dans l'URL
-    const { userId, language } = req.query;
-    console.log('USER_ID ======> ' + JSON.stringify(userId));
-
-    if (!userId) {
-      return res.status(401).json({ message: "Utilisateur non authentifié" });
-    }
-
-    let conversation = await ConversationModel.findOne({
-      participants: { $all: [userId, SUPPORT_USER_ID] },
-      name: "Support",
-    });
-
-    if (!conversation) {
-      conversation = new ConversationModel({
-        participants: [userId, SUPPORT_USER_ID],
-        name: "Support",
-        language: language || "fr",
-      });
-      await conversation.save();
-    }
-
-    res.status(200).json(conversation);
-  } catch (error) {
-    console.error("Erreur lors de la récupération/création de la conversation Support:", error);
-    res.status(500).json({ message: "Impossible d'obtenir la conversation Support", error });
-  }
-};
-
-
-// Ajouter un message à la conversation Support
-const getSupportMessages = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    const conversations = await ConversationModel.find({ name: "Support" }) // Filtrer les conversations
-      .populate({
-        path: "participants",
-        model: UserModel,
-        select: "firstname lastname email"
-      });
-
-    for (let conv of conversations) {
-      let idUser = conv.participants[0];
-      const user = await UserModel.findById(idUser);
-      if (!user) {
-        res.status(404).json({ message: "Utilisateur non trouvé" });
-      }
-      conv.user = user;
-    }
-    await res.status(200).json(conversations);
-  } catch (error) {
-    console.error("Erreur lors de la récupération des messages Support:", error);
-    res.status(500).json({ message: "Impossible de récupérer les messages Support", error });
-  }
-};
-
-
-// Ajouter un message à la conversation Support
-const SUPPORT_AGENT_URL = process.env.SUPPORT_AGENT_URL || "http://support-agent:9000/support/reply";
-
-// Ajouter un message à la conversation Support
-export const addSupportMessage = async (req: express.Request, res: express.Response) => {
-  try {
-    console.log("ADD SUPPORT MESSAGE :")
-    const { content, messageType, mediaUrl } = req.body;
-    const { userId, language } = req.params;
-
-    let conversation = await ConversationModel.findOne({
-      participants: { $all: [userId, SUPPORT_USER_ID] },
-      name: "Support",
-    });
-
-    if (!conversation) {
-      return res.status(404).json({ message: "Conversation Support non trouvée" });
-    }
-
-    // 1) On pousse le message client
-    const newMessage: any = {
-      sender: new mongoose.Types.ObjectId(userId),
-      content: content,
-      contentFr: language !== "fr" ? undefined : content,
-      messageType: messageType || "text",
-      mediaUrl: mediaUrl || "",
-      createdAt: new Date(),
-    };
-
-    conversation.messages.push(newMessage);
-    await conversation.save();
-    const lastMsg = conversation.messages[conversation.messages.length - 1] as IMessage | undefined;
-
-    if (!lastMsg || !lastMsg._id) {
-      throw new Error("Impossible de récupérer le dernier message (lastMsg introuvable ou sans _id).");
-    }
-
-    const lastMessageId = lastMsg._id.toString();
-
-    // 2) Appel de l’agent (on ne répond qu'au DERNIER message)
-    const payload = {
-      conversationId: conversation._id.toString(),
-      lastMessageId,
-      lastMessageText: content,
-      language: language || "fr",
-      userId
-    };
-
-    let agent;
-    try {
-      const r = await axios.post(SUPPORT_AGENT_URL, payload, { timeout: 60_000 });
-      agent = r.data; // { action, reply?, intent, flags, severity, reasons }
-    } catch (e: any) {
-      console.error("support-agent error:", e?.response?.data || e.message);
-      agent = { action: "escalate", intent: "other", reasons: ["agent_unavailable"] };
-    }
-
-    // 3) Agir selon la décision
-    // 3) Agir selon la décision
-    if (agent.action === "reply" && agent.reply) {
-      const replyMessage: any = {
-        sender: new mongoose.Types.ObjectId(SUPPORT_USER_ID),
-        content: agent.reply,
-        contentFr: language === "fr" ? agent.reply : undefined,
-        messageType: "text",
-        createdAt: new Date(),
-      };
-      conversation.messages.push(replyMessage);
-      await conversation.save();
-
-      // ✅ Diffusion temps réel
-      const payload = JSON.stringify({
-        topic: `conversation/${conversation._id}`,
-        message: replyMessage,
-      });
-      const { WebSocket } = require('ws');
-      const { rooms } = require('../server'); // ⚠️ il faut exporter rooms dans server.ts
-      rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
-        if (client.readyState === WebSocket.OPEN) client.send(payload);
-      });
-
-    } else if (agent.action === "escalate") {
-      conversation.flagged = true;
-      await conversation.save();
-    }
-
-
-    // On renvoie la conversation à jour
-    res.status(200).json(conversation);
-
-  } catch (error) {
-    console.error("Erreur lors de l'ajout d'un message Support:", error);
-    res.status(500).json({ message: "Impossible d'ajouter le message", error });
-  }
-};
-
-const translateMessage = async (content: any, sourceLang: string, targetLang: string) => {
-  if (!OPENAI_API_KEY) {
-    console.error("Clé API OpenAI manquante");
-    return content;
-  }
-
-  if (sourceLang === targetLang) {
-    return content;
-  }
-
-  try {
-    const response = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: 'Tu es un traducteur précis. Traduis ce texte de ${sourceLang} vers ${targetLang}.'
-          },
-          {
-            role: "user",
-            content: content
-          }
-        ],
-        temperature: 0.3
-      },
-      {
-        headers: {
-          "Authorization": 'Bearer ${OPENAI_API_KEY}',
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
-    return response.data.choices[0].message.content.trim();
-  } catch (error: any) {
-    console.error("Erreur de traduction OpenAI :", error.response?.data || error.message);
-    return content;
-  }
-};
 module.exports = {
   createConversation,
   getAllConversations,
@@ -540,10 +234,6 @@ module.exports = {
   addMessage,
   deleteConversationById,
   deleteMessage,
-  addSupportMessage,
   inviteUser,
-  getSupportMessages,
-  getOrCreateSupportConversation,
-  getOrCreateConversationByUserId,
   createConversationByEmail
 };
