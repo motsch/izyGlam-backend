@@ -292,52 +292,170 @@ const getSupportMessages = async (req: express.Request, res: express.Response) =
 /**
  * Ajouter un message à la conversation Support
  */
+/**
+ * Ajouter un message à la conversation Support
+ */
 const addSupportMessage = async (req: express.Request, res: express.Response) => {
   try {
-    const { content, messageType, mediaUrl, clientId } = req.body;
-    const { userId, language } = req.params;
+    const { content, messageType, mediaUrl, clientId, language, conversationId } = req.body;
 
-    let conversation = await ConversationModel.findOne({
-      participants: { $all: [userId, SUPPORT_USER_ID] },
-      name: "Support"
-    });
+    const authUser = (req as any).user || null;
+    const userId = authUser?._id || authUser?.id || null;
 
-    if (!conversation) {
-      return res.status(404).json({ message: "Conversation Support non trouvée" });
+    console.log("➡️ [Support] Nouveau message reçu:");
+    console.log("   userId (auth):", userId || "(absent)");
+    console.log("   conversationId (body):", conversationId || "(absent)");
+    console.log("   language:", language);
+    console.log("   content:", content);
+    console.log("   messageType:", messageType);
+
+    if (!content && !mediaUrl) {
+      return res.status(400).json({ message: "Message vide" });
     }
 
+    if (!SUPPORT_USER_ID) {
+      console.error("❌ [Support] SUPPORT_USER_ID non défini en env");
+      return res.status(500).json({ message: "Support non configuré (SUPPORT_USER_ID manquant)" });
+    }
+
+    const supportOid = new mongoose.Types.ObjectId(String(SUPPORT_USER_ID));
+    let conversation: any = null;
+
+    // 1) Si on fournit la conversation directement (recommandé côté front)
+    if (conversationId) {
+      conversation = await ConversationModel.findById(conversationId);
+      if (!conversation) {
+        console.warn("⚠️ [Support] conversationId inexistant → 404");
+        return res.status(404).json({ message: "Conversation Support non trouvée" });
+      }
+      // Vérifier que c’est bien la conv Support
+      if ((conversation.name || "").toLowerCase() !== "support") {
+        console.warn("⚠️ [Support] conversationId fourni mais name != Support");
+      }
+      console.log("✅ [Support] Conversation trouvée par ID:", conversation._id);
+    } else {
+      // 2) Sinon, on s’appuie sur le user authentifié
+      if (!userId) {
+        console.warn("❌ [Support] userId introuvable (auth manquante ?).");
+        return res.status(400).json({ message: "Utilisateur non authentifié (userId manquant)" });
+      }
+      const uid = new mongoose.Types.ObjectId(String(userId));
+
+      conversation = await ConversationModel.findOne({
+        participants: { $all: [uid, supportOid] },
+        name: "Support"
+      });
+
+      if (!conversation) {
+        console.warn("⚠️ [Support] Conversation non trouvée pour user", userId, "→ création…");
+        conversation = new ConversationModel({
+          participants: [uid, supportOid],
+          name: "Support",
+          language: language || "fr",
+          messages: []
+        });
+        await conversation.save();
+        console.log("✅ [Support] Conversation créée:", conversation._id);
+      } else {
+        console.log("✅ [Support] Conversation trouvée:", conversation._id);
+      }
+    }
+
+    // ---- 1. Sauvegarder le message utilisateur ----
+    const senderId = userId
+      ? new mongoose.Types.ObjectId(String(userId))
+      : conversation.participants.find((p: any) => String(p) !== String(SUPPORT_USER_ID));
+
     const newMessage: IMessage = {
-      sender: new mongoose.Types.ObjectId(userId),
+      sender: senderId,
       content,
       messageType: messageType || "text",
       mediaUrl: mediaUrl || "",
       createdAt: new Date(),
-      clientId // ✅ pour dédup côté front
+      clientId
     };
 
     conversation.messages.push(newMessage);
     await conversation.save();
 
     const savedMsg = conversation.messages[conversation.messages.length - 1];
+    console.log("💾 [Support] Message utilisateur sauvegardé:", savedMsg._id);
 
+    // Diffusion WS
     const payload = JSON.stringify({
       topic: `conversation/${conversation._id}`,
       message: savedMsg
     });
-
     rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
-      if (client.readyState === WebSocket.OPEN) client.send(payload);
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(payload);
+        console.log("📡 [WS] Message utilisateur diffusé");
+      }
     });
 
-    // ✅ Notification push aux destinataires (Support ↔ Utilisateur)
+    // Notif push
     try {
       await notifyChatMessage(conversation, savedMsg);
+      console.log("📲 [Push] Notification envoyée (user → support)");
     } catch (e) {
-      console.error("[NOTIFY][support_chat] erreur envoi notification:", e);
+      console.error("❌ [Push] Erreur notification:", e);
     }
 
+    // ---- 2. Appeler l’agent IA pour une réponse éventuelle ----
+    try {
+      console.log("🤖 [Agent] Appel à l’IA…");
+      const resp = await axios.post(SUPPORT_AGENT_URL, {
+        conversationId: String(conversation._id),
+        lastMessageId: String(savedMsg._id),
+        lastMessageText: savedMsg.content,
+        language: language || conversation.language || "fr",
+        userId: String(senderId)
+      });
+      console.log("✅ [Agent] Réponse:", resp.data);
+
+      if (resp.data.action === "reply" && resp.data.reply) {
+        const autoReply: IMessage = {
+          sender: new mongoose.Types.ObjectId(String(SUPPORT_USER_ID)),
+          content: resp.data.reply,
+          messageType: "text",
+          createdAt: new Date(),
+          clientId: ""
+        };
+        conversation.messages.push(autoReply);
+        await conversation.save();
+
+        const savedReply = conversation.messages[conversation.messages.length - 1];
+        console.log("💾 [Support] Réponse IA sauvegardée:", savedReply._id);
+
+        const replyPayload = JSON.stringify({
+          topic: `conversation/${conversation._id}`,
+          message: savedReply
+        });
+        rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(replyPayload);
+            console.log("📡 [WS] Réponse IA diffusée");
+          }
+        });
+
+        await notifyChatMessage(conversation, savedReply);
+        console.log("📲 [Push] Notification envoyée (support → user)");
+      } else if (resp.data.action === "escalate") {
+        console.warn("⚠️ [Agent] Escalade requise (humain)");
+      } else {
+        console.log("ℹ️ [Agent] noop (pas de réponse)");
+      }
+    } catch (agentErr) {
+      console.error("❌ [Agent] Erreur appel IA:", agentErr);
+      // On ne bloque pas la réponse HTTP au client
+    }
+
+    // ---- 3. Réponse API ----
     res.status(200).json(savedMsg);
+    console.log("✅ [Support] addSupportMessage terminé");
+
   } catch (error) {
+    console.error("🔥 [Support] Erreur addSupportMessage:", error);
     res.status(500).json({ message: "Impossible d'ajouter le message Support", error });
   }
 };

@@ -27,6 +27,8 @@ app.get("/", (req: any, res: any) => {
 });
 
 // Routes
+// Routes
+const prospectionRoutes = require("./routes/prospectionRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const serviceTemplateRoutes = require("./routes/serviceTemplateRoutes");
@@ -62,6 +64,7 @@ const notifyRoutes = require('./routes/notify');
 const devicesRoutes = require('./routes/devices');
 
 // Utilisation des routes
+app.use("/api", prospectionRoutes);
 app.use("/api", bookingRoutes);
 app.use("/api", advertisementRoutes);
 app.use("/api", serviceRoutes);
