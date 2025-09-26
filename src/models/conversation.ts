@@ -15,7 +15,6 @@ export interface IMessage {
   deletedAt?: Date;
   deletedBy?: Types.ObjectId; // Référence à l'admin ayant supprimé le message
   clientId?: string;
-
 }
 
 // Interface pour la conversation
