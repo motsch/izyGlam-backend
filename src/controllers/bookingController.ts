@@ -551,17 +551,12 @@ export const getAvailableSlots = async (req: express.Request, res: express.Respo
     // 4) Récupère les bookings bloquants sur la fenêtre (pending + accepted)
     const bookings = await BookingModel.find({
       userProId: professional._id.toString(),
-      start: { $gte: startDate.toDate(), $lte: endDate.toDate() },
       status: { $in: BLOCKING_STATUSES },
+      // correction n°1 : on prend toute résa qui chevauche la fenêtre
+      $or: [
+        { start: { $lt: endDate.toDate() }, end: { $gt: startDate.toDate() } }
+      ]
     }).lean();
-
-    // (Optionnel) Récupérer aussi les "holds" non expirés pour 5 min de verrou doux (voir section 3)
-    // const holds = await SlotHoldModel.find({
-    //   userProId: professional._id.toString(),
-    //   start: { $lte: endDate.toDate() },
-    //   end:   { $gte: startDate.toDate() },
-    //   expiresAt: { $gt: new Date() },
-    // }).lean();
 
     const allAvailableSlots: Array<{ date: string; start: string; end: string }> = [];
 
@@ -623,14 +618,7 @@ export const getAvailableSlots = async (req: express.Request, res: express.Respo
             return overlapsWithBuffer(slotStart, slotEnd, bStart, bEnd, minimumDelayMin);
           });
 
-          // // (Optionnel) Test overlap vs holds
-          // const collidesHold = holds?.some((h: any) => {
-          //   const hStart = moment(h.start).tz(tz);
-          //   const hEnd = moment(h.end).tz(tz);
-          //   return overlapsWithBuffer(slotStart, slotEnd, hStart, hEnd, minimumDelayMin);
-          // }) ?? false;
-
-          if (!collidesBooking /* && !collidesHold */) {
+          if (!collidesBooking) {
             dayCandidates.push({
               date: d.format("YYYY-MM-DD"),
               start: slotStart.format("HH:mm"),
@@ -639,7 +627,7 @@ export const getAvailableSlots = async (req: express.Request, res: express.Respo
             });
           }
 
-          // Option A : on avance de la grille (15 min), même si bloqué
+          // avance d’un pas de grille (15 min)
           cur.add(GRID_MINUTES, "minutes");
         }
       }
@@ -662,6 +650,7 @@ export const getAvailableSlots = async (req: express.Request, res: express.Respo
     return res.status(500).json({ message: "Erreur lors du calcul des créneaux disponibles" });
   }
 };
+
 
 module.exports = {
   getAllCACount,
