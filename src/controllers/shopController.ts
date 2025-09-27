@@ -479,14 +479,14 @@ const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) 
 
     // ✅ Construction des catégories
     const categories = {
-      "A découvrir": shuffle(enrichedShops).slice(0, 15),
-      "Les plus appréciés": [...enrichedShops]
+      "discover": shuffle(enrichedShops).slice(0, 15),
+      "appreciated": [...enrichedShops]
         .sort((a, b) => Number(b.note) - Number(a.note))
         .slice(0, 15),
-      "Les plans malins": [...enrichedShops]
+      "smart": [...enrichedShops]
         .sort((a, b) => a.avgPrice - b.avgPrice)
         .slice(0, 15),
-      "Top10 de la semaine": [...enrichedShops]
+      "top10": [...enrichedShops]
         .sort((a, b) => b.clics - a.clics)
         .slice(0, 15),
     };
