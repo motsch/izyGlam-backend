@@ -38,7 +38,7 @@ router.get("/shop/nearby", shopController.getShopsNearby);
 
 // Nouvelle route pour récupérer les shops en fonction des codes postaux
 // Exemple d'appel : /shop/delivery?codes=75001,75002
-router.get("/shop/delivery", shopController.getShopsByPostalCodes);
+router.get("/shop/delivery", shopController.getShopsByPostalCodesWithCategories);
 
 // Route to retrieve a specific shop by ID
 router.get("/shop/:id", shopController.getShopById);

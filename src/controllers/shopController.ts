@@ -429,6 +429,79 @@ const getShopsByPostalCodes = async (req: Request, res: Response) => {
   }
 };
 
+const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) => {
+  try {
+    const { codes } = req.query;
+    let postalCodes: string[] = [];
+
+    if (!codes) {
+      return res.status(400).json({ message: "Les codes postaux sont requis" });
+    }
+
+    if (typeof codes === "string") {
+      postalCodes = codes.split(",").map((c) => c.trim());
+    } else if (Array.isArray(codes)) {
+      postalCodes = codes.map((c) => String(c).trim());
+    }
+
+    // 🔹 Shops filtrés par codes postaux
+    const shops = await ShopModel.find({
+      deliveryPostalCodes: { $in: postalCodes },
+      active: true,
+      status: "approved",
+    }).lean();
+
+    // IDs des shops pour aller chercher les services
+    const shopIds = shops.map((s) => s._id.toString());
+
+    // 🔹 On calcule la moyenne des prix pour chaque shop
+    const servicesAgg = await ServiceModel.aggregate([
+      { $match: { shopId: { $in: shopIds } } },
+      {
+        $group: {
+          _id: "$shopId",
+          avgPrice: { $avg: "$price" },
+        },
+      },
+    ]);
+
+    // Map shopId -> avgPrice
+    const avgPriceByShop: Record<string, number> = {};
+    servicesAgg.forEach((s) => {
+      avgPriceByShop[s._id] = s.avgPrice;
+    });
+
+    // On enrichit les shops avec avgPrice
+    const enrichedShops = shops.map((shop) => ({
+      ...shop,
+      avgPrice: avgPriceByShop[shop._id.toString()] ?? Infinity,
+    }));
+
+    // ✅ Construction des catégories
+    const categories = {
+      "A découvrir": shuffle(enrichedShops).slice(0, 15),
+      "Les plus appréciés": [...enrichedShops]
+        .sort((a, b) => Number(b.note) - Number(a.note))
+        .slice(0, 15),
+      "Les plans malins": [...enrichedShops]
+        .sort((a, b) => a.avgPrice - b.avgPrice)
+        .slice(0, 15),
+      "Top10 de la semaine": [...enrichedShops]
+        .sort((a, b) => b.clics - a.clics)
+        .slice(0, 15),
+    };
+
+    res.json(categories);
+  } catch (error) {
+    console.error("Erreur getShopsByPostalCodesWithCategories:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
+
+// Petit helper
+function shuffle<T>(array: T[]): T[] {
+  return [...array].sort(() => Math.random() - 0.5);
+}
 
 // Récupérer une boutique par son ID
 const getShopById = async (req: express.Request, res: express.Response) => {
@@ -824,4 +897,5 @@ module.exports = {
   getIzyGlamDescription,
   uploadServiceImageAI,
   getIzyGlamProductDescription,
+  getShopsByPostalCodesWithCategories,
 };
