@@ -354,7 +354,7 @@ export const forgotPassword = async (req: express.Request, res: express.Response
       },
     });
 
-    const logoPath = path.join(__dirname, "../../uploads/images/logo/fr.png"); // Chemin absolu du logo
+    const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png"); // Chemin absolu du logo
     const currentYear = new Date().getFullYear(); // Récupère l'année actuelle
 
     const htmlContent = `
@@ -380,7 +380,7 @@ export const forgotPassword = async (req: express.Request, res: express.Response
             overflow: hidden;
           }
           .header {
-            background: linear-gradient(90deg, #36d1dc, #5b86e5);
+            background: linear-gradient(90deg, #ff95c1ff, #ffdcecff);
             padding: 20px;
             text-align: center;
           }
@@ -393,7 +393,7 @@ export const forgotPassword = async (req: express.Request, res: express.Response
             text-align: left;
           }
           .content h1 {
-            color: #0072ff;
+            color: #ff8fbeff;
             font-size: 24px;
             margin-bottom: 10px;
           }
@@ -410,8 +410,8 @@ export const forgotPassword = async (req: express.Request, res: express.Response
             display: inline-block;
             padding: 15px 20px;
             font-size: 16px;
-            color: #ffffff !important;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            color: #ffffffff !important;
+            background: linear-gradient(90deg, #ffdcecff, #ff95c1ff);
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
@@ -427,7 +427,7 @@ export const forgotPassword = async (req: express.Request, res: express.Response
             font-size: 14px;
           }
           .footer a {
-            color: #0072ff;
+            color: #ff8fbeff;
             text-decoration: none;
           }
           .footer a:hover {
@@ -438,21 +438,21 @@ export const forgotPassword = async (req: express.Request, res: express.Response
       <body>
         <div class="email-container">
           <div class="header">
-            <img src="cid:logo" alt="IzyGlow Logo">
+            <img src="cid:logo" alt="izyGlam Logo">
           </div>
           <div class="content">
             <h1>Réinitialisation de votre mot de passe</h1>
             <p>Bonjour,</p>
-            <p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte IzyGlow. Cliquez sur le bouton ci-dessous pour continuer.</p>
+            <p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte izyGlam. Cliquez sur le bouton ci-dessous pour continuer.</p>
             <div class="button-container">
               <a class="button" href="${resetLink}" target="_blank">Réinitialiser mon mot de passe</a>
             </div>
             <p>Ce lien est valable pendant 1 heure. Si vous n'avez pas fait cette demande, veuillez ignorer cet email.</p>
-            <p>Merci,<br>L'équipe IzyGlow</p>
+            <p>Merci,<br>L'équipe izyGlam</p>
           </div>
           <div class="footer">
-            <p>Besoin d'aide ? <a href="mailto:support@izyglow.com">support@izyglow.com</a></p>
-            <p>&copy; ${currentYear} IzyGlow. Tous droits réservés.</p>
+            <p>Besoin d'aide ? <a href="mailto:support@izyglam.com">support@izyglam.com</a></p>
+            <p>&copy; ${currentYear} izyGlam. Tous droits réservés.</p>
           </div>
         </div>
       </body>
@@ -460,9 +460,9 @@ export const forgotPassword = async (req: express.Request, res: express.Response
     `;
 
     const info = await transporter.sendMail({
-      from: 'contact@izyglow.com',
+      from: 'contact@izyglam.com',
       to: email,
-      subject: 'Réinitialisation de votre mot de passe - IzyGlow',
+      subject: 'Réinitialisation de votre mot de passe - izyGlam',
       html: htmlContent,
       attachments: [
         {

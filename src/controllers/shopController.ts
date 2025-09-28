@@ -451,6 +451,17 @@ const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) 
       status: "approved",
     }).lean();
 
+
+    // On filtre par rapport à un champ deliveryPostalCodes
+    // (assure-toi d'avoir ce champ dans le modèle ou de l'ajouter si besoin)
+    const shopsByPostalCodes = shops.filter((shop) => {
+      if (!shop.deliveryPostalCodes || !Array.isArray(shop.deliveryPostalCodes)) {
+        return false;
+      }
+      return shop.deliveryPostalCodes.some((deliveryCode: string) =>
+        postalCodes.includes(deliveryCode)
+      );
+    });
     // IDs des shops pour aller chercher les services
     const shopIds = shops.map((s) => s._id.toString());
 
@@ -479,6 +490,7 @@ const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) 
 
     // ✅ Construction des catégories
     const categories = {
+      "all": shopsByPostalCodes,
       "discover": shuffle(enrichedShops).slice(0, 15),
       "appreciated": [...enrichedShops]
         .sort((a, b) => Number(b.note) - Number(a.note))
