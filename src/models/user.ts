@@ -23,6 +23,9 @@ interface BankInformation {
 export interface iUser extends Document {
   lastname: string;
   firstname: string;
+  active: boolean; // ✅ nouvel indicateur d'activation
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
   facebook: any;
   instagram: any;
   bank?: BankInformation;
@@ -113,6 +116,9 @@ const userSchema = new Schema<iUser>({
   bank: { type: BankInformationSchema, required: false },
   conversationId: { type: String, required: false },
   companyId: { type: String, required: false },
+  active: { type: Boolean, default: false }, // ✅ par défaut à false
+  emailVerificationToken: { type: String },
+  emailVerificationExpires: { type: Date },
   abonnement: {
     type: String,
     required: false,

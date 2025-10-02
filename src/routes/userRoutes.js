@@ -29,11 +29,15 @@ router.post("/registerUserNoToken", usersController.registerUserNoToken);
 // Route to create a new user without requiring authentication
 router.post("/usersNoToken", usersController.createUser);
 
+router.get("/verify-email", usersController.verifyEmail);
+router.post("/resend-verification", usersController.resendVerificationEmail);
+
+
 // Route to retrieve all users without requiring authentication
 router.get("/usersNoToken", usersController.getAllUsers);
 
-    // Route pour ajouter une adresse à un utilisateur
-    router.patch("/users/:id/address", usersController.addUserAddress);
+// Route pour ajouter une adresse à un utilisateur
+router.patch("/users/:id/address", usersController.addUserAddress);
 
 // Authenticated route to create a new user
 router.post("/users", usersController.createUser);

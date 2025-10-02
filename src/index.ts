@@ -34,6 +34,7 @@ const serviceRoutes = require("./routes/serviceRoutes");
 const serviceTemplateRoutes = require("./routes/serviceTemplateRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const userRoutes = require("./routes/userRoutes");
+const countryRoutes = require("./routes/countryRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const companyRoutes = require("./routes/companyRoutes");
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -98,6 +99,7 @@ app.use("/api", cityRoutes);
 app.use("/api", subscriptionRoutes);
 app.use('/api', notifyRoutes);
 app.use('/api', devicesRoutes);
+app.use('/api', countryRoutes);
 
 // Middleware pour servir les fichiers statiques
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));

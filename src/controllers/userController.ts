@@ -4,6 +4,9 @@ import { Request } from "express";
 import axios from 'axios';
 import path from "path"; // Pour manipuler les chemins locaux
 
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:4200";
+
 import ConversationModel from "../models/conversation";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -85,7 +88,16 @@ const getUserInfo = async (
         const userId = decodedToken.userId;
 
         const user = await UserModel.findById(userId);
+
+
+
         if (user) {
+          // 4) Vérif activation
+          if (!user.active) {
+            return res.status(403).json({
+              message: "Votre compte n’est pas encore activé. Veuillez vérifier vos emails."
+            });
+          }
           // Le user a été trouvé, renvoyer ses informations (sans le mot de passe)
           const {
             lastname,
@@ -137,7 +149,6 @@ const getUserInfo = async (
     });
   }
 };
-
 
 // Fonction de refresh du token
 const refreshToken = async (
@@ -245,8 +256,6 @@ const loginVerifSMS = async (
   }
 };
 
-
-
 // Fonction de login pour vérifier les informations d'identification de l'utilisateur
 const loginUserSMS = async (
   req: { body: { email: any; phone: any } },
@@ -295,37 +304,60 @@ const loginUserSMS = async (
 };
 // Fonction de login pour vérifier les informations d'identification de l'utilisateur
 const loginUser = async (
-  req: { body: { email: any; password: any } },
+  req: { body: { email?: string; password?: string } },
   res: express.Response
 ) => {
   try {
-    console.log("IN LOG");
-    const { email, password } = req.body;
-    const user = await UserModel.findOne({ email });
-    const test = await UserModel.find({});
-    if (!user) {
-      console.log("user not found ???")
-      return res.status(401).json({ message: "Email invalide", test: test });
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const password = String(req.body?.password || '');
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email et mot de passe requis." });
     }
+
+    // Recherche de l'utilisateur (email insensible à la casse si stocké en lowercase)
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      // On reste volontairement vague pour éviter l'énumération des emails
+      return res.status(401).json({ message: "Identifiants invalides." });
+    }
+
+    // Vérification du mot de passe
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Mot de passe invalide" });
+      return res.status(401).json({ message: "Identifiants invalides." });
     }
-    // Créer un token JWT signé avec la clé secrète
+
+    // Vérification de l'activation du compte
+    // >>>> Adapte ce champ selon ton schéma: isActive / emailVerified / verified / active
+    if (!user.active) {
+      // 403 = on comprend la requête, mais l'accès est refusé (compte non activé)
+      return res.status(403).json({
+        message: "Votre compte n’est pas encore activé. Veuillez vérifier vos emails.",
+        activationRequired: true // pratique côté frontend pour rediriger vers /resend-activation
+      });
+    }
+
+    // OK -> génération du JWT
+    if (!process.env.SECRET_KEY) {
+      // Optionnel: aide au debug si la clé n'est pas définie
+      console.error("SECRET_KEY manquante dans l'environnement");
+      return res.status(500).json({ message: "Configuration serveur invalide." });
+    }
+
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id.toString(), role: user.role },
       process.env.SECRET_KEY,
-      {
-        expiresIn: "72h",
-      }
+      { expiresIn: "72h" }
     );
-    res.json({ message: user._id + " : Connexion réussie", token });
+
+    return res.json({ message: "Connexion réussie", token });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Une erreur est survenue lors de la connexion" });
+    console.error("Erreur login:", error);
+    return res.status(500).json({ message: "Une erreur est survenue lors de la connexion." });
   }
 };
+
 
 // Forgot password: Send reset link
 export const forgotPassword = async (req: express.Request, res: express.Response) => {
@@ -482,9 +514,6 @@ export const forgotPassword = async (req: express.Request, res: express.Response
   }
 };
 
-
-
-
 // Reset password
 export const resetPassword = async (req: express.Request, res: express.Response) => {
   const { token, newPassword } = req.body;
@@ -510,60 +539,191 @@ export const resetPassword = async (req: express.Request, res: express.Response)
 };
 
 // Créer un nouvel utilisateur
-const createUser = async (req: express.Request, res: express.Response) => {
+export const createUser = async (req: express.Request, res: express.Response) => {
   try {
     console.log("IN CREATE");
-    const myUser = req.body;
-    const newUser = new UserModel(myUser);
-    console.log("newUser : " + JSON.stringify(newUser));
-    // Récupérer le token d'authentification à partir de l'en-tête de la demande
-    // const token = req.header("Authorization");
+    const payload = { ...req.body };
 
-    /*if (!token) {
-        return res
-          .status(401)
-          .json({ message: "Token d'authentification manquant 2" });
-      }*/
+    // Sécurité: on ne laisse pas le client forcer ces champs
+    delete (payload as any).active;
+    delete (payload as any).emailVerificationToken;
+    delete (payload as any).emailVerificationExpires;
 
-    // Vérifier et décoder le token JWT pour obtenir le rôle de l'utilisateur
-    /*jwt.verify(
-        token,
-        process.env.SECRET_KEY,
-        async (err: any, decodedToken: { userId: any; role: string }) => {
-          if (err) {
-            return res
-              .status(403)
-              .json({ message: "Token d'authentification invalide" });
-          }
-  
-          const userRole = decodedToken.role;
-          // Vérifier le rôle de l'utilisateur avant de permettre la suppression
-          if (userRole !== "admin" && userRole !== "DeveloppeurFreelance") {
-            return res
-              .status(403)
-              .json({
-                message:
-                  "Accès refusé : seuls les administrateurs peuvent créer des utilisateurs",
-              });
-          }
-          await newUser.save();
-          res.status(201);
-          res.send(newUser);
-        }
-      );*/
+    // Création user avec active=false
+    const newUser = new UserModel({
+      ...payload,
+      active: false,
+    });
+
+    // Génère un token de vérification valable 1h
+    const token = crypto.randomBytes(32).toString("hex");
+    newUser.emailVerificationToken = token;
+    newUser.emailVerificationExpires = new Date(Date.now() + 3600000); // 1h
 
     await newUser.save();
-    res.status(201);
-    res.send(newUser);
+
+    // Lien de vérification pour le frontend
+    const verifyLink = `${FRONTEND_URL}/verify-email?token=${token}`;
+
+    // Transport SMTP (OVH comme ton forgotPassword)
+    const transporter = nodemailer.createTransport({
+      host: "ssl0.ovh.net",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_ID,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
+    const currentYear = new Date().getFullYear();
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Confirmez votre adresse email</title>
+        <style>
+          body { font-family: Arial, sans-serif; background:#f9f9f9; margin:0; padding:0;}
+          .email-container { max-width:600px; margin:20px auto; background:#fff; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,.1); overflow:hidden;}
+          .header { background:linear-gradient(90deg,#ff95c1ff,#ffdcecff); padding:20px; text-align:center;}
+          .header img { max-width:150px;}
+          .content { padding:20px; color:#333; text-align:left;}
+          .content h1 { color:#ff8fbeff; font-size:24px; margin-bottom:10px;}
+          .content p { font-size:16px; line-height:1.6; margin-bottom:20px;}
+          .button-container { text-align:center; margin:20px 0;}
+          .button { display:inline-block; padding:15px 20px; font-size:16px; color:#fff !important; background:linear-gradient(90deg,#ffdcecff,#ff95c1ff); text-decoration:none; border-radius:5px; font-weight:bold;}
+          .button:hover { opacity:.9;}
+          .footer { text-align:center; background:#f4f4f4; padding:10px; color:#888; font-size:14px;}
+          .footer a { color:#ff8fbeff; text-decoration:none;}
+          .footer a:hover { text-decoration:underline;}
+        </style>
+      </head>
+      <body>
+        <div class="email-container">
+          <div class="header">
+            <img src="cid:logo" alt="izyGlam Logo"/>
+          </div>
+          <div class="content">
+            <h1>Confirmez votre adresse email</h1>
+            <p>Bonjour,</p>
+            <p>Bienvenue sur izyGlam 🎀 ! Cliquez sur le bouton ci-dessous pour <strong>activer votre compte</strong>.</p>
+            <div class="button-container">
+              <a class="button" href="${verifyLink}" target="_blank">Activer mon compte</a>
+            </div>
+            <p>Ce lien est valable pendant 1 heure. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.</p>
+            <p>Merci,<br>L'équipe izyGlam</p>
+          </div>
+          <div class="footer">
+            <p>Besoin d'aide ? <a href="mailto:support@izyglam.com">support@izyglam.com</a></p>
+            <p>&copy; ${currentYear} izyGlam. Tous droits réservés.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await transporter.sendMail({
+      from: "contact@izyglam.com",
+      to: newUser.email,
+      subject: "Activez votre compte - izyGlam",
+      html: htmlContent,
+      attachments: [
+        { filename: "logo.png", path: logoPath, cid: "logo" },
+      ],
+    });
+
+    // On renvoie le user (sans password)
+    const safeUser = newUser.toObject();
+    delete (safeUser as any).password;
+    delete (safeUser as any).emailVerificationToken;
+    delete (safeUser as any).emailVerificationExpires;
+
+    res.status(201).json(safeUser);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message:
-          "Impossible de créer l'utilisateur => " + JSON.stringify(error),
-      });
+    console.error("Erreur création user:", error);
+    res.status(500).json({
+      message: "Impossible de créer l'utilisateur",
+      error: (error as any)?.message || error,
+    });
   }
 };
+
+export const resendVerificationEmail = async (req: express.Request, res: express.Response) => {
+  try {
+    const { email } = req.body as { email: string };
+    if (!email) return res.status(400).json({ message: "Email requis" });
+
+    const user = await UserModel.findOne({ email });
+    if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
+    if (user.active) return res.status(200).json({ message: "Compte déjà activé" });
+
+    // Nouveau token (invalidate l'ancien)
+    const token = crypto.randomBytes(32).toString("hex");
+    user.emailVerificationToken = token;
+    user.emailVerificationExpires = new Date(Date.now() + 3600000); // 1h
+    await user.save();
+
+    const verifyLink = `${FRONTEND_URL}/verify-email?token=${token}`;
+    const transporter = nodemailer.createTransport({
+      host: "ssl0.ovh.net",
+      port: 465,
+      secure: true,
+      auth: { user: process.env.EMAIL_ID, pass: process.env.EMAIL_PASSWORD },
+    });
+
+    const html = `Bonjour,<br/>Cliquez ici pour activer votre compte : <a href="${verifyLink}" target="_blank">Activer mon compte</a> (valide 1h).`;
+    await transporter.sendMail({
+      from: "contact@izyglam.com",
+      to: email,
+      subject: "Renvoyer l'activation - izyGlam",
+      html,
+    });
+
+    res.status(200).json({ message: "Email d'activation renvoyé" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur lors du renvoi de l'email d'activation" });
+  }
+};
+
+
+export const verifyEmail = async (req: express.Request, res: express.Response) => {
+  try {
+    const { token } = req.query as { token?: string };
+
+    if (!token) {
+      return res.status(400).json({ message: "Token manquant" });
+    }
+
+    const user = await UserModel.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Lien invalide ou expiré" });
+    }
+
+    user.active = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    // Option A: renvoyer JSON et laisser le front afficher une page "compte activé"
+    return res.status(200).json({ message: "Compte activé avec succès" });
+
+    // Option B (alternative): rediriger vers une page front
+    // return res.redirect(`${FRONTEND_URL}/verify-email/success`);
+  } catch (error) {
+    console.error("Erreur vérification email:", error);
+    res.status(500).json({ message: "Erreur serveur lors de la vérification" });
+  }
+};
+
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -690,6 +850,12 @@ export const handleFacebookLogin = async (req: any, res: express.Response) => {
       });
       console.log("Utilisateur créé:", user);
     } else {
+
+      if (!user.active) {
+        return res.status(403).json({
+          message: "Votre compte n’est pas encore activé. Veuillez vérifier vos emails."
+        });
+      }
       // CLONER les valeurs d’origine pour ne pas perdre les infos avant modif
       const originalFirstname = user.firstname;
       const originalLastname = user.lastname;
@@ -814,12 +980,16 @@ const updateUserPassword = async (
 const updateUserById = async (req: any, res: express.Response) => {
   try {
     const { id } = req.params;
-    const updates = { ...req.body }; // Récupère tout ce qui est dans req.body
+    const updates = { ...req.body };
 
-    // Sécurité : On interdit de modifier certains champs sensibles
-    delete updates.password;
-    delete updates._id;
-    delete updates.email; // <-- selon ta politique de modification d'email
+    // 🔒 Sécurités : on interdit de modifier des champs sensibles
+    delete (updates as any).password;
+    delete (updates as any)._id;
+    delete (updates as any).email;
+    delete (updates as any).active; // ✅ NE PEUT PAS être changé ici
+    delete (updates as any).emailVerificationToken;
+    delete (updates as any).emailVerificationExpires;
+    delete (updates as any).role; // (optionnel) évite l’élévation de privilèges
 
     const token = req.header("Authorization");
     if (!token) {
@@ -836,7 +1006,7 @@ const updateUserById = async (req: any, res: express.Response) => {
 
         const updatedUser = await UserModel.findByIdAndUpdate(
           id,
-          updates, // <-- on passe tous les champs autorisés
+          updates,
           { new: true, runValidators: true }
         );
 
@@ -852,6 +1022,7 @@ const updateUserById = async (req: any, res: express.Response) => {
     res.status(500).json({ message: "Erreur serveur lors de la mise à jour" });
   }
 };
+
 
 const getUsersAllCount = async (
   req: express.Request,
@@ -1381,5 +1552,7 @@ module.exports = {
   subscribeToPlan,
   getSubscriptionInfo,
   removeEmployeeFromBoss,
+  verifyEmail,
+  resendVerificationEmail,
   createAndAddEmployeeToBoss,
 };
