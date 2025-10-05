@@ -1,13 +1,34 @@
 import TipModel from "../models/tips";
 import * as express from "express";
+import { logger } from "../utils/logger";
 
 // Créer un nouveau tip
 export const createTip = async (req: express.Request, res: express.Response) => {
   try {
+    logger.info({
+      msg: "tips.create.start",
+      route: req.originalUrl,
+      method: req.method,
+    });
+
     const newTip = new TipModel(req.body);
     await newTip.save();
+
+    logger.info({
+      msg: "tips.create.success",
+      id: newTip._id?.toString(),
+    });
+
     res.status(201).json(newTip);
-  } catch (error:any) {
+  } catch (error: any) {
+    logger.error({
+      msg: "tips.create.error",
+      route: req.originalUrl,
+      method: req.method,
+      params: req.params,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de créer le tip", error: error.message });
   }
 };
@@ -15,9 +36,28 @@ export const createTip = async (req: express.Request, res: express.Response) => 
 // Récupérer tous les tips
 export const getAllTips = async (req: express.Request, res: express.Response) => {
   try {
+    logger.info({
+      msg: "tips.list.start",
+      route: req.originalUrl,
+      method: req.method,
+    });
+
     const tips = await TipModel.find();
+
+    logger.info({
+      msg: "tips.list.success",
+      count: tips.length,
+    });
+
     res.json(tips);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "tips.list.error",
+      route: req.originalUrl,
+      method: req.method,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de récupérer les tips" });
   }
 };
@@ -26,13 +66,38 @@ export const getAllTips = async (req: express.Request, res: express.Response) =>
 export const getTipById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+
+    logger.info({
+      msg: "tips.get_by_id.start",
+      route: req.originalUrl,
+      method: req.method,
+      id,
+    });
+
     const tip = await TipModel.findById(id);
+
     if (tip) {
+      logger.info({
+        msg: "tips.get_by_id.success",
+        id,
+      });
       res.json(tip);
     } else {
+      logger.warn({
+        msg: "tips.get_by_id.not_found",
+        id,
+      });
       res.status(404).json({ message: "Tip non trouvé" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "tips.get_by_id.error",
+      route: req.originalUrl,
+      method: req.method,
+      params: req.params,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de récupérer le tip" });
   }
 };
@@ -41,13 +106,38 @@ export const getTipById = async (req: express.Request, res: express.Response) =>
 export const updateTipById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+
+    logger.info({
+      msg: "tips.update.start",
+      route: req.originalUrl,
+      method: req.method,
+      id,
+    });
+
     const updatedTip = await TipModel.findByIdAndUpdate(id, req.body, { new: true });
+
     if (updatedTip) {
+      logger.info({
+        msg: "tips.update.success",
+        id,
+      });
       res.json(updatedTip);
     } else {
+      logger.warn({
+        msg: "tips.update.not_found",
+        id,
+      });
       res.status(404).json({ message: "Tip non trouvé" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "tips.update.error",
+      route: req.originalUrl,
+      method: req.method,
+      params: req.params,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de mettre à jour le tip" });
   }
 };
@@ -56,13 +146,38 @@ export const updateTipById = async (req: express.Request, res: express.Response)
 export const deleteTipById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+
+    logger.info({
+      msg: "tips.delete.start",
+      route: req.originalUrl,
+      method: req.method,
+      id,
+    });
+
     const deletedTip = await TipModel.findByIdAndDelete(id);
+
     if (deletedTip) {
+      logger.info({
+        msg: "tips.delete.success",
+        id,
+      });
       res.json({ message: "Tip supprimé avec succès" });
     } else {
+      logger.warn({
+        msg: "tips.delete.not_found",
+        id,
+      });
       res.status(404).json({ message: "Tip non trouvé" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "tips.delete.error",
+      route: req.originalUrl,
+      method: req.method,
+      params: req.params,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de supprimer le tip" });
   }
 };

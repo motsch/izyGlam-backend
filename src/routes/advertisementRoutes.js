@@ -16,8 +16,6 @@ router.get("/ads/:id", advertisementController.getAdvertisementById);
 // Route to update a color by ID
 router.put("/ads/:id", authMiddleware, advertisementController.updateAdvertisement);
 
-
-
 // Route to update a color by ID
 router.put("/ads/:id/impression", authMiddleware, advertisementController.incrementImpression);
 

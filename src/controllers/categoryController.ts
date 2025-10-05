@@ -1,181 +1,244 @@
 import { Request, Response } from "express";
 import CategoryModel from "../models/category";
 import ShopModel from "../models/shop";
+import { logger } from "../utils/logger";
+
+// -- util: éviter de logguer des secrets par erreur
+function sanitize(obj: any) {
+  if (!obj || typeof obj !== "object") return obj;
+  const clone = JSON.parse(JSON.stringify(obj));
+  const forbidden = ["password", "pwd", "token", "card", "cvv", "cvc", "iban"];
+  const deep = (o: any) => {
+    if (!o || typeof o !== "object") return;
+    Object.keys(o).forEach((k) => {
+      if (forbidden.includes(k.toLowerCase())) {
+        o[k] = "***";
+      } else if (typeof o[k] === "object") {
+        deep(o[k]);
+      }
+    });
+  };
+  deep(clone);
+  return clone;
+}
 
 // Créer une nouvelle catégorie
 const createCategory = async (req: Request, res: Response) => {
   try {
     const newCategory = new CategoryModel(req.body);
     await newCategory.save();
+
+    logger.info({
+      msg: "createCategory success",
+      route: "POST /api/category",
+      method: req.method,
+      url: req.originalUrl,
+      categoryId: newCategory?._id?.toString(),
+      body: sanitize(req.body),
+      userId: (req as any).user?._id,
+    });
+
     res.status(201).json(newCategory);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "createCategory failed",
+      route: "POST /api/category",
+      method: req.method,
+      url: req.originalUrl,
+      body: sanitize(req.body),
+      userId: (req as any).user?._id,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de créer la catégorie" });
   }
 };
 
-// Fonction de calcul de distance (formule de Haversine)
+// --- Haversine
 const calculateDistance = (
   lat1: number,
   lon1: number,
   lat2: number,
   lon2: number
 ): number => {
-  const R = 6371; // Rayon de la Terre en km
-  const radLat1 = (lat1 * Math.PI) / 180;
-  const radLat2 = (lat2 * Math.PI) / 180;
-  const deltaLat = radLat2 - radLat1;
-  const deltaLon = ((lon2 - lon1) * Math.PI) / 180;
-
+  const R = 6371; // km
+  const rad = (x: number) => (x * Math.PI) / 180;
+  const dLat = rad(lat2 - lat1);
+  const dLon = rad(lon2 - lon1);
   const a =
-    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-    Math.cos(radLat1) *
-    Math.cos(radLat2) *
-    Math.sin(deltaLon / 2) *
-    Math.sin(deltaLon / 2);
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
 
+// Catégories disponibles en fonction des shops filtrés (geo OU codes postaux)
 const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
   try {
     const { lat, lon, codes } = req.query;
 
-    console.log("Query parameters:", { lat, lon, codes });
-
-    // Récupérer toutes les boutiques
     let shops = await ShopModel.find();
-    console.log(`Total shops récupérées: ${shops.length}`);
 
-    // Si lat et lon sont fournis, on filtre par distance uniquement
+    // Filtrage géo
     if (lat && lon) {
       const clientLatitude = parseFloat(lat as string);
       const clientLongitude = parseFloat(lon as string);
-      console.log("Filtrage par géolocalisation avec:", {
-        clientLatitude,
-        clientLongitude,
-      });
 
-      const shopsBeforeFilter = shops.length;
-      shops = shops.filter((shop) => {
-        if (
-          !shop.location ||
-          shop.location.latitude === undefined ||
-          shop.location.longitude === undefined
-        ) {
-          return false;
-        }
+      const before = shops.length;
+      shops = shops.filter((shop: any) => {
+        if (!shop.location || shop.location.latitude == null || shop.location.longitude == null) return false;
         const distance = calculateDistance(
           clientLatitude,
           clientLongitude,
           shop.location.latitude,
           shop.location.longitude
         );
-        console.log(
-          `Shop ${shop._id}: distance calculée = ${distance.toFixed(2)} km, maxDistance = ${shop.maxDistance} km`
-        );
-        return distance <= shop.maxDistance;
+        return typeof shop.maxDistance === "number" && distance <= shop.maxDistance;
       });
-      console.log(
-        `Shops filtrées par géolocalisation: ${shops.length} sur ${shopsBeforeFilter}`
-      );
+
+      logger.info({
+        msg: "getCategoriesWithAvailableShops geo filter",
+        route: "GET /api/category/available",
+        method: req.method,
+        url: req.originalUrl,
+        initial: before,
+        filtered: shops.length,
+        lat: clientLatitude,
+        lon: clientLongitude,
+      });
     }
-    // Sinon, si des codes postaux sont fournis, on filtre par codes postaux uniquement
+    // Filtrage par codes postaux
     else if (codes) {
       let postalCodes: string[] = [];
-      if (typeof codes === "string") {
-        postalCodes = codes.split(",").map((c) => c.trim());
-      } else if (Array.isArray(codes)) {
-        postalCodes = (codes as string[]).map((c) => c.trim());
-      }
-      console.log("Filtrage par codes postaux avec:", postalCodes);
+      if (typeof codes === "string") postalCodes = (codes as string).split(",").map((c) => c.trim());
+      else if (Array.isArray(codes)) postalCodes = (codes as string[]).map((c) => c.trim());
 
-      const shopsBeforeFilter = shops.length;
-      shops = shops.filter((shop) => {
-        if (!shop.deliveryPostalCodes || !Array.isArray(shop.deliveryPostalCodes)) {
-          return false;
-        }
-        const match = shop.deliveryPostalCodes.some((deliveryCode: string) =>
-          postalCodes.includes(deliveryCode)
-        );
-        console.log(
-          `Shop ${shop._id}: deliveryPostalCodes = ${shop.deliveryPostalCodes}, match: ${match}`
-        );
-        return match;
+      const before = shops.length;
+      shops = shops.filter((shop: any) => {
+        if (!Array.isArray(shop.deliveryPostalCodes)) return false;
+        return shop.deliveryPostalCodes.some((deliveryCode: string) => postalCodes.includes(deliveryCode));
       });
-      console.log(
-        `Shops filtrées par codes postaux: ${shops.length} sur ${shopsBeforeFilter}`
-      );
+
+      logger.info({
+        msg: "getCategoriesWithAvailableShops postal filter",
+        route: "GET /api/category/available",
+        method: req.method,
+        url: req.originalUrl,
+        initial: before,
+        filtered: shops.length,
+        postalCodesCount: postalCodes.length,
+      });
     } else {
-      console.log("Aucun filtre fourni, utilisation de toutes les shops disponibles");
+      logger.info({
+        msg: "getCategoriesWithAvailableShops no filter",
+        route: "GET /api/category/available",
+        method: req.method,
+        url: req.originalUrl,
+        totalShops: shops.length,
+      });
     }
 
-    // Extraction des catégories depuis les shops. 
-    // Ici on suppose que le champ "type" dans Shop correspond au nom de la catégorie.
-
-    const tradKeys = [...new Set(shops.map(s => s.trad).filter(Boolean))];
+    // On collecte les clés de trad présentes dans les shops filtrées
+    const tradKeys = [...new Set(shops.map((s: any) => s.trad).filter(Boolean))];
 
     const categories = await CategoryModel.find({
       trad: { $in: tradKeys },
-      // optionnel si tu veux filtrer seulement les catégories actives :
-      // active: true,
+      // active: true, // décommente si tu veux filtrer que les actives
     });
-    console.log(`Nombre de catégories trouvées: ${categories.length}`);
+
+    logger.info({
+      msg: "getCategoriesWithAvailableShops success",
+      route: "GET /api/category/available",
+      method: req.method,
+      url: req.originalUrl,
+      categories: categories.length,
+      tradKeys: tradKeys.length,
+    });
 
     return res.json(categories);
-  } catch (error) {
-    console.error("Erreur dans getCategoriesWithAvailableShops:", error);
+  } catch (error: any) {
+    logger.error({
+      msg: "getCategoriesWithAvailableShops failed",
+      route: "GET /api/category/available",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      query: req.query,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({
       message: "Erreur lors de la récupération des catégories disponibles",
     });
   }
 };
 
-// Récupérer toutes les catégories triées par position (ordre croissant)
+// Récupérer toutes les catégories triées par position
 const getAllCategories = async (req: Request, res: Response) => {
   try {
-    console.log("🔍 Début de récupération des catégories...");
-
     let categories = await CategoryModel.find().sort({ position: 1 });
-
-    console.log(`📌 Catégories trouvées (${categories.length}) :`, categories);
 
     let missingPosition = 1;
     let updates = 0;
 
     for (const category of categories) {
-      console.log(`➡️ Vérification de la catégorie ${category.name} (ID: ${category._id}) - Position actuelle: ${category.position}`);
-
       if (!category.position || category.position !== missingPosition) {
-        console.log(`⚠️ Correction de la position de ${category.name} : ${category.position} ➡️ ${missingPosition}`);
-
         try {
           category.position = missingPosition;
-          await category.save(); // Met à jour la position
-
-          console.log(`✅ Position de ${category.name} mise à jour avec succès.`);
+          await category.save();
           updates++;
-        } catch (saveError) {
-          console.error(`❌ Erreur lors de la mise à jour de ${category.name} (ID: ${category._id}):`, saveError);
+        } catch (saveError: any) {
+          logger.error({
+            msg: "getAllCategories position save failed",
+            route: "GET /api/category",
+            method: req.method,
+            url: req.originalUrl,
+            categoryId: category?._id?.toString(),
+            errorName: saveError?.name,
+            errorMessage: saveError?.message,
+            stack: saveError?.stack,
+          });
         }
       }
       missingPosition++;
     }
 
     if (updates > 0) {
-      console.log(`🔄 ${updates} catégories mises à jour. Rechargement des catégories...`);
       categories = await CategoryModel.find().sort({ position: 1 });
+      logger.info({
+        msg: "getAllCategories positions normalized",
+        route: "GET /api/category",
+        method: req.method,
+        url: req.originalUrl,
+        updates,
+        total: categories.length,
+      });
     } else {
-      console.log("✅ Aucune mise à jour nécessaire.");
+      logger.info({
+        msg: "getAllCategories success",
+        route: "GET /api/category",
+        method: req.method,
+        url: req.originalUrl,
+        total: categories.length,
+      });
     }
 
-    console.log("🚀 Envoi de la réponse au client...");
     res.json(categories);
-  } catch (error) {
-    console.error("❌ Erreur générale dans getAllCategories :", error);
+  } catch (error: any) {
+    logger.error({
+      msg: "getAllCategories failed",
+      route: "GET /api/category",
+      method: req.method,
+      url: req.originalUrl,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de récupérer les catégories", error });
   }
 };
-
 
 // Met à jour toutes les positions des catégories
 const updatePositions = async (req: Request, res: Response) => {
@@ -183,40 +246,87 @@ const updatePositions = async (req: Request, res: Response) => {
     const { categories } = req.body;
 
     if (!Array.isArray(categories)) {
+      logger.warn({
+        msg: "updatePositions bad request",
+        route: "PUT /api/update-positions",
+        method: req.method,
+        url: req.originalUrl,
+        body: sanitize(req.body),
+      });
       return res.status(400).json({ message: "Données invalides" });
     }
 
-    console.log("🔄 Attribution de positions temporaires...");
-    await Promise.all(categories.map((cat, index) =>
-      CategoryModel.findByIdAndUpdate(cat._id, { position: 9999 + index })
-    ));
+    await Promise.all(
+      categories.map((cat: any, index: number) =>
+        CategoryModel.findByIdAndUpdate(cat._id, { position: 9999 + index })
+      )
+    );
+    await Promise.all(
+      categories.map((cat: any, index: number) =>
+        CategoryModel.findByIdAndUpdate(cat._id, { position: index + 1 })
+      )
+    );
 
-    console.log("✅ Positions temporaires attribuées, mise à jour des positions réelles...");
-    await Promise.all(categories.map((cat, index) =>
-      CategoryModel.findByIdAndUpdate(cat._id, { position: index + 1 })
-    ));
+    logger.info({
+      msg: "updatePositions success",
+      route: "PUT /api/update-positions",
+      method: req.method,
+      url: req.originalUrl,
+      count: categories.length,
+    });
 
     res.json({ message: "✅ Positions mises à jour avec succès" });
-  } catch (error) {
-    console.error("❌ Erreur lors de la mise à jour des positions :", error);
+  } catch (error: any) {
+    logger.error({
+      msg: "updatePositions failed",
+      route: "PUT /api/update-positions",
+      method: req.method,
+      url: req.originalUrl,
+      body: sanitize(req.body),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de mettre à jour les positions" });
   }
 };
-
-
-
 
 // Récupérer une catégorie par son ID
 const getCategoryById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const category = await CategoryModel.findById(id);
+
     if (category) {
+      logger.info({
+        msg: "getCategoryById success",
+        route: "GET /api/category/:id",
+        method: req.method,
+        url: req.originalUrl,
+        categoryId: id,
+      });
       res.json(category);
     } else {
+      logger.warn({
+        msg: "getCategoryById not found",
+        route: "GET /api/category/:id",
+        method: req.method,
+        url: req.originalUrl,
+        categoryId: id,
+      });
       res.status(404).json({ message: "Catégorie non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "getCategoryById failed",
+      route: "GET /api/category/:id",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de récupérer la catégorie" });
   }
 };
@@ -225,15 +335,40 @@ const getCategoryById = async (req: Request, res: Response) => {
 const updateCategoryById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updatedCategory = await CategoryModel.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+    const updatedCategory = await CategoryModel.findByIdAndUpdate(id, req.body, { new: true });
+
     if (updatedCategory) {
+      logger.info({
+        msg: "updateCategoryById success",
+        route: "PUT /api/category/:id",
+        method: req.method,
+        url: req.originalUrl,
+        categoryId: id,
+        body: sanitize(req.body),
+      });
       res.json(updatedCategory);
     } else {
+      logger.warn({
+        msg: "updateCategoryById not found",
+        route: "PUT /api/category/:id",
+        method: req.method,
+        url: req.originalUrl,
+        categoryId: id,
+      });
       res.status(404).json({ message: "Catégorie non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "updateCategoryById failed",
+      route: "PUT /api/category/:id",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      body: sanitize(req.body),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de mettre à jour la catégorie" });
   }
 };
@@ -243,12 +378,37 @@ const deleteCategoryById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const deletedCategory = await CategoryModel.findByIdAndDelete(id);
+
     if (deletedCategory) {
+      logger.info({
+        msg: "deleteCategoryById success",
+        route: "DELETE /api/category/:id",
+        method: req.method,
+        url: req.originalUrl,
+        categoryId: id,
+      });
       res.json({ message: "Catégorie supprimée avec succès" });
     } else {
+      logger.warn({
+        msg: "deleteCategoryById not found",
+        route: "DELETE /api/category/:id",
+        method: req.method,
+        url: req.originalUrl,
+        categoryId: id,
+      });
       res.status(404).json({ message: "Catégorie non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "deleteCategoryById failed",
+      route: "DELETE /api/category/:id",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de supprimer la catégorie" });
   }
 };

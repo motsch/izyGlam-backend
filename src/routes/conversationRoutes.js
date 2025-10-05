@@ -1,5 +1,4 @@
-// src/routes/conversationRoutes.js
-
+// src/routes/conversation.routes.ts
 const express = require("express");
 const router = express.Router();
 const conversationController = require("../controllers/conversationController");
@@ -26,7 +25,7 @@ router.get("/support", authMiddleware, conversationController.getOrCreateSupport
 // Route pour envoyer un message au support
 router.post("/support/message", authMiddleware, conversationController.addSupportMessage);
 
-// Supprimer (soft) un message d'une conversation (action admin)
+// Supprimer (soft) un message d'une conversation (action admin/restreinte)
 router.delete(
   "/conversation/:conversationId/message/:messageId",
   authMiddleware,

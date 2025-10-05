@@ -1,17 +1,25 @@
 import VilleModel, { iVille } from "../models/ville";
 import * as express from "express";
-// On crée un type décrivant la structure de l'objet cityGroups
-// où la clé (city) est une string et la valeur est un tableau de iVille.
+import { logger } from "../utils/logger";
+
 type CityGroups = {
   [city: string]: iVille[];
 };
+
 // Créer une nouvelle ville
 const createVille = async (req: express.Request, res: express.Response) => {
   try {
+    logger.info({ msg: "ville.create.start" });
     const newVille = new VilleModel(req.body);
     await newVille.save();
+    logger.info({ msg: "ville.create.success", id: newVille._id?.toString() });
     res.status(201).json(newVille);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "ville.create.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de créer la ville" });
   }
 };
@@ -19,9 +27,16 @@ const createVille = async (req: express.Request, res: express.Response) => {
 // Récupérer toutes les villes
 const getAllVilles = async (req: express.Request, res: express.Response) => {
   try {
+    logger.info({ msg: "ville.list.start" });
     const villes = await VilleModel.find();
+    logger.info({ msg: "ville.list.success", count: villes.length });
     res.json(villes);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "ville.list.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de récupérer les villes" });
   }
 };
@@ -29,40 +44,39 @@ const getAllVilles = async (req: express.Request, res: express.Response) => {
 // Récupérer toutes les villes et retourner un objet structuré
 export const getAllVillesLimited = async (req: express.Request, res: express.Response) => {
   try {
-    // On précise à TypeScript que "villes" est un tableau de iVille
+    logger.info({ msg: "ville.listLimited.start" });
     const villes: iVille[] = await VilleModel.find();
 
-    // On crée un objet cityGroups (avec type explicite) pour regrouper les documents par city
     const cityGroups: CityGroups = villes.reduce((acc: CityGroups, ville: iVille) => {
-      // Si le groupe pour cette city n'existe pas, on l'initialise
-      if (!acc[ville.city]) {
-        acc[ville.city] = [];
-      }
-      // On pousse la ville actuelle dans le tableau correspondant
+      if (!acc[ville.city]) acc[ville.city] = [];
       acc[ville.city].push(ville);
       return acc;
     }, {});
 
-    // On crée la liste de villes selon la règle :
-    // - S'il y a plusieurs documents pour une même city => on retourne city
-    // - S'il n'y en a qu'un => on retourne name
-    const listeVilles = Object.values(cityGroups).map((group: iVille[]) => {
-      if (group.length > 1) {
-        return group[0].city; // ex. "Paris"
-      }
-      return group[0].name;   // ex. "Timișoara"
-    });
+    const listeVilles = Object.values(cityGroups).map((group: iVille[]) =>
+      group.length > 1 ? group[0].city : group[0].name
+    );
 
-    // On crée la liste des pays uniques
     const listePays = [...new Set(villes.map((ville: iVille) => ville.pays))];
 
-    // On renvoie l'objet structuré
-    res.json({
-      villes: listeVilles, // Liste unique de villes
-      pays: listePays,     // Liste unique des pays
-      data: villes,        // Données brutes
+    logger.info({
+      msg: "ville.listLimited.success",
+      villesCount: listeVilles.length,
+      paysCount: listePays.length,
+      totalDocs: villes.length,
     });
-  } catch (error) {
+
+    res.json({
+      villes: listeVilles,
+      pays: listePays,
+      data: villes,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "ville.listLimited.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de récupérer les villes" });
   }
 };
@@ -71,13 +85,22 @@ export const getAllVillesLimited = async (req: express.Request, res: express.Res
 const getVilleById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    logger.info({ msg: "ville.getById.start", id });
     const ville = await VilleModel.findById(id);
     if (ville) {
+      logger.info({ msg: "ville.getById.success", id });
       res.json(ville);
     } else {
+      logger.warn({ msg: "ville.getById.notFound", id });
       res.status(404).json({ message: "Ville non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "ville.getById.error",
+      id: req.params?.id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de récupérer la ville" });
   }
 };
@@ -86,13 +109,22 @@ const getVilleById = async (req: express.Request, res: express.Response) => {
 const updateVilleById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    logger.info({ msg: "ville.update.start", id });
     const updatedVille = await VilleModel.findByIdAndUpdate(id, req.body, { new: true });
     if (updatedVille) {
+      logger.info({ msg: "ville.update.success", id });
       res.json(updatedVille);
     } else {
+      logger.warn({ msg: "ville.update.notFound", id });
       res.status(404).json({ message: "Ville non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "ville.update.error",
+      id: req.params?.id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de mettre à jour la ville" });
   }
 };
@@ -101,13 +133,22 @@ const updateVilleById = async (req: express.Request, res: express.Response) => {
 const deleteVilleById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    logger.info({ msg: "ville.delete.start", id });
     const deletedVille = await VilleModel.findByIdAndDelete(id);
     if (deletedVille) {
+      logger.info({ msg: "ville.delete.success", id });
       res.json({ message: "Ville supprimée avec succès" });
     } else {
+      logger.warn({ msg: "ville.delete.notFound", id });
       res.status(404).json({ message: "Ville non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "ville.delete.error",
+      id: req.params?.id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: "Impossible de supprimer la ville" });
   }
 };

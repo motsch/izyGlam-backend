@@ -18,6 +18,10 @@ router.put("/ad-park/:id", authMiddleware, adParkController.updateAdParkById);
 // Route pour supprimer une campagne adPark par ID
 router.delete("/ad-park/:id", authMiddleware, adParkController.deleteAdParkById);
 
-router.get("/ad-park-by-advertisement/:advertisementId", adParkController.getAdParkByAdvertisementId);
+// Route pour récupérer une campagne adPark via l'ID de publicité
+router.get(
+  "/ad-park-by-advertisement/:advertisementId",
+  adParkController.getAdParkByAdvertisementId
+);
 
 module.exports = router;

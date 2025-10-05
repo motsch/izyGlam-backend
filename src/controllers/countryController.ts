@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Country from "../models/country";
 import LanguageModel from "../models/language";
+import { logger } from "../utils/logger";
 
 // Helper: parse boolean proprement à partir de string/boolean
 const toBool = (v: any): boolean | undefined => {
@@ -13,12 +14,38 @@ const toBool = (v: any): boolean | undefined => {
   return undefined;
 };
 
+// -- util: éviter de logguer des secrets par erreur
+function sanitize(obj: any) {
+  if (!obj || typeof obj !== "object") return obj;
+  const clone = JSON.parse(JSON.stringify(obj));
+  const forbidden = ["password", "pwd", "token", "card", "cvv", "cvc", "iban", "authorization", "api_key", "apikey"];
+  const deep = (o: any) => {
+    if (!o || typeof o !== "object") return;
+    Object.keys(o).forEach((k) => {
+      if (forbidden.includes(k.toLowerCase())) {
+        o[k] = "***";
+      } else if (typeof o[k] === "object") {
+        deep(o[k]);
+      }
+    });
+  };
+  deep(clone);
+  return clone;
+}
+
 // CREATE
 export const createCountry = async (req: Request, res: Response) => {
   try {
     const { name, translation, active, languages } = req.body;
 
     if (!name || !translation) {
+      logger.warn({
+        msg: "createCountry bad request",
+        route: "POST /api/country",
+        method: req.method,
+        url: req.originalUrl,
+        body: sanitize(req.body),
+      });
       return res.status(400).json({ message: "Champs requis: name, translation." });
     }
 
@@ -36,8 +63,27 @@ export const createCountry = async (req: Request, res: Response) => {
       languages: langs,
     });
 
+    logger.info({
+      msg: "createCountry success",
+      route: "POST /api/country",
+      method: req.method,
+      url: req.originalUrl,
+      countryId: doc?._id?.toString(),
+      body: sanitize(req.body),
+    });
+
     return res.status(201).json(doc);
   } catch (err: any) {
+    logger.error({
+      msg: "createCountry failed",
+      route: "POST /api/country",
+      method: req.method,
+      url: req.originalUrl,
+      body: sanitize(req.body),
+      errorName: err?.name,
+      errorMessage: err?.message,
+      stack: err?.stack,
+    });
     return res.status(500).json({ message: err?.message ?? "Erreur serveur" });
   }
 };
@@ -60,8 +106,28 @@ export const getCountries = async (req: Request, res: Response) => {
     }
 
     const items = await Country.find(filter).sort({ name: 1 });
+
+    logger.info({
+      msg: "getCountries success",
+      route: "GET /api/country",
+      method: req.method,
+      url: req.originalUrl,
+      query: req.query,
+      count: items.length,
+    });
+
     return res.json(items);
   } catch (err: any) {
+    logger.error({
+      msg: "getCountries failed",
+      route: "GET /api/country",
+      method: req.method,
+      url: req.originalUrl,
+      query: req.query,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      stack: err?.stack,
+    });
     return res.status(500).json({ message: err?.message ?? "Erreur serveur" });
   }
 };
@@ -71,9 +137,37 @@ export const getCountryById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const doc = await Country.findById(id);
-    if (!doc) return res.status(404).json({ message: "Pays introuvable." });
+    if (!doc) {
+      logger.warn({
+        msg: "getCountryById not found",
+        route: "GET /api/country/:id",
+        method: req.method,
+        url: req.originalUrl,
+        countryId: id,
+      });
+      return res.status(404).json({ message: "Pays introuvable." });
+    }
+
+    logger.info({
+      msg: "getCountryById success",
+      route: "GET /api/country/:id",
+      method: req.method,
+      url: req.originalUrl,
+      countryId: id,
+    });
+
     return res.json(doc);
   } catch (err: any) {
+    logger.error({
+      msg: "getCountryById failed",
+      route: "GET /api/country/:id",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      stack: err?.stack,
+    });
     return res.status(500).json({ message: err?.message ?? "Erreur serveur" });
   }
 };
@@ -98,9 +192,40 @@ export const updateCountry = async (req: Request, res: Response) => {
     }
 
     const doc = await Country.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
-    if (!doc) return res.status(404).json({ message: "Pays introuvable." });
+    if (!doc) {
+      logger.warn({
+        msg: "updateCountry not found",
+        route: "PUT /api/country/:id",
+        method: req.method,
+        url: req.originalUrl,
+        countryId: id,
+        body: sanitize(req.body),
+      });
+      return res.status(404).json({ message: "Pays introuvable." });
+    }
+
+    logger.info({
+      msg: "updateCountry success",
+      route: "PUT /api/country/:id",
+      method: req.method,
+      url: req.originalUrl,
+      countryId: id,
+      body: sanitize(req.body),
+    });
+
     return res.json(doc);
   } catch (err: any) {
+    logger.error({
+      msg: "updateCountry failed",
+      route: "PUT /api/country/:id",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      body: sanitize(req.body),
+      errorName: err?.name,
+      errorMessage: err?.message,
+      stack: err?.stack,
+    });
     return res.status(500).json({ message: err?.message ?? "Erreur serveur" });
   }
 };
@@ -110,9 +235,37 @@ export const deleteCountry = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const doc = await Country.findByIdAndDelete(id);
-    if (!doc) return res.status(404).json({ message: "Pays introuvable." });
+    if (!doc) {
+      logger.warn({
+        msg: "deleteCountry not found",
+        route: "DELETE /api/country/:id",
+        method: req.method,
+        url: req.originalUrl,
+        countryId: id,
+      });
+      return res.status(404).json({ message: "Pays introuvable." });
+    }
+
+    logger.info({
+      msg: "deleteCountry success",
+      route: "DELETE /api/country/:id",
+      method: req.method,
+      url: req.originalUrl,
+      countryId: id,
+    });
+
     return res.json({ message: "Pays supprimé avec succès." });
   } catch (err: any) {
+    logger.error({
+      msg: "deleteCountry failed",
+      route: "DELETE /api/country/:id",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      stack: err?.stack,
+    });
     return res.status(500).json({ message: err?.message ?? "Erreur serveur" });
   }
 };
@@ -122,21 +275,59 @@ export const setCountryActive = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     // on accepte active dans body ou query
-    const activeSource = req.body?.active ?? req.query?.active;
+    const activeSource = (req.body as any)?.active ?? (req.query as any)?.active;
     const activeBool = toBool(activeSource);
 
     if (typeof activeBool !== "boolean") {
+      logger.warn({
+        msg: "setCountryActive bad request (active invalid)",
+        route: "PATCH /api/country/:id/active",
+        method: req.method,
+        url: req.originalUrl,
+        body: sanitize(req.body),
+        query: req.query,
+      });
       return res.status(400).json({ message: "Paramètre 'active' invalide (true/false)." });
     }
 
     const doc = await Country.findByIdAndUpdate(id, { active: activeBool }, { new: true });
-    if (!doc) return res.status(404).json({ message: "Pays introuvable." });
+    if (!doc) {
+      logger.warn({
+        msg: "setCountryActive not found",
+        route: "PATCH /api/country/:id/active",
+        method: req.method,
+        url: req.originalUrl,
+        countryId: id,
+      });
+      return res.status(404).json({ message: "Pays introuvable." });
+    }
+
+    logger.info({
+      msg: "setCountryActive success",
+      route: "PATCH /api/country/:id/active",
+      method: req.method,
+      url: req.originalUrl,
+      countryId: id,
+      active: activeBool,
+    });
+
     return res.json(doc);
   } catch (err: any) {
+    logger.error({
+      msg: "setCountryActive failed",
+      route: "PATCH /api/country/:id/active",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      body: sanitize(req.body),
+      query: req.query,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      stack: err?.stack,
+    });
     return res.status(500).json({ message: err?.message ?? "Erreur serveur" });
   }
 };
-
 
 // Helper pour échapper un nom dans une RegExp
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -158,6 +349,13 @@ export const getLanguagesByCountryName = async (req: Request, res: Response) => 
   try {
     const raw = (req.params.name || "").trim();
     if (!raw) {
+      logger.warn({
+        msg: "getLanguagesByCountryName bad request (name missing)",
+        route: "GET /api/country/name/:name/languages",
+        method: req.method,
+        url: req.originalUrl,
+        params: req.params,
+      });
       return res.status(400).json({ message: "Paramètre 'name' requis." });
     }
 
@@ -175,6 +373,13 @@ export const getLanguagesByCountryName = async (req: Request, res: Response) => 
     }
 
     if (!country) {
+      logger.warn({
+        msg: "getLanguagesByCountryName not found",
+        route: "GET /api/country/name/:name/languages",
+        method: req.method,
+        url: req.originalUrl,
+        searchedName: raw,
+      });
       return res.status(404).json({ message: `Pays '${raw}' introuvable.` });
     }
 
@@ -183,6 +388,14 @@ export const getLanguagesByCountryName = async (req: Request, res: Response) => 
       : [];
 
     if (codes.length === 0) {
+      logger.info({
+        msg: "getLanguagesByCountryName no codes",
+        route: "GET /api/country/name/:name/languages",
+        method: req.method,
+        url: req.originalUrl,
+        countryId: country._id?.toString(),
+        codesCount: 0,
+      });
       return res.json({
         countryId: country._id,
         name: country.name,
@@ -204,18 +417,28 @@ export const getLanguagesByCountryName = async (req: Request, res: Response) => 
     codes.forEach((c, idx) => orderMap.set(c, idx));
 
     const sortedLangs = langs
-      .map(l => ({ ...l, code: String(l.code).toLowerCase() }))
-      .sort((a, b) => {
+      .map((l: any) => ({ ...l, code: String(l.code).toLowerCase() }))
+      .sort((a: any, b: any) => {
         const ia = orderMap.get(a.code) ?? Number.MAX_SAFE_INTEGER;
         const ib = orderMap.get(b.code) ?? Number.MAX_SAFE_INTEGER;
         if (ia !== ib) return ia - ib;
-        // fallback lexicographique par nom
         return String(a.name || "").localeCompare(String(b.name || ""));
       });
 
     // Déterminer les codes manquants en base Language (pour seed i18n)
-    const foundCodes = new Set(sortedLangs.map(l => l.code));
-    const missingCodes = codes.filter(c => !foundCodes.has(c));
+    const foundCodes = new Set(sortedLangs.map((l: any) => l.code));
+    const missingCodes = codes.filter((c) => !foundCodes.has(c));
+
+    logger.info({
+      msg: "getLanguagesByCountryName success",
+      route: "GET /api/country/name/:name/languages",
+      method: req.method,
+      url: req.originalUrl,
+      countryId: country._id?.toString(),
+      includeInactive,
+      returned: sortedLangs.length,
+      missing: missingCodes.length,
+    });
 
     return res.json({
       countryId: country._id,
@@ -224,6 +447,17 @@ export const getLanguagesByCountryName = async (req: Request, res: Response) => 
       missingCodes,
     });
   } catch (err: any) {
+    logger.error({
+      msg: "getLanguagesByCountryName failed",
+      route: "GET /api/country/name/:name/languages",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      query: req.query,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      stack: err?.stack,
+    });
     return res.status(500).json({ message: err?.message ?? "Erreur serveur" });
   }
 };

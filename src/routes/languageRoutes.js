@@ -1,5 +1,5 @@
-const express = require('express');
-const languageController = require('../controllers/languageController');
+const express = require("express");
+const languageController = require("../controllers/languageController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.post("/language", authMiddleware, languageController.createLanguage);
 // Route pour récupérer toutes les langues
 router.get("/language", languageController.getAllLanguages);
 
-// Route pour récupérer toutes les langues pou le client
+// Route pour récupérer toutes les langues pour le client
 router.get("/language-cleaned", languageController.getAllLanguagesCleaned);
 
 // Route pour récupérer une langue spécifique par ID

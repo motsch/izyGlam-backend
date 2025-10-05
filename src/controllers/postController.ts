@@ -5,6 +5,7 @@ import SubscriptionModel from "../models/subscription";
 import ProfileModel from "../models/profile";
 import fs from "fs";
 import path from "path";
+import { logger } from "../utils/logger";
 
 function generateDynamicCategoriesPrompt(
   categories: { name: string }[]

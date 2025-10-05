@@ -7,7 +7,7 @@ const router = express.Router();
 // Route pour créer le paiement initial lors de la réservation
 router.post("/financial/initial-payment", authMiddleware, financialController.createInitialPayment);
 
-// Route pour traiter un remboursement (complét ou partiel)
+// Route pour traiter un remboursement (complet ou partiel)
 router.post("/financial/refund", authMiddleware, financialController.processRefund);
 
 // Route pour effectuer le versement (payout) au prestataire une fois la prestation terminée

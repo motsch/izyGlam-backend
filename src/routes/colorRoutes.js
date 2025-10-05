@@ -3,7 +3,6 @@ const router = express.Router();
 const colorController = require("../controllers/colorController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
-
 // Route to create a new color
 router.post("/color", authMiddleware, colorController.createColor);
 

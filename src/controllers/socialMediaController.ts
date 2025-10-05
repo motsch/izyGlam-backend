@@ -1,10 +1,13 @@
 import axios from "axios";
 import * as express from "express";
 import UserModel from "../models/user";
+import { logger } from "../utils/logger";
+
 // Publier sur LinkedIn
 const postOnLinkedIn = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "social.linkedin.post.start", route: req.originalUrl, method: req.method });
   try {
-    const { content, accessToken } = req.body;
+    const { content/* , accessToken */ } = req.body;
     const response = await axios.post(
       "https://api.linkedin.com/v2/ugcPosts",
       {
@@ -20,20 +23,30 @@ const postOnLinkedIn = async (req: express.Request, res: express.Response) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${req.body.accessToken}`, // ne pas logger
           "Content-Type": "application/json",
           "X-Restli-Protocol-Version": "2.0.0",
         },
       }
     );
+    logger.info({ msg: "social.linkedin.post.success", id: response.data?.id });
     res.status(200).json({ message: "Post publié sur LinkedIn", data: response.data });
   } catch (error: any) {
+    logger.error({
+      msg: "social.linkedin.post.error",
+      errorMessage: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la publication sur LinkedIn" });
   }
 };
 
 // Publier sur Instagram
 const postOnInstagram = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "social.instagram.post.start", route: req.originalUrl, method: req.method });
   try {
     const { imageUrl, caption, accessToken } = req.body;
     const containerResponse = await axios.post(
@@ -44,42 +57,72 @@ const postOnInstagram = async (req: express.Request, res: express.Response) => {
       `https://graph.facebook.com/v17.0/${process.env.INSTAGRAM_USER_ID}/media_publish`,
       { creation_id: containerResponse.data.id, access_token: accessToken }
     );
+    logger.info({ msg: "social.instagram.post.success", containerId: containerResponse.data?.id, publishId: response.data?.id });
     res.status(200).json({ message: "Post publié sur Instagram", data: response.data });
   } catch (error: any) {
+    logger.error({
+      msg: "social.instagram.post.error",
+      errorMessage: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la publication sur Instagram" });
   }
 };
 
 // Publier sur TikTok
 const postOnTikTok = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "social.tiktok.post.start", route: req.originalUrl, method: req.method });
   try {
     const { videoUrl, caption, accessToken } = req.body;
     const response = await axios.post(
       "https://open-api.tiktok.com/share/video/upload/",
       { video_url: videoUrl, caption: caption, access_token: accessToken }
     );
+    logger.info({ msg: "social.tiktok.post.success", data: !!response.data });
     res.status(200).json({ message: "Vidéo publiée sur TikTok", data: response.data });
   } catch (error: any) {
+    logger.error({
+      msg: "social.tiktok.post.error",
+      errorMessage: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la publication sur TikTok" });
   }
 };
 
 // Publier sur Facebook
 const postOnFacebook = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "social.facebook.post.start", route: req.originalUrl, method: req.method });
   try {
     const { message, accessToken } = req.body;
     const response = await axios.post(
       `https://graph.facebook.com/v17.0/${process.env.FACEBOOK_PAGE_ID}/feed`,
       { message: message, access_token: accessToken }
     );
+    logger.info({ msg: "social.facebook.post.success", id: response.data?.id });
     res.status(200).json({ message: "Post publié sur Facebook", data: response.data });
   } catch (error: any) {
+    logger.error({
+      msg: "social.facebook.post.error",
+      errorMessage: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la publication sur Facebook" });
   }
 };
 
 // Récupérer les informations d'un post
 const getPostInfo = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "social.post.info.start", route: req.originalUrl, method: req.method });
   const { platform, postId, accessToken } = req.body;
   let url = "";
 
@@ -97,37 +140,47 @@ const getPostInfo = async (req: express.Request, res: express.Response) => {
       url = `https://graph.facebook.com/v17.0/${postId}?fields=message,created_time,likes.summary(true),comments.summary(true)&access_token=${accessToken}`;
       break;
     default:
+      logger.warn({ msg: "social.post.info.unsupported_platform", platform });
       return res.status(400).json({ message: "Plateforme non supportée" });
   }
 
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, {
+      headers: platform === "LinkedIn" ? { Authorization: `Bearer ${accessToken}` } : undefined,
+    });
+    logger.info({ msg: "social.post.info.success", platform, postId });
     res.status(200).json({ message: "Informations du post récupérées", data: response.data });
   } catch (error: any) {
-    res.status(500).json({ message: "Erreur lors de la récupération des informations du post" });
+    logger.error({
+      msg: "social.post.info.error",
+      platform,
+      postId,
+      errorMessage: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      route: req.originalUrl,
+      method: req.method,
+    });
   }
 };
 
 const connect = async (req: express.Request, res: express.Response) => {
   const platform = req.params.platform.toLowerCase();
+  logger.info({ msg: "social.connect.start", platform, route: req.originalUrl, method: req.method });
   try {
-    const  code  = req.body.code;
+    const code = req.body.code;
     const { userId } = req.body;
     const user = await UserModel.findById(userId);
-    console.log(code)
-    console.log(platform)
-    console.log(userId)
-    console.log(user)
 
     if (!user) {
+      logger.warn({ msg: "social.connect.user_not_found", userId, platform });
       return res.status(404).json({ message: 'Utilisateur non trouvé.' });
     }
 
-    let tokenData:any;
+    let tokenData: any;
 
     switch (platform) {
       case 'facebook':
-        console.log('in facebook')
         tokenData = await exchangeFacebookToken(code, userId);
         user.facebook = {
           accessToken: tokenData.accessToken,
@@ -137,7 +190,6 @@ const connect = async (req: express.Request, res: express.Response) => {
         break;
 
       case 'instagram':
-        console.log('in instagram')
         tokenData = await exchangeInstagramToken(code, userId);
         user.instagram = {
           accessToken: tokenData.accessToken,
@@ -146,7 +198,6 @@ const connect = async (req: express.Request, res: express.Response) => {
         break;
 
       case 'linkedin':
-        console.log('in linkedIn')
         tokenData = await exchangeLinkedInToken(code, userId);
         user.linkedin = {
           accessToken: tokenData.accessToken,
@@ -156,7 +207,6 @@ const connect = async (req: express.Request, res: express.Response) => {
         break;
 
       case 'bluesky':
-        console.log('in bluesky')
         tokenData = await exchangeBlueskyToken(code, userId);
         user.bluesky = {
           accessToken: tokenData.accessToken,
@@ -166,7 +216,6 @@ const connect = async (req: express.Request, res: express.Response) => {
         break;
 
       case 'tiktok':
-        console.log('in tiktok')
         tokenData = await exchangeTikTokToken(code, userId);
         user.tiktok = {
           accessToken: tokenData.accessToken,
@@ -176,12 +225,23 @@ const connect = async (req: express.Request, res: express.Response) => {
         break;
 
       default:
+        logger.warn({ msg: "social.connect.unsupported_platform", platform });
         return res.status(400).json({ message: 'Plateforme non supportée.' });
     }
 
     await user.save();
+    logger.info({ msg: "social.connect.success", platform, userId });
     res.json({ message: `${platform} connecté avec succès.`, user });
   } catch (error: any) {
+    logger.error({
+      msg: "social.connect.error",
+      platform,
+      errorMessage: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      route: req.originalUrl,
+      method: req.method,
+    });
     console.error(`Erreur lors de la connexion à ${platform} :`, error);
     res.status(500).json({
       message: `Erreur lors de la connexion à ${platform}.`,
@@ -191,6 +251,7 @@ const connect = async (req: express.Request, res: express.Response) => {
 };
 
 const exchangeFacebookToken = async (code: string, userId: string) => {
+  logger.info({ msg: "social.facebook.exchangeToken.start", userId });
   try {
     const clientId = process.env.META_APP_ID;
     const clientSecret = process.env.META_APP_SECRET;
@@ -200,17 +261,10 @@ const exchangeFacebookToken = async (code: string, userId: string) => {
       throw new Error("Le code est manquant dans la requête.");
     }
 
-    // Échange du code contre un token d'accès
     const tokenResponse = await axios.get('https://graph.facebook.com/v17.0/oauth/access_token', {
-      params: {
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: redirectUri,
-        code,
-      },
+      params: { client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, code },
     });
 
-    // Validation des données du token
     if (!tokenResponse.data.access_token || !tokenResponse.data.expires_in) {
       throw new Error("Données du token Facebook invalides.");
     }
@@ -218,21 +272,15 @@ const exchangeFacebookToken = async (code: string, userId: string) => {
     const accessToken = tokenResponse.data.access_token;
     const tokenExpiresAt = new Date(Date.now() + tokenResponse.data.expires_in * 1000);
 
-    // Récupération des informations utilisateur depuis Facebook
     const userInfoResponse = await axios.get('https://graph.facebook.com/v17.0/me', {
-      params: {
-        access_token: accessToken,
-        fields: 'id,name,email',
-      },
+      params: { access_token: accessToken, fields: 'id,name,email' },
     });
 
     const { id: facebookUserId, name, email } = userInfoResponse.data;
-
     if (!facebookUserId || !name) {
       throw new Error("Impossible de récupérer les informations utilisateur depuis Facebook.");
     }
 
-    // Mise à jour ou création de l'utilisateur dans la base de données
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
       {
@@ -243,26 +291,33 @@ const exchangeFacebookToken = async (code: string, userId: string) => {
         lastname: name.split(" ")[1] || "",
         email: email || "",
       },
-      { new: true, upsert: true } // Met à jour ou crée l'utilisateur si inexistant
+      { new: true, upsert: true }
     );
 
+    logger.info({ msg: "social.facebook.exchangeToken.success", userId, fbUserId: facebookUserId });
     return {
       message: "Utilisateur connecté avec succès.",
       user: updatedUser,
       accessToken,
       expires_in: tokenResponse.data.expires_in,
+      userId: facebookUserId,
+      tokenExpiresAt,
     };
   } catch (error: any) {
+    logger.error({
+      msg: "social.facebook.exchangeToken.error",
+      userId,
+      errorMessage: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+    });
     console.error("Erreur lors de l'échange du code Facebook :", error.message);
-
-    throw new Error(
-      error.response?.data?.error?.message || "Erreur lors de l'échange du code Facebook."
-    );
+    throw new Error(error.response?.data?.error?.message || "Erreur lors de l'échange du code Facebook.");
   }
 };
 
-
 const exchangeInstagramToken = async (code: string, userId: string) => {
+  logger.info({ msg: "social.instagram.exchangeToken.start", userId });
   const clientId = process.env.INSTAGRAM_APP_ID;
   const clientSecret = process.env.INSTAGRAM_APP_SECRET;
   const redirectUri = process.env.INSTAGRAM_REDIRECT_URI;
@@ -279,17 +334,12 @@ const exchangeInstagramToken = async (code: string, userId: string) => {
 
   const accessToken = tokenResponse.data.access_token;
 
-  // Récupérer les infos utilisateur Instagram
   const userInfoResponse = await axios.get('https://graph.instagram.com/me', {
-    params: {
-      access_token: accessToken,
-      fields: 'id,username',
-    },
+    params: { access_token: accessToken, fields: 'id,username' },
   });
 
   const { id, username } = userInfoResponse.data;
 
-  // Mettre à jour l'utilisateur dans la base de données
   await UserModel.findByIdAndUpdate(userId, {
     instagram: {
       accessToken,
@@ -297,19 +347,16 @@ const exchangeInstagramToken = async (code: string, userId: string) => {
     },
   });
 
-  return {
-    accessToken,
-    businessAccountId: id,
-    username,
-  };
+  logger.info({ msg: "social.instagram.exchangeToken.success", userId, igId: id, username });
+  return { accessToken, businessAccountId: id, username };
 };
 
 const exchangeLinkedInToken = async (code: string, userId: string) => {
+  logger.info({ msg: "social.linkedin.exchangeToken.start", userId });
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
   const redirectUri = process.env.LINKEDIN_REDIRECT_URI;
 
-  // Échange du code pour un token d'accès
   const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
     params: {
       grant_type: 'authorization_code',
@@ -322,23 +369,22 @@ const exchangeLinkedInToken = async (code: string, userId: string) => {
 
   const accessToken = tokenResponse.data.access_token;
 
-  // Stocker le token dans la base de données
   await UserModel.findByIdAndUpdate(userId, {
     linkedin: {
       accessToken,
-      tokenExpiresAt: new Date(Date.now() + tokenResponse.data.expires_in * 1000), // Expiration du token
+      tokenExpiresAt: new Date(Date.now() + tokenResponse.data.expires_in * 1000),
     },
   });
 
+  logger.info({ msg: "social.linkedin.exchangeToken.success", userId });
   return {
     accessToken,
     tokenExpiresAt: new Date(Date.now() + tokenResponse.data.expires_in * 1000),
   };
 };
 
-
-
 const exchangeBlueskyToken = async (code: string, userId: string) => {
+  logger.info({ msg: "social.bluesky.exchangeToken.start", userId });
   const clientId = process.env.BLUESKY_CLIENT_ID;
   const clientSecret = process.env.BLUESKY_CLIENT_SECRET;
   const redirectUri = process.env.BLUESKY_REDIRECT_URI;
@@ -353,16 +399,12 @@ const exchangeBlueskyToken = async (code: string, userId: string) => {
 
   const accessToken = tokenResponse.data.access_token;
 
-  // Récupérer les infos utilisateur Bluesky
   const userInfoResponse = await axios.get('https://api.blueskyweb.xyz/me', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
 
   const { id, username } = userInfoResponse.data;
 
-  // Mettre à jour l'utilisateur dans la base de données
   await UserModel.findByIdAndUpdate(userId, {
     bluesky: {
       accessToken,
@@ -371,6 +413,7 @@ const exchangeBlueskyToken = async (code: string, userId: string) => {
     },
   });
 
+  logger.info({ msg: "social.bluesky.exchangeToken.success", userId, bskyId: id, username });
   return {
     accessToken,
     tokenExpiresAt: new Date(Date.now() + tokenResponse.data.expires_in * 1000),
@@ -380,6 +423,7 @@ const exchangeBlueskyToken = async (code: string, userId: string) => {
 };
 
 const exchangeTikTokToken = async (code: string, userId: string) => {
+  logger.info({ msg: "social.tiktok.exchangeToken.start", userId });
   const clientId = process.env.TIKTOK_CLIENT_KEY;
   const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
   const redirectUri = process.env.TIKTOK_REDIRECT_URI;
@@ -394,16 +438,12 @@ const exchangeTikTokToken = async (code: string, userId: string) => {
 
   const accessToken = tokenResponse.data.data.access_token;
 
-  // Récupérer les infos utilisateur TikTok
   const userInfoResponse = await axios.get('https://open.tiktokapis.com/v2/user/info/', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
 
   const { open_id, display_name } = userInfoResponse.data.data;
 
-  // Mettre à jour l'utilisateur dans la base de données
   await UserModel.findByIdAndUpdate(userId, {
     tiktok: {
       accessToken,
@@ -412,6 +452,7 @@ const exchangeTikTokToken = async (code: string, userId: string) => {
     },
   });
 
+  logger.info({ msg: "social.tiktok.exchangeToken.success", userId, tiktokOpenId: open_id, display_name });
   return {
     accessToken,
     tokenExpiresAt: new Date(Date.now() + tokenResponse.data.data.expires_in * 1000),
@@ -423,11 +464,12 @@ const exchangeTikTokToken = async (code: string, userId: string) => {
 const checkConnectionStatus = async (req: express.Request, res: express.Response) => {
   const platform = req.params.platform.toLowerCase();
   const userId = req.body.userId;
-
+  logger.info({ msg: "social.status.start", platform, userId, route: req.originalUrl, method: req.method });
   try {
     const user = await UserModel.findById(userId);
 
     if (!user) {
+      logger.warn({ msg: "social.status.user_not_found", platform, userId });
       return res.status(404).json({ message: 'Utilisateur non trouvé.' });
     }
 
@@ -450,11 +492,23 @@ const checkConnectionStatus = async (req: express.Request, res: express.Response
         isConnected = !!user.tiktok?.accessToken;
         break;
       default:
+        logger.warn({ msg: "social.status.unsupported_platform", platform });
         return res.status(400).json({ message: 'Plateforme non supportée.' });
     }
 
+    logger.info({ msg: "social.status.success", platform, userId, isConnected });
     res.json({ platform, isConnected });
   } catch (error: any) {
+    logger.error({
+      msg: "social.status.error",
+      platform,
+      userId,
+      errorMessage: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      route: req.originalUrl,
+      method: req.method,
+    });
     console.error(`Erreur lors de la vérification de connexion à ${platform} :`, error);
     res.status(500).json({
       message: `Erreur lors de la vérification de connexion à ${platform}.`,
@@ -462,7 +516,6 @@ const checkConnectionStatus = async (req: express.Request, res: express.Response
     });
   }
 };
-
 
 // Export des fonctions
 module.exports = {

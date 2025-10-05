@@ -3,11 +3,12 @@ import * as express from "express";
 import Stripe from "stripe";
 import UserModel from "../models/user";
 import * as dotenv from "dotenv";
+import { logger } from "../utils/logger";
 
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia", // Version de l'API Stripe
+  apiVersion: "2025-01-27.acacia", // laissé tel quel
 });
 
 /**
@@ -16,22 +17,35 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
  */
 export const refundPayment = async (req: express.Request, res: express.Response) => {
   const { paymentIntentId, amount } = req.body;
+  logger.info({
+    msg: "stripe.refund.start",
+    route: req.originalUrl,
+    method: req.method,
+    paymentIntentId,
+    hasAmount: typeof amount === "number",
+  });
+
   if (!paymentIntentId) {
+    logger.warn({ msg: "stripe.refund.validation_failed", reason: "paymentIntentId missing" });
     return res.status(400).json({ error: "paymentIntentId est requis" });
   }
   try {
-    // Préparer le payload pour le remboursement
-    const refundPayload: any = {
-      payment_intent: paymentIntentId,
-    };
-    // Si un montant est fourni, l'ajouter au payload
-    if (amount) {
-      refundPayload.amount = amount;
-    }
-    // Créez un remboursement pour le payment intent spécifié
+    const refundPayload: any = { payment_intent: paymentIntentId };
+    if (amount) refundPayload.amount = amount;
+
     const refund = await stripe.refunds.create(refundPayload);
+
+    logger.info({ msg: "stripe.refund.success", refundId: refund.id, status: refund.status });
     res.status(200).json(refund);
   } catch (error: any) {
+    logger.error({
+      msg: "stripe.refund.error",
+      errorMessage: error?.message,
+      code: error?.code,
+      type: error?.type,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ error: error.message });
   }
 };
@@ -39,19 +53,32 @@ export const refundPayment = async (req: express.Request, res: express.Response)
 /**
  * Crée une méthode de paiement à partir des détails de la carte.
  */
-export const createPaymentMethodFromDetails = async (
-  req: express.Request,
-  res: express.Response
-) => {
+export const createPaymentMethodFromDetails = async (req: express.Request, res: express.Response) => {
   const { paymentMethodId } = req.body;
+  logger.info({
+    msg: "stripe.payment_method.retrieve.start",
+    route: req.originalUrl,
+    method: req.method,
+    paymentMethodId,
+  });
+
   if (!paymentMethodId) {
+    logger.warn({ msg: "stripe.payment_method.retrieve.validation_failed", reason: "paymentMethodId missing" });
     return res.status(400).json({ error: "paymentMethodId est requis" });
   }
   try {
-    // Récupérez les détails de la méthode de paiement pour validation
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+    logger.info({ msg: "stripe.payment_method.retrieve.success", paymentMethodId: paymentMethod.id, type: paymentMethod.type });
     res.status(201).json({ paymentMethodId: paymentMethod.id });
   } catch (error: any) {
+    logger.error({
+      msg: "stripe.payment_method.retrieve.error",
+      errorMessage: error?.message,
+      code: error?.code,
+      type: error?.type,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ error: error.message });
   }
 };
@@ -59,32 +86,44 @@ export const createPaymentMethodFromDetails = async (
 /**
  * Enregistre une nouvelle carte pour un utilisateur.
  */
-export const saveCard = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  const { paymentMethodId, userId } = req.body; // Ajoutez userId dans la requête
+export const saveCard = async (req: express.Request, res: express.Response) => {
+  const { paymentMethodId, userId } = req.body;
+  logger.info({
+    msg: "stripe.customer.create_with_pm.start",
+    route: req.originalUrl,
+    method: req.method,
+    userId,
+    hasPaymentMethodId: !!paymentMethodId,
+  });
+
   if (!paymentMethodId || !userId) {
+    logger.warn({ msg: "stripe.customer.create_with_pm.validation_failed", reason: "paymentMethodId or userId missing" });
     return res.status(400).json({ error: "paymentMethodId et userId sont requis" });
   }
   try {
-    // Créez un client Stripe et attachez la méthode de paiement
-    const customer = await stripe.customers.create({
-      payment_method: paymentMethodId,
-    });
+    const customer = await stripe.customers.create({ payment_method: paymentMethodId });
 
-    // Récupérez l'utilisateur depuis la base de données
     const user = await UserModel.findById(userId);
     if (!user) {
+      logger.warn({ msg: "stripe.customer.create_with_pm.user_not_found", userId });
       return res.status(404).json({ error: "Utilisateur introuvable" });
     }
 
-    // Mettez à jour le champ customerId de l'utilisateur
     user.customerId = customer.id;
     await user.save();
 
+    logger.info({ msg: "stripe.customer.create_with_pm.success", userId, customerId: customer.id });
     res.status(201).json({ customerId: customer.id });
   } catch (error: any) {
+    logger.error({
+      msg: "stripe.customer.create_with_pm.error",
+      errorMessage: error?.message,
+      code: error?.code,
+      type: error?.type,
+      route: req.originalUrl,
+      method: req.method,
+      userId,
+    });
     res.status(500).json({ error: error.message });
   }
 };
@@ -92,110 +131,142 @@ export const saveCard = async (
 /**
  * Définit une carte comme méthode de paiement principale.
  */
-export const setPrimaryCard = async (
-  req: express.Request,
-  res: express.Response
-) => {
+export const setPrimaryCard = async (req: express.Request, res: express.Response) => {
   const { cardId, customerId } = req.body;
 
-  console.log("Début de la fonction setPrimaryCard");
-  console.log("cardId:", cardId);
-  console.log("customerId:", customerId);
+  logger.info({
+    msg: "stripe.primary_card.set.start",
+    route: req.originalUrl,
+    method: req.method,
+    cardId,
+    customerId,
+  });
 
   if (!cardId || !customerId) {
-    console.error("Erreur : cardId et customerId sont requis");
+    logger.warn({ msg: "stripe.primary_card.set.validation_failed", reason: "cardId or customerId missing" });
     return res.status(400).json({ error: "cardId et customerId sont requis" });
   }
 
   try {
-    console.log("Tentative d'attachement du payment_method au client...");
-    // Attachez la méthode de paiement au client
-    await stripe.paymentMethods.attach(cardId, {
-      customer: customerId,
-    });
-    console.log("Payment_method attaché avec succès");
-
-    console.log("Tentative de mise à jour du moyen de paiement par défaut...");
-    // Définissez la méthode de paiement comme principale
+    await stripe.paymentMethods.attach(cardId, { customer: customerId });
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: cardId },
     });
-    console.log("Moyen de paiement par défaut mis à jour avec succès");
 
+    logger.info({ msg: "stripe.primary_card.set.success", customerId, cardId });
     res.json({ success: true });
   } catch (error: any) {
-    console.error("Erreur lors de l'exécution de setPrimaryCard:", error.message);
-    console.error("Stack trace:", error.stack);
+    logger.error({
+      msg: "stripe.primary_card.set.error",
+      errorMessage: error?.message,
+      code: error?.code,
+      type: error?.type,
+      route: req.originalUrl,
+      method: req.method,
+      customerId,
+      cardId,
+      stack: error?.stack,
+    });
     res.status(500).json({ error: error.message });
   } finally {
-    console.log("Fin de la fonction setPrimaryCard");
+    logger.info({ msg: "stripe.primary_card.set.end" });
   }
 };
 
 /**
  * Récupère toutes les cartes associées à un client.
  */
-export const getCards = async (
-  req: express.Request,
-  res: express.Response
-) => {
+export const getCards = async (req: express.Request, res: express.Response) => {
   const { customerId } = req.query;
+  logger.info({
+    msg: "stripe.cards.list.start",
+    route: req.originalUrl,
+    method: req.method,
+    customerId,
+  });
+
   if (!customerId) {
+    logger.warn({ msg: "stripe.cards.list.validation_failed", reason: "customerId missing" });
     return res.status(400).json({ error: "customerId est requis" });
   }
 
   try {
-    // Récupérez les méthodes de paiement du client
     const paymentMethods = await stripe.paymentMethods.list({
       customer: customerId as string,
-      type: 'card',
+      type: "card",
     });
-
-    // Récupérez les informations du client pour obtenir le default_payment_method
     const customer = await stripe.customers.retrieve(customerId as string);
 
-    // Vérifiez si le client est supprimé
     if ((customer as any).deleted) {
+      logger.warn({ msg: "stripe.cards.list.customer_deleted", customerId });
       return res.status(404).json({ error: "Le client est supprimé." });
     }
 
-    // Accédez à invoice_settings.default_payment_method
     const defaultPaymentMethod = (customer as any).invoice_settings?.default_payment_method;
 
-    // Mapper les cartes en ajoutant isDefault
-    const cards = paymentMethods.data.map((paymentMethod: any) => ({
-      id: paymentMethod.id,
-      last4: paymentMethod.card.last4,
-      brand: paymentMethod.card.brand,
-      exp_month: paymentMethod.card.exp_month,
-      exp_year: paymentMethod.card.exp_year,
-      isDefault: paymentMethod.id === defaultPaymentMethod,
+    const cards = paymentMethods.data.map((pm: any) => ({
+      id: pm.id,
+      last4: pm.card.last4,
+      brand: pm.card.brand,
+      exp_month: pm.card.exp_month,
+      exp_year: pm.card.exp_year,
+      isDefault: pm.id === defaultPaymentMethod,
     }));
 
+    logger.info({ msg: "stripe.cards.list.success", customerId, count: cards.length });
     res.status(200).json({ cards });
   } catch (error: any) {
+    logger.error({
+      msg: "stripe.cards.list.error",
+      errorMessage: error?.message,
+      code: error?.code,
+      type: error?.type,
+      route: req.originalUrl,
+      method: req.method,
+      customerId,
+    });
     res.status(500).json({ error: error.message });
   }
 };
 
-export const createPaymentIntent = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  const { amount, currency, customerId } = req.body; // Ajoutez customerId ici
-  console.log(amount);
-  console.log(currency);
+export const createPaymentIntent = async (req: express.Request, res: express.Response) => {
+  const { amount, currency, customerId } = req.body;
+  logger.info({
+    msg: "stripe.payment_intent.create.start",
+    route: req.originalUrl,
+    method: req.method,
+    amount,
+    currency,
+    customerId,
+  });
+
   if (!amount || !currency || !customerId) {
+    logger.warn({ msg: "stripe.payment_intent.create.validation_failed", reason: "missing fields" });
     return res.status(400).json({ error: "amount, currency et customerId sont requis" });
   }
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency,
-      customer: customerId, // Incluez customerId ici
+      customer: customerId,
+    });
+    logger.info({
+      msg: "stripe.payment_intent.create.success",
+      paymentIntentId: paymentIntent.id,
+      status: paymentIntent.status,
+      hasClientSecret: !!paymentIntent.client_secret,
     });
     res.status(200).json({ clientSecret: paymentIntent.client_secret });
   } catch (error: any) {
+    logger.error({
+      msg: "stripe.payment_intent.create.error",
+      errorMessage: error?.message,
+      code: error?.code,
+      type: error?.type,
+      route: req.originalUrl,
+      method: req.method,
+      customerId,
+    });
     res.status(500).json({ error: error.message });
   }
 };

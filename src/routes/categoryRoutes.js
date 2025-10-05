@@ -23,4 +23,5 @@ router.delete("/category/:id", authMiddleware, categoryController.deleteCategory
 
 // Route to change all route positions
 router.put("/update-positions", authMiddleware, categoryController.updatePositions);
+
 module.exports = router;

@@ -6,60 +6,73 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import path from "path";
 import fs from "fs";
-import UserModel from "../models/user"; // Assure-toi d’avoir bien importé ça en haut
+import UserModel from "../models/user";
 import serviceModel from "../models/service";
-
+import { logger } from "../utils/logger";
 
 // Étendre l'interface Request pour inclure la propriété 'files'
 interface MulterRequest extends Request {
-  files: Express.Multer.File[]; // Correctement typé
+  files: Express.Multer.File[];
 }
 
 const getShopsAllCount = async (
   req: express.Request,
-  res: express.Response) => {
+  res: express.Response
+) => {
+  logger.info({ msg: "shops.countAll.start", route: req.originalUrl, method: req.method });
   try {
-    const shops = await ShopModel.find()
+    const shops = await ShopModel.find();
     const shopsCount = shops.length;
+    logger.info({ msg: "shops.countAll.success", count: shopsCount });
     res.status(200).json(shopsCount);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shops.countAll.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de récupérer le nombre d'utilisateurs" });
   }
 };
 
 const getShopsByIds = async (req: any, res: express.Response) => {
+  logger.info({ msg: "shops.byIds.start", route: req.originalUrl, method: req.method });
   try {
-    // const { shopIds } = req.params;
-
     const shopIds = req.body.shopIds;
     console.log("shopIds : " + shopIds);
     const shops = await ShopModel.find({ _id: { $in: shopIds } });
+    logger.info({ msg: "shops.byIds.success", returned: shops.length });
     res.json(shops);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shops.byIds.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: 'Erreur lors de la récupération des shops favoris' });
   }
-}
+};
 
 // Créer une nouvelle boutique (shop)
 const createShop = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.create.start", route: req.originalUrl, method: req.method, bodyKeys: Object.keys(req.body || {}) });
   try {
     console.log("IN CREATE SHOP");
     const body = req.body;
 
-    // Étape 1 – Création de la boutique
     const newShop = new ShopModel(body);
     await newShop.save();
 
-    // Étape 2 – Recherche des templates du bon type
     let templates = await ServiceTemplateModel.find({ type: newShop.type, active: true });
-
-    // Si aucun, on prend n'importe quels templates actifs
     if (templates.length === 0) {
       console.log("Aucun template du type trouvé, fallback vers des templates actifs génériques");
       templates = await ServiceTemplateModel.find({ active: true });
     }
 
-    // Étape 3 – Clonage des services à partir des templates
     const servicesToCreate = templates.map((template) => {
       return new ServiceModel({
         name: template.name,
@@ -68,29 +81,40 @@ const createShop = async (req: express.Request, res: express.Response) => {
         type: template.type,
         price: template.price,
         duration: template.duration,
-        color: template.color || "#ff4081", // fallback si jamais
+        color: template.color || "#ff4081",
         shopId: newShop._id,
       });
     });
 
-    // Étape 4 – Sauvegarde des services
     const createdServices = await ServiceModel.insertMany(servicesToCreate);
 
-    // Étape 5 – On peut renvoyer la boutique + les services
+    logger.info({
+      msg: "shop.create.success",
+      shopId: newShop._id?.toString(),
+      servicesCreated: createdServices.length
+    });
+
     res.status(201).json({
       shop: newShop,
       services: createdServices,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur dans createShop :", error);
+    logger.error({
+      msg: "shop.create.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de créer la boutique et ses services." });
   }
 };
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// Créer une nouvelle boutique (shop)
 export const getIzyGlamProductDescription = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.productDescription.start", route: req.originalUrl, method: req.method });
   try {
     console.log("IN PRODUCT DESCRIPTION IZYGLAM");
 
@@ -130,32 +154,37 @@ export const getIzyGlamProductDescription = async (req: express.Request, res: ex
           'Content-Type': 'application/json',
         },
       }
-    ); let formattedDescription = response.data.choices[0].message?.content?.trim() || '';
-    // Retire les guillemets simples ou doubles en début et fin
+    );
+
+    let formattedDescription = response.data.choices[0].message?.content?.trim() || '';
     formattedDescription = formattedDescription.replace(/^["']|["']$/g, '');
 
-    // 1️⃣ Récupérer le produit dans MongoDB
     const newProduct = await serviceModel.findById(product._id);
     if (!newProduct) {
       return res.status(404).json({ message: "Produit introuvable." });
     }
 
-    // 2️⃣ Mettre à jour la description
     newProduct.description = formattedDescription;
-
-    // 3️⃣ Sauvegarder en base
     await newProduct.save();
 
-    // 🔹 Retourner directement le document
+    logger.info({ msg: "shop.productDescription.success", productId: product._id });
+
     res.status(200).json(newProduct);
   } catch (error: any) {
     console.error("Erreur dans getIzyGlamDescription :", error?.response?.data || error);
+    logger.error({
+      msg: "shop.productDescription.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de générer la description." });
   }
 };
 
-// Créer une nouvelle boutique (shop)
 export const getIzyGlamDescription = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.description.start", route: req.originalUrl, method: req.method });
   try {
     console.log("IN DESCRIPTION IZYGLAM");
 
@@ -196,21 +225,27 @@ export const getIzyGlamDescription = async (req: express.Request, res: express.R
 
     const formattedDescription = response.data.choices[0].message?.content?.trim() || '';
 
+    logger.info({ msg: "shop.description.success", type });
+
     res.status(200).json({ formattedDescription });
   } catch (error: any) {
     console.error("Erreur dans getIzyGlamDescription :", error?.response?.data || error);
+    logger.error({
+      msg: "shop.description.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de générer la description." });
   }
 };
 
-
-
 /**
  * Remplace l'image d'un Service par une image générée via OpenAI.
- * Body attendu: { product: { type: string, description?: string }, size?: "1024x1024"|"1792x1024"|"1024x1792" }
- * Route suggérée: POST /services/:id/image/ai
  */
 export const uploadServiceImageAI = async (req: Request, res: Response) => {
+  logger.info({ msg: "shop.imageAI.start", route: req.originalUrl, method: req.method });
   try {
     const { product, size } = req.body || {};
     const id = product?._id;
@@ -222,7 +257,7 @@ export const uploadServiceImageAI = async (req: Request, res: Response) => {
     const service = await ServiceModel.findById(id);
     if (!service) return res.status(404).json({ message: "Service non trouvé." });
 
-    const clientGender = "femme"; // ou "homme"
+    const clientGender = "femme";
 
     const prompt = `
 Tu es un·e directeur·ice artistique. Crée une photo ultra réaliste et professionnelle pour représenter ce service de beauté à domicile, dans le style des visuels produits d'Uber Eats (présentation irrésistible, mise en avant claire du sujet, éclairage parfait, réalisme maximal).
@@ -231,13 +266,11 @@ Style: photo haute définition, éclairage naturel et harmonieux, ambiance chale
 La scène montre un professionnel en train de réaliser la prestation sur un·e client·e ${clientGender}, dans un intérieur cosy et lumineux.
 Une attention particulière doit être portée à la position et au réalisme des bras et des mains, avec une interaction naturelle et précise entre le professionnel et le/la client·e (aucune distorsion ou doigts supplémentaires).
 Sujet: "${product.type}" à domicile.
-${product.description ? `Description du produit: ${product.description}` : ""}
-`.trim();
+${product.description ? `Description du produit: ${product.description}` : ""}`.trim();
 
     const allowedSizes = ["1024x1024", "1024x1536", "1536x1024", "auto"];
     const finalSize = allowedSizes.includes(size) ? size : "1536x1024";
 
-    // 1) Génération
     let aiResp;
     try {
       aiResp = await axios.post(
@@ -253,6 +286,11 @@ ${product.description ? `Description du produit: ${product.description}` : ""}
       );
     } catch (e: any) {
       console.error("OpenAI images error:", e?.response?.status, e?.response?.data || e?.message);
+      logger.error({
+        msg: "shop.imageAI.openai_error",
+        status: e?.response?.status,
+        data: e?.response?.data,
+      });
       const status = e?.response?.status || 502;
       const msg = e?.response?.data?.error?.message || e?.message || "Erreur OpenAI Images";
       return res.status(status).json({ message: msg });
@@ -261,10 +299,10 @@ ${product.description ? `Description du produit: ${product.description}` : ""}
     const item = aiResp?.data?.data?.[0];
     if (!item) {
       console.error("OpenAI images payload inattendu:", JSON.stringify(aiResp?.data, null, 2));
+      logger.error({ msg: "shop.imageAI.payload_invalid" });
       return res.status(502).json({ message: "Payload image invalide (data[0] manquant)." });
     }
 
-    // 2) Écriture fichier : gère base64 OU URL
     const dir = path.resolve(process.cwd(), "uploads", "images", "articles");
     await fs.promises.mkdir(dir, { recursive: true });
 
@@ -272,21 +310,19 @@ ${product.description ? `Description du produit: ${product.description}` : ""}
     const absPath = path.join(dir, filename);
 
     if (item.b64_json) {
-      // Cas base64 (ce que tu vois dans tes logs)
       const buffer = Buffer.from(item.b64_json, "base64");
       await fs.promises.writeFile(absPath, buffer);
     } else if (item.url) {
-      // Cas URL (ancien comportement)
       const imgResp = await axios.get(item.url, { responseType: "arraybuffer" });
       await fs.promises.writeFile(absPath, imgResp.data);
     } else {
       console.error("Ni b64_json ni url dans la réponse:", JSON.stringify(item, null, 2));
+      logger.error({ msg: "shop.imageAI.no_image_field" });
       return res.status(502).json({ message: "OpenAI n'a pas retourné d'image (ni b64 ni url)." });
     }
 
     const publicPath = `/uploads/images/articles/${filename}`;
 
-    // 3) Supprime l’ancienne si interne
     if (service.image?.startsWith("/uploads/images/articles/")) {
       try {
         const oldAbs = path.resolve(process.cwd(), service.image.slice(1));
@@ -294,9 +330,10 @@ ${product.description ? `Description du produit: ${product.description}` : ""}
       } catch { /* ignore */ }
     }
 
-    // 4) MAJ service
     service.image = publicPath;
     await service.save();
+
+    logger.info({ msg: "shop.imageAI.success", serviceId: service._id?.toString(), path: publicPath });
 
     return res.status(200).json({
       message: "Image générée et mise à jour avec succès",
@@ -306,6 +343,13 @@ ${product.description ? `Description du produit: ${product.description}` : ""}
 
   } catch (error: any) {
     console.error("Erreur uploadServiceImageAI :", error?.response?.data || error);
+    logger.error({
+      msg: "shop.imageAI.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     return res.status(500).json({
       message: "Erreur génération image",
       error: error?.message || "unknown",
@@ -313,26 +357,33 @@ ${product.description ? `Description du produit: ${product.description}` : ""}
   }
 };
 
-
-
 // Récupérer toutes les boutiques
 const getAllShops = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shops.list.start", route: req.originalUrl, method: req.method });
   try {
     const shops = await ShopModel.find();
+    logger.info({ msg: "shops.list.success", count: shops.length });
     res.json(shops);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shops.list.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de récupérer les boutiques" });
   }
 };
 
-// Fonction de calcul de distance (formule de Haversine)
+// Fonction de calcul de distance
 const calculateDistance = (
   lat1: number,
   lon1: number,
   lat2: number,
   lon2: number
 ): number => {
-  const R = 6371; // Rayon de la Terre en km
+  const R = 6371;
   const radLat1 = (lat1 * Math.PI) / 180;
   const radLat2 = (lat2 * Math.PI) / 180;
   const deltaLat = radLat2 - radLat1;
@@ -349,6 +400,7 @@ const calculateDistance = (
 };
 
 const getShopsNearby = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shops.nearby.start", route: req.originalUrl, method: req.method, query: req.query });
   const { lat, lon } = req.query;
   if (!lat || !lon) {
     return res.status(400).json({ message: "Les coordonnées 'lat' et 'lon' sont requises" });
@@ -357,10 +409,8 @@ const getShopsNearby = async (req: express.Request, res: express.Response) => {
     const clientLatitude = parseFloat(lat as string);
     const clientLongitude = parseFloat(lon as string);
 
-    // On récupère toutes les boutiques
     const shops = await ShopModel.find();
 
-    // On filtre les boutiques selon la distance
     const shopsNearby = shops.filter((shop: any) => {
       if (
         !shop.location ||
@@ -378,40 +428,38 @@ const getShopsNearby = async (req: express.Request, res: express.Response) => {
       return distance <= shop.maxDistance;
     });
 
+    logger.info({ msg: "shops.nearby.success", returned: shopsNearby.length });
     res.json(shopsNearby);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shops.nearby.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la récupération des boutiques à proximité" });
   }
-}
+};
 
 const getShopsByPostalCodes = async (req: Request, res: Response) => {
+  logger.info({ msg: "shops.byPostalCodes.start", route: req.originalUrl, method: req.method, query: req.query });
   try {
-    // On récupère `codes` depuis la query
     const { codes } = req.query;
-
-    // On déclare un tableau final de codes postaux (string[])
     let postalCodes: string[] = [];
 
-    // Si rien n'est fourni
     if (!codes) {
       return res.status(400).json({ message: "Les codes postaux sont requis" });
     }
 
-    // 1) Si `codes` est une simple string (ex: "?codes=75001,75002")
     if (typeof codes === "string") {
       postalCodes = codes.split(",").map((code) => code.trim());
-    }
-    // 2) Si `codes` est déjà un tableau (ex: "?codes=75001&codes=75002")
-    else if (Array.isArray(codes)) {
-      // Attention : codes peut être (string | ParsedQs)[], donc on transforme en string[]
+    } else if (Array.isArray(codes)) {
       postalCodes = codes.map((code) => String(code).trim());
     }
 
-    // À ce stade, postalCodes est un tableau de chaînes
     const shops = await ShopModel.find();
 
-    // On filtre par rapport à un champ deliveryPostalCodes
-    // (assure-toi d'avoir ce champ dans le modèle ou de l'ajouter si besoin)
     const shopsByPostalCodes = shops.filter((shop) => {
       if (!shop.deliveryPostalCodes || !Array.isArray(shop.deliveryPostalCodes)) {
         return false;
@@ -421,8 +469,16 @@ const getShopsByPostalCodes = async (req: Request, res: Response) => {
       );
     });
 
+    logger.info({ msg: "shops.byPostalCodes.success", postalCount: postalCodes.length, returned: shopsByPostalCodes.length });
     res.json(shopsByPostalCodes);
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shops.byPostalCodes.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res
       .status(500)
       .json({ message: "Erreur lors de la récupération des boutiques par codes postaux" });
@@ -430,6 +486,7 @@ const getShopsByPostalCodes = async (req: Request, res: Response) => {
 };
 
 const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) => {
+  logger.info({ msg: "shops.byPostalCodesWithCategories.start", route: req.originalUrl, method: req.method, query: req.query });
   try {
     const { codes } = req.query;
     let postalCodes: string[] = [];
@@ -444,16 +501,12 @@ const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) 
       postalCodes = codes.map((c) => String(c).trim());
     }
 
-    // 🔹 Shops filtrés par codes postaux
     const shops = await ShopModel.find({
       deliveryPostalCodes: { $in: postalCodes },
       active: true,
       status: "approved",
     }).lean();
 
-
-    // On filtre par rapport à un champ deliveryPostalCodes
-    // (assure-toi d'avoir ce champ dans le modèle ou de l'ajouter si besoin)
     const shopsByPostalCodes = shops.filter((shop) => {
       if (!shop.deliveryPostalCodes || !Array.isArray(shop.deliveryPostalCodes)) {
         return false;
@@ -462,10 +515,9 @@ const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) 
         postalCodes.includes(deliveryCode)
       );
     });
-    // IDs des shops pour aller chercher les services
+
     const shopIds = shops.map((s) => s._id.toString());
 
-    // 🔹 On calcule la moyenne des prix pour chaque shop
     const servicesAgg = await ServiceModel.aggregate([
       { $match: { shopId: { $in: shopIds } } },
       {
@@ -476,19 +528,16 @@ const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) 
       },
     ]);
 
-    // Map shopId -> avgPrice
     const avgPriceByShop: Record<string, number> = {};
     servicesAgg.forEach((s) => {
       avgPriceByShop[s._id] = s.avgPrice;
     });
 
-    // On enrichit les shops avec avgPrice
     const enrichedShops = shops.map((shop) => ({
       ...shop,
       avgPrice: avgPriceByShop[shop._id.toString()] ?? Infinity,
     }));
 
-    // ✅ Construction des catégories
     const categories = {
       "all": shopsByPostalCodes,
       "discover": shuffle(enrichedShops).slice(0, 15),
@@ -503,9 +552,28 @@ const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) 
         .slice(0, 15),
     };
 
+    logger.info({
+      msg: "shops.byPostalCodesWithCategories.success",
+      postalCount: postalCodes.length,
+      counts: {
+        all: categories.all.length,
+        discover: categories.discover.length,
+        appreciated: categories.appreciated.length,
+        smart: categories.smart.length,
+        top10: categories.top10.length
+      }
+    });
+
     res.json(categories);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur getShopsByPostalCodesWithCategories:", error);
+    logger.error({
+      msg: "shops.byPostalCodesWithCategories.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -517,45 +585,67 @@ function shuffle<T>(array: T[]): T[] {
 
 // Récupérer une boutique par son ID
 const getShopById = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.get.start", route: req.originalUrl, method: req.method, params: req.params });
   try {
     const { id } = req.params;
-    console.log("ID : " + id)
+    console.log("ID : " + id);
     const shop = await ShopModel.findById(id);
     if (shop) {
+      logger.info({ msg: "shop.get.success", id });
       res.json(shop);
     } else {
+      logger.warn({ msg: "shop.get.not_found", id });
       res.status(404).json({ message: "Boutique non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.get.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de récupérer la boutique" });
   }
 };
 
 // Mettre à jour une boutique par son ID
 const updateShopById = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.update.start", route: req.originalUrl, method: req.method, params: req.params, bodyKeys: Object.keys(req.body || {}) });
   try {
     const { id } = req.params;
     const updatedShop = await ShopModel.findByIdAndUpdate(id, req.body, {
       new: true,
     });
     if (updatedShop) {
+      logger.info({ msg: "shop.update.success", id });
       res.json(updatedShop);
     } else {
+      logger.warn({ msg: "shop.update.not_found", id });
       res.status(404).json({ message: "Boutique non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.update.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de mettre à jour la boutique" });
   }
 };
 
 // Supprimer une boutique par son ID
 const deleteShopById = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.delete.start", route: req.originalUrl, method: req.method, params: req.params });
   try {
     const { id } = req.params;
 
     const deletedShop = await ShopModel.findByIdAndDelete(id);
 
     if (!deletedShop) {
+      logger.warn({ msg: "shop.delete.not_found", id });
       return res.status(404).json({ message: "Boutique non trouvée" });
     }
 
@@ -563,66 +653,90 @@ const deleteShopById = async (req: express.Request, res: express.Response) => {
     const employee = await UserModel.findById(employeeId);
 
     if (employee && employee.managerId) {
-      // Suppression du lien boss → employé
       await UserModel.findByIdAndUpdate(employee.managerId, {
         $pull: { employeesIds: employee._id },
       });
 
-      // Suppression du lien employé → boss
       employee.managerId = undefined;
       await employee.save();
     }
 
+    logger.info({ msg: "shop.delete.success", id });
     res.json({ message: "Boutique supprimée avec succès" });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+    logger.error({
+      msg: "shop.delete.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de supprimer la boutique" });
   }
 };
 
-
 // Récupérer tous les services proposés par une boutique
 const getServicesByShop = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.services.start", route: req.originalUrl, method: req.method, params: req.params });
   try {
     const { id } = req.params;
-    // const services = await ServiceModel.find({ shopId: id });
     const services = await ServiceModel.find({ shopId: id });
-    // const services = await ServiceModel.find();
-    console.log("shopId shopController : " + id)
+    console.log("shopId shopController : " + id);
     if (services.length > 0) {
-      console.log("Service length > 0")
+      console.log("Service length > 0");
+      logger.info({ msg: "shop.services.success", id, count: services.length });
       res.json(services);
     } else {
+      logger.warn({ msg: "shop.services.none_found", id });
       res.status(404).json({ message: "Aucun service trouvé pour cette boutique" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.services.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de récupérer les services pour cette boutique" });
   }
 };
 
 // Récupérer toutes les boutiques associées à un userId
 const getShopsByUserId = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shops.byUser.start", route: req.originalUrl, method: req.method, params: req.params });
   try {
     const { userId } = req.params;
-    console.log(userId)
+    console.log(userId);
     const shops = await ShopModel.find({ idUser: userId });
 
     if (shops.length > 0) {
-      console.log("shops to find 66666666666666      :::::::: " + shops)
+      console.log("shops to find 66666666666666      :::::::: " + shops);
+      logger.info({ msg: "shops.byUser.success", userId, count: shops.length });
       res.json(shops);
     } else {
+      logger.warn({ msg: "shops.byUser.none_found", userId });
       res.status(404).json({ message: "Aucune boutique trouvée pour cet utilisateur" });
     }
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shops.byUser.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible de récupérer les boutiques pour cet utilisateur" });
   }
 };
 
 // Upload images to a shop's gallery
 const uploadGalleryImages = async (req: MulterRequest, res: Response) => {
+  logger.info({ msg: "shop.gallery.upload.start", route: req.originalUrl, method: req.method, params: req.params, filesCount: (req.files || []).length });
   try {
     const { id } = req.params;
-    const files = req.files;  // Récupérer les fichiers uploadés via Multer
+    const files = req.files;
 
     if (!files || files.length === 0) {
       return res.status(400).json({ message: "Aucune image uploadée" });
@@ -633,73 +747,94 @@ const uploadGalleryImages = async (req: MulterRequest, res: Response) => {
       return res.status(404).json({ message: "Boutique non trouvée" });
     }
 
-    // Extraire les noms des fichiers
     const imagePaths = files.map(file => `/uploads/images/gallery/${file.filename}`);
     console.log("imagePaths : " + imagePaths);
 
-    // Ajouter les chemins des fichiers à la galerie
     if (!shop.galleryImages) {
       shop.galleryImages = [];
     }
     shop.galleryImages.push(...imagePaths);
     console.log("shop.galleryImages : " + shop.galleryImages);
-    // Sauvegarder les chemins des fichiers dans la base de données
     await shop.updateOne({ galleryImages: shop.galleryImages });
 
+    logger.info({ msg: "shop.gallery.upload.success", id, added: imagePaths.length });
     res.status(200).json({ message: "Images uploadées avec succès", galleryImages: shop.galleryImages });
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.gallery.upload.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de l'upload des images" });
   }
 };
 
-
 // Get all gallery images for a specific shop
 const getGalleryImages = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.gallery.get.start", route: req.originalUrl, method: req.method, params: req.params });
   try {
     const { id } = req.params;
     console.log("id ShopGallery : " + id);
-    // Trouver le shop par son ID
     const shop = await ShopModel.findById(id);
     if (!shop || !shop.galleryImages) {
+      logger.warn({ msg: "shop.gallery.get.not_found", id });
       return res.status(404).json({ message: "Boutique ou galerie non trouvée" });
     }
 
-    // Retourner les images de la galerie
+    logger.info({ msg: "shop.gallery.get.success", id, count: shop.galleryImages.length });
     res.status(200).json({ galleryImages: shop.galleryImages });
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.gallery.get.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la récupération des images de la galerie" });
   }
 };
 
-
 // Annuler une réservation en mettant à jour son statut à "cancelled"
 const addShopReview = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.review.add.start", route: req.originalUrl, method: req.method, params: req.params });
   try {
-    const { id } = req.params; // Shop ID from the request parameters
-    const review = req.body; // Review details (rating, comment, user) from the request body
-    //console.log("req.body : " + JSON.stringify(req.body));
+    const { id } = req.params;
+    const review = req.body;
     console.log("review : " + JSON.stringify(req.body));
-    // Add the review to the shop's reviews array
+
     const updatedShop = await ShopModel.findByIdAndUpdate(
       id,
-      { $push: { reviews: review } }, // Use $push to add the review to the reviews array
-      { new: true } // Return the updated document
+      { $push: { reviews: review } },
+      { new: true }
     );
-    // console.log("updatedShop : " + updatedShop);
+
     if (updatedShop) {
+      logger.info({ msg: "shop.review.add.success", id });
       res.json({ message: "Avis ajouté avec succès", shop: updatedShop });
     } else {
+      logger.warn({ msg: "shop.review.add.not_found", id });
       res.status(404).json({ message: "Shop non trouvée" });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+    logger.error({
+      msg: "shop.review.add.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Impossible d'ajouter votre avis" });
   }
 };
 
 const bulkUpdateShopStats = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.stats.bulkUpdate.start", route: req.originalUrl, method: req.method });
   try {
-    const { stats } = req.body; // stats = [{ shopId, impressions: X, duree_affichage: Y }, ...]
+    const { stats } = req.body;
 
     if (!Array.isArray(stats) || stats.length === 0) {
       return res.status(400).json({ message: "Données invalides" });
@@ -719,14 +854,23 @@ const bulkUpdateShopStats = async (req: express.Request, res: express.Response) 
     }));
 
     await ShopModel.bulkWrite(bulkOps);
+    logger.info({ msg: "shop.stats.bulkUpdate.success", ops: bulkOps.length });
     res.json({ message: "Mises à jour des statistiques effectuées" });
 
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.stats.bulkUpdate.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la mise à jour des stats", error });
   }
 };
 
 const incrementImpression = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.stats.impression.start", route: req.originalUrl, method: req.method, params: req.params });
   try {
     const { id } = req.params;
     console.log(`📢 Tentative d'incrémentation d'impression pour la boutique ${id}`);
@@ -734,6 +878,7 @@ const incrementImpression = async (req: express.Request, res: express.Response) 
     const shop = await ShopModel.findById(id);
     if (!shop) {
       console.error(`❌ Boutique introuvable : ${id}`);
+      logger.warn({ msg: "shop.stats.impression.not_found", id });
       return res.status(404).json({ message: "Boutique non trouvée" });
     }
 
@@ -741,15 +886,23 @@ const incrementImpression = async (req: express.Request, res: express.Response) 
     await shop.save();
 
     console.log(`✅ Impression mise à jour avec succès pour ${id}`);
+    logger.info({ msg: "shop.stats.impression.success", id, impressions: shop.impressions });
     res.json({ message: "Impression mise à jour", shop });
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Erreur dans incrementImpression :", error);
+    logger.error({
+      msg: "shop.stats.impression.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la mise à jour des impressions", error });
   }
 };
 
-
 const updateShopDisplayTime = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.stats.displayTime.start", route: req.originalUrl, method: req.method, params: req.params });
   try {
     const { id } = req.params;
     const { duree_affichage } = req.body;
@@ -766,13 +919,29 @@ const updateShopDisplayTime = async (req: express.Request, res: express.Response
     shop.temps_affichage_total += duree_affichage;
     shop.nombre_affichages_valides += 1;
     await shop.save();
+
+    logger.info({
+      msg: "shop.stats.displayTime.success",
+      id,
+      total: shop.temps_affichage_total,
+      validCount: shop.nombre_affichages_valides
+    });
+
     res.json({ message: "Temps d'affichage mis à jour", shop });
-  } catch (error) {
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.stats.displayTime.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la mise à jour du temps d'affichage", error });
   }
 };
 
 const searchShopsWithServices = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shops.searchWithServices.start", route: req.originalUrl, method: req.method, query: req.query });
   try {
     const { postalCode, query } = req.query;
 
@@ -783,14 +952,10 @@ const searchShopsWithServices = async (req: express.Request, res: express.Respon
     const lowerQuery = query.toString().toLowerCase();
 
     const results = await ShopModel.aggregate([
-      {
-        $match: {
-          deliveryPostalCodes: postalCode,
-        }
-      },
+      { $match: { deliveryPostalCodes: postalCode } },
       {
         $lookup: {
-          from: 'services', // nom exact de la collection Mongo
+          from: 'services',
           localField: '_id',
           foreignField: 'shopId',
           as: 'services'
@@ -847,14 +1012,23 @@ const searchShopsWithServices = async (req: express.Request, res: express.Respon
       }
     ]);
 
+    logger.info({ msg: "shops.searchWithServices.success", returned: results.length });
     res.status(200).json(results);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur dans searchShopsWithServices :", error);
+    logger.error({
+      msg: "shops.searchWithServices.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur lors de la recherche des boutiques", error });
   }
 };
 
 const getShopsByBoss = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shops.byBoss.start", route: req.originalUrl, method: req.method });
   try {
     const token = req.header("Authorization");
     if (!token) {
@@ -864,27 +1038,31 @@ const getShopsByBoss = async (req: express.Request, res: express.Response) => {
     const decoded: any = require("jsonwebtoken").verify(token, process.env.SECRET_KEY);
     const bossId = decoded.userId;
 
-    // Récupérer le boss
     const boss = await UserModel.findById(bossId);
     if (!boss || boss.role !== "boss") {
       return res.status(403).json({ message: "Accès interdit : rôle non autorisé" });
     }
 
-    // Si pas d'employés
     if (!boss.employeesIds || boss.employeesIds.length === 0) {
+      logger.info({ msg: "shops.byBoss.success_noEmployees", bossId });
       return res.status(200).json([]);
     }
 
-    // Récupérer les shops des employés
     const shops = await ShopModel.find({ idUser: { $in: boss.employeesIds } });
+    logger.info({ msg: "shops.byBoss.success", bossId, count: shops.length });
     res.status(200).json(shops);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur dans getShopsByBoss :", error);
+    logger.error({
+      msg: "shops.byBoss.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
     res.status(500).json({ message: "Erreur serveur", error });
   }
 };
-
-
 
 module.exports = {
   getShopsByBoss,
