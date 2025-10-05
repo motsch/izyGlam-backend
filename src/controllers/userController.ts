@@ -1,15 +1,17 @@
 import UserModel from "../models/user";
 import * as express from "express";
-import { Request } from "express";
 import axios from 'axios';
 import path from "path"; // Pour manipuler les chemins locaux
-
+import { renderEmailHTML } from "../i18n/email";
+import type { SupportedLang } from "../i18n/email";
+import { resolveLang } from "../i18n/resolveLang";
+import nodemailer from "nodemailer";
+import { randomBytes } from "node:crypto";
+import { makeTransport } from "../utils/mailer";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:4200";
 
-import ConversationModel from "../models/conversation";
-import crypto from "crypto";
-import nodemailer from "nodemailer";
+// import
 require("dotenv").config();
 // controllers/usersController.js
 const jwt = require("jsonwebtoken");
@@ -86,10 +88,7 @@ const getUserInfo = async (
         }
 
         const userId = decodedToken.userId;
-
         const user = await UserModel.findById(userId);
-
-
 
         if (user) {
           // 4) Vérif activation
@@ -358,161 +357,49 @@ const loginUser = async (
   }
 };
 
-
-// Forgot password: Send reset link
+/* --------------------------
+   Forgot password
+--------------------------- */
 export const forgotPassword = async (req: express.Request, res: express.Response) => {
-  const { email } = req.body;
   try {
+    const { email } = req.body as { email?: string };
+    if (!email) return res.status(400).json({ message: "Email requis" });
+
+    const lang = resolveLang(req);
+
     const user = await UserModel.findOne({ email });
     if (!user) {
+      // on renvoie 200 pour ne pas révéler l'existence d'un compte (optionnel)
       return res.status(404).json({ message: "User not found" });
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
+    const token = randomBytes(32).toString("hex");
     user.resetPasswordToken = token;
-    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 heure
-
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1h
     await user.save();
 
-    const resetLink = `${req.protocol}://localhost:4200/reset-password?token=${token}`;
+    const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
+    const { subject, html } = renderEmailHTML("reset", lang, resetLink, new Date().getFullYear());
 
-    const transporter = nodemailer.createTransport({
-      host: 'ssl0.ovh.net',
-      port: 465,
-      secure: true, // Utilisation de SSL
-      auth: {
-        user: process.env.EMAIL_ID,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
-    const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png"); // Chemin absolu du logo
-    const currentYear = new Date().getFullYear(); // Récupère l'année actuelle
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Réinitialisation de mot de passe</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-          }
-          .email-container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          }
-          .header {
-            background: linear-gradient(90deg, #ff95c1ff, #ffdcecff);
-            padding: 20px;
-            text-align: center;
-          }
-          .header img {
-            max-width: 150px;
-          }
-          .content {
-            padding: 20px;
-            color: #333333;
-            text-align: left;
-          }
-          .content h1 {
-            color: #ff8fbeff;
-            font-size: 24px;
-            margin-bottom: 10px;
-          }
-          .content p {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-          }
-          .button-container {
-            text-align: center;
-            margin: 20px 0;
-          }
-          .button {
-            display: inline-block;
-            padding: 15px 20px;
-            font-size: 16px;
-            color: #ffffffff !important;
-            background: linear-gradient(90deg, #ffdcecff, #ff95c1ff);
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-          }
-          .button:hover {
-            opacity: 0.9;
-          }
-          .footer {
-            text-align: center;
-            background-color: #f4f4f4;
-            padding: 10px;
-            color: #888888;
-            font-size: 14px;
-          }
-          .footer a {
-            color: #ff8fbeff;
-            text-decoration: none;
-          }
-          .footer a:hover {
-            text-decoration: underline;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="email-container">
-          <div class="header">
-            <img src="cid:logo" alt="izyGlam Logo">
-          </div>
-          <div class="content">
-            <h1>Réinitialisation de votre mot de passe</h1>
-            <p>Bonjour,</p>
-            <p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte izyGlam. Cliquez sur le bouton ci-dessous pour continuer.</p>
-            <div class="button-container">
-              <a class="button" href="${resetLink}" target="_blank">Réinitialiser mon mot de passe</a>
-            </div>
-            <p>Ce lien est valable pendant 1 heure. Si vous n'avez pas fait cette demande, veuillez ignorer cet email.</p>
-            <p>Merci,<br>L'équipe izyGlam</p>
-          </div>
-          <div class="footer">
-            <p>Besoin d'aide ? <a href="mailto:support@izyglam.com">support@izyglam.com</a></p>
-            <p>&copy; ${currentYear} izyGlam. Tous droits réservés.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    const transporter = makeTransport();
+    const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
 
     const info = await transporter.sendMail({
-      from: 'contact@izyglam.com',
+      from: process.env.SMTP_FROM || `IzyGlam <${process.env.SMTP_USER}>`,
       to: email,
-      subject: 'Réinitialisation de votre mot de passe - izyGlam',
-      html: htmlContent,
-      attachments: [
-        {
-          filename: 'fr.png',
-          path: logoPath, // Chemin vers le logo
-          cid: 'logo', // Content-ID pour l'inclusion dans le HTML
-        },
-      ],
+      subject,
+      html,
+      attachments: [{ filename: "logo.png", path: logoPath, cid: "logo" }],
     });
 
-    console.log('Message sent: %s', info.messageId);
-
+    console.log("ForgotPassword mail sent:", info.messageId);
     res.status(200).json({ message: `Password reset email sent to ${email}` });
   } catch (error) {
-    console.error('Error sending reset email:', error);
+    console.error("Error sending reset email:", error);
     res.status(500).json({ message: "Error sending reset email", error });
   }
 };
+
 
 // Reset password
 export const resetPassword = async (req: express.Request, res: express.Response) => {
@@ -538,105 +425,44 @@ export const resetPassword = async (req: express.Request, res: express.Response)
   }
 };
 
-// Créer un nouvel utilisateur
+/* --------------------------
+   Create user (send verify)
+--------------------------- */
 export const createUser = async (req: express.Request, res: express.Response) => {
   try {
     console.log("IN CREATE");
     const payload = { ...req.body };
 
-    // Sécurité: on ne laisse pas le client forcer ces champs
+    // Langue demandée (query, body, header)
+    const lang = resolveLang(req);
+
+    // Sécurité: le client ne force pas ces champs
     delete (payload as any).active;
     delete (payload as any).emailVerificationToken;
     delete (payload as any).emailVerificationExpires;
 
-    // Création user avec active=false
-    const newUser = new UserModel({
-      ...payload,
-      active: false,
-    });
+    const newUser = new UserModel({ ...payload, active: false });
 
-    // Génère un token de vérification valable 1h
-    const token = crypto.randomBytes(32).toString("hex");
+    // Token de vérif (1h)
+    const token = randomBytes(32).toString("hex");
     newUser.emailVerificationToken = token;
-    newUser.emailVerificationExpires = new Date(Date.now() + 3600000); // 1h
-
+    newUser.emailVerificationExpires = new Date(Date.now() + 3600000);
     await newUser.save();
 
-    // Lien de vérification pour le frontend
     const verifyLink = `${FRONTEND_URL}/verify-email?token=${token}`;
+    const { subject, html } = renderEmailHTML("verify", lang, verifyLink, new Date().getFullYear());
 
-    // Transport SMTP (OVH comme ton forgotPassword)
-    const transporter = nodemailer.createTransport({
-      host: "ssl0.ovh.net",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_ID,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
+    const transporter = makeTransport();
     const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
-    const currentYear = new Date().getFullYear();
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>Confirmez votre adresse email</title>
-        <style>
-          body { font-family: Arial, sans-serif; background:#f9f9f9; margin:0; padding:0;}
-          .email-container { max-width:600px; margin:20px auto; background:#fff; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,.1); overflow:hidden;}
-          .header { background:linear-gradient(90deg,#ff95c1ff,#ffdcecff); padding:20px; text-align:center;}
-          .header img { max-width:150px;}
-          .content { padding:20px; color:#333; text-align:left;}
-          .content h1 { color:#ff8fbeff; font-size:24px; margin-bottom:10px;}
-          .content p { font-size:16px; line-height:1.6; margin-bottom:20px;}
-          .button-container { text-align:center; margin:20px 0;}
-          .button { display:inline-block; padding:15px 20px; font-size:16px; color:#fff !important; background:linear-gradient(90deg,#ffdcecff,#ff95c1ff); text-decoration:none; border-radius:5px; font-weight:bold;}
-          .button:hover { opacity:.9;}
-          .footer { text-align:center; background:#f4f4f4; padding:10px; color:#888; font-size:14px;}
-          .footer a { color:#ff8fbeff; text-decoration:none;}
-          .footer a:hover { text-decoration:underline;}
-        </style>
-      </head>
-      <body>
-        <div class="email-container">
-          <div class="header">
-            <img src="cid:logo" alt="izyGlam Logo"/>
-          </div>
-          <div class="content">
-            <h1>Confirmez votre adresse email</h1>
-            <p>Bonjour,</p>
-            <p>Bienvenue sur izyGlam 🎀 ! Cliquez sur le bouton ci-dessous pour <strong>activer votre compte</strong>.</p>
-            <div class="button-container">
-              <a class="button" href="${verifyLink}" target="_blank">Activer mon compte</a>
-            </div>
-            <p>Ce lien est valable pendant 1 heure. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.</p>
-            <p>Merci,<br>L'équipe izyGlam</p>
-          </div>
-          <div class="footer">
-            <p>Besoin d'aide ? <a href="mailto:support@izyglam.com">support@izyglam.com</a></p>
-            <p>&copy; ${currentYear} izyGlam. Tous droits réservés.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
 
     await transporter.sendMail({
-      from: "contact@izyglam.com",
+      from: process.env.SMTP_FROM || `IzyGlam <${process.env.SMTP_USER}>`,
       to: newUser.email,
-      subject: "Activez votre compte - izyGlam",
-      html: htmlContent,
-      attachments: [
-        { filename: "logo.png", path: logoPath, cid: "logo" },
-      ],
+      subject,
+      html,
+      attachments: [{ filename: "logo.png", path: logoPath, cid: "logo" }],
     });
 
-    // On renvoie le user (sans password)
     const safeUser = newUser.toObject();
     delete (safeUser as any).password;
     delete (safeUser as any).emailVerificationToken;
@@ -652,44 +478,46 @@ export const createUser = async (req: express.Request, res: express.Response) =>
   }
 };
 
+/* --------------------------
+   Resend verification email
+--------------------------- */
 export const resendVerificationEmail = async (req: express.Request, res: express.Response) => {
   try {
-    const { email } = req.body as { email: string };
+    const { email } = req.body as { email?: string };
     if (!email) return res.status(400).json({ message: "Email requis" });
+
+    const lang = resolveLang(req);
 
     const user = await UserModel.findOne({ email });
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
     if (user.active) return res.status(200).json({ message: "Compte déjà activé" });
 
-    // Nouveau token (invalidate l'ancien)
-    const token = crypto.randomBytes(32).toString("hex");
+    // Nouveau token (invalide l'ancien)
+    const token = randomBytes(32).toString("hex");
     user.emailVerificationToken = token;
     user.emailVerificationExpires = new Date(Date.now() + 3600000); // 1h
     await user.save();
 
     const verifyLink = `${FRONTEND_URL}/verify-email?token=${token}`;
-    const transporter = nodemailer.createTransport({
-      host: "ssl0.ovh.net",
-      port: 465,
-      secure: true,
-      auth: { user: process.env.EMAIL_ID, pass: process.env.EMAIL_PASSWORD },
-    });
+    const { subject, html } = renderEmailHTML("verify", lang, verifyLink, new Date().getFullYear());
 
-    const html = `Bonjour,<br/>Cliquez ici pour activer votre compte : <a href="${verifyLink}" target="_blank">Activer mon compte</a> (valide 1h).`;
+    const transporter = makeTransport();
+    const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
+
     await transporter.sendMail({
-      from: "contact@izyglam.com",
+      from: process.env.SMTP_FROM || `IzyGlam <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Renvoyer l'activation - izyGlam",
+      subject,
       html,
+      attachments: [{ filename: "logo.png", path: logoPath, cid: "logo" }],
     });
 
     res.status(200).json({ message: "Email d'activation renvoyé" });
   } catch (error) {
-    console.error(error);
+    console.error("Erreur renvoi email activation:", error);
     res.status(500).json({ message: "Erreur lors du renvoi de l'email d'activation" });
   }
 };
-
 
 export const verifyEmail = async (req: express.Request, res: express.Response) => {
   try {
@@ -907,9 +735,6 @@ export const handleFacebookLogin = async (req: any, res: express.Response) => {
   }
 };
 
-
-
-
 // Récupérer un utilisateur par son ID
 const getUsersByCompanyId = async (req: any, res: express.Response) => {
   try {
@@ -927,6 +752,7 @@ const getUsersByCompanyId = async (req: any, res: express.Response) => {
       .json({ message: "Impossible de récupérer les utilisateurs" });
   }
 };
+
 // Ajoute une nouvelle adresse à l'utilisateur identifié par son id
 const addUserAddress = async (
   req: express.Request,
@@ -1022,7 +848,6 @@ const updateUserById = async (req: any, res: express.Response) => {
     res.status(500).json({ message: "Erreur serveur lors de la mise à jour" });
   }
 };
-
 
 const getUsersAllCount = async (
   req: express.Request,

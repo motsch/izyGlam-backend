@@ -8,10 +8,12 @@ export interface iCountry extends mongoose.Document {
     languages: string[];        // Liste des codes langue disponibles (ex: ["fr","en","es"])
     createdAt: Date;
     updatedAt: Date;
+    mainLangue: string;
 }
 
 const countrySchema = new mongoose.Schema<iCountry>(
     {
+        mainLangue: { type: String, required: true }, // Chemin ou URL de l'image
         flag: { type: String, required: true }, // Chemin ou URL de l'image
         name: {
             type: String,
