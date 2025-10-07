@@ -9,6 +9,7 @@ import fs from "fs";
 import UserModel from "../models/user";
 import serviceModel from "../models/service";
 import { logger } from "../utils/logger";
+import { resolveLang } from "../utils/lang"; // ajuste le chemin si besoin
 
 // Étendre l'interface Request pour inclure la propriété 'files'
 interface MulterRequest extends Request {
@@ -116,48 +117,53 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 export const getIzyGlamProductDescription = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shop.productDescription.start", route: req.originalUrl, method: req.method });
   try {
-    console.log("IN PRODUCT DESCRIPTION IZYGLAM");
+    const lang = resolveLang(req);
+    console.log("IN PRODUCT DESCRIPTION IZYGLAM", { lang });
 
     const { product } = req.body;
 
-    if (!product.type) {
+    if (!product?.type) {
       return res.status(400).json({ message: "Le type de salon est requis." });
     }
-    if (!product._id) {
+    if (!product?._id) {
       return res.status(400).json({ message: "L'ID du produit est requis." });
     }
 
-    const prompt = product.description
-      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Pour la prestation ${product.name}, on souhaite revoir la description: "${product.description}". Si une description est viable, reformule-la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon, crée-la de 0. Maximum 15 mots. Pas de symboles bizarres, d'étoile ou autre.`
-      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description de prestation originale, professionnelle, engageante et sympathique pour une prestation portant ce nom: "${product.name}". Ajoute une touche de personnalité unique à chaque fois. Maximum 15 mots. Pas de symboles bizarres, d'étoile ou autre.`;
+    const baseInstruction =
+      `You are a senior beauty copywriter for a home-services marketplace.
+Always write the FINAL answer in the target language given by 'lang' = ${lang}.
+If inputs are in other languages, TRANSLATE and LOCALIZE to ${lang}.
+Output: ONE single sentence, human, professional, engaging, sales-oriented, no emojis, no weird symbols, no quotes.
+Hard limit: 15 words. No list, no preface, no explanations.`;
+
+    const userPrompt = product.description
+      ? `Service name: "${product.name}".
+Current description: "${product.description}".
+Rewrite if viable; otherwise create from scratch.`
+      : `Create from scratch a compelling description for service name: "${product.name}".`;
 
     const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      "https://api.openai.com/v1/chat/completions",
       {
-        model: 'gpt-4',
+        model: "gpt-4",
         messages: [
-          {
-            role: 'system',
-            content: 'Le salon est toujours géré par une seule personne. Les descriptions ne parlent donc pas d\'une équipe, mais d\'un professionnel.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
+          { role: "system", content: baseInstruction },
+          { role: "system", content: "The salon is always run by a single practitioner, never a team." },
+          { role: "user", content: userPrompt },
         ],
         temperature: 0.8,
-        max_tokens: 300,
+        max_tokens: 150,
       },
       {
         headers: {
           Authorization: `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
     );
 
-    let formattedDescription = response.data.choices[0].message?.content?.trim() || '';
-    formattedDescription = formattedDescription.replace(/^["']|["']$/g, '');
+    let formattedDescription = response.data.choices[0].message?.content?.trim() || "";
+    formattedDescription = formattedDescription.replace(/^["']|["']$/g, "");
 
     const newProduct = await serviceModel.findById(product._id);
     if (!newProduct) {
@@ -167,11 +173,11 @@ export const getIzyGlamProductDescription = async (req: express.Request, res: ex
     newProduct.description = formattedDescription;
     await newProduct.save();
 
-    logger.info({ msg: "shop.productDescription.success", productId: product._id });
+    logger.info({ msg: "shop.productDescription.success", productId: product._id, lang });
 
     res.status(200).json(newProduct);
   } catch (error: any) {
-    console.error("Erreur dans getIzyGlamDescription :", error?.response?.data || error);
+    console.error("Erreur dans getIzyGlamProductDescription :", error?.response?.data || error);
     logger.error({
       msg: "shop.productDescription.error",
       errorMessage: error?.message,
@@ -186,7 +192,8 @@ export const getIzyGlamProductDescription = async (req: express.Request, res: ex
 export const getIzyGlamDescription = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shop.description.start", route: req.originalUrl, method: req.method });
   try {
-    console.log("IN DESCRIPTION IZYGLAM");
+    const lang = resolveLang(req);
+    console.log("IN DESCRIPTION IZYGLAM", { lang });
 
     const { description, type } = req.body;
 
@@ -194,38 +201,44 @@ export const getIzyGlamDescription = async (req: express.Request, res: express.R
       return res.status(400).json({ message: "Le type de salon est requis." });
     }
 
-    const prompt = description
-      ? `Tu es un expert en communication pour une plateforme de salons de beauté à domcile. Voici une description pour ce salon de type "${type}". La description est : "${description}". Si une description est viable, refomule la pour qu'elle soit professionnelle, engageante, sympathique et vendeuse, tout en gardant un ton humain. Sinon créer là de 0. C'est une description à la premiere personne (On utilise le "je"). Maximum 40 mots. Pas de symboles bizarres, d'étoile ou autre.`
-      : `Tu es un expert en communication pour une plateforme de salons de beauté à domicile. Génére une description originale, professionnelle, engageante et sympathique pour un salon de type "${type}". Ajoute une touche de personnalité unique à chaque fois. C'est une description à la premiere personne (On utilise le "je"). Maximum 40 mots. Pas de symboles bizarres, d'étoile ou autre.`;
+    const baseInstruction =
+      `You are a senior beauty copywriter for a home-services marketplace.
+Always write the FINAL answer in the target language given by 'lang' = ${lang}.
+Write in FIRST-PERSON SINGULAR appropriate for ${lang} ("I" / "je" / etc.).
+If inputs are in other languages, TRANSLATE and LOCALIZE to ${lang}.
+Tone: human, professional, warm, selling without sounding pushy. 
+Output: ONE paragraph, plain text, no emojis, no weird symbols, no quotes.
+Hard limit: 40 words. No list, no preface, no explanations.`;
+
+    const userPrompt = description
+      ? `Salon type: "${type}".
+Existing description: "${description}".
+If viable, rewrite; otherwise create from scratch.`
+      : `Create from scratch a compelling first-person description for a salon of type: "${type}".`;
 
     const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      "https://api.openai.com/v1/chat/completions",
       {
-        model: 'gpt-4',
+        model: "gpt-4",
         messages: [
-          {
-            role: 'system',
-            content: 'Tu es un expert en rédaction de desciption pour une platefome, spécialisée dans les salons de beauté.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
+          { role: "system", content: baseInstruction },
+          { role: "system", content: "The salon is operated by a single practitioner (not a team)." },
+          { role: "user", content: userPrompt },
         ],
         temperature: 0.8,
-        max_tokens: 300,
+        max_tokens: 200,
       },
       {
         headers: {
           Authorization: `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
     );
 
-    const formattedDescription = response.data.choices[0].message?.content?.trim() || '';
+    const formattedDescription = response.data.choices[0].message?.content?.trim() || "";
 
-    logger.info({ msg: "shop.description.success", type });
+    logger.info({ msg: "shop.description.success", type, lang });
 
     res.status(200).json({ formattedDescription });
   } catch (error: any) {
