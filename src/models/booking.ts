@@ -12,6 +12,7 @@ export interface iBooking extends mongoose.Document {
   shopId: string; // Référence à la boutique où le service est réservé
   status: "pending" | "refused" | "accepted" | "deleted" | "cancelled" | "finished" | "no-show-client" | "no-show-pro"; // Statut de la réservation
   price: string;
+  serviceFee: string;
   commission: string;
   date: string; // Date et heure du passage de la commande
   orderDate: Date; // Date et heure du passage de la commande
@@ -52,6 +53,7 @@ const bookingSchema = new mongoose.Schema<iBooking>({
     required: true,
   },
   price: { type: String, required: false },
+  serviceFee: { type: String, required: false },
   commission: { type: String, required: false },
   date: { type: String, required: true },
   orderDate: { type: Date, required: true },
