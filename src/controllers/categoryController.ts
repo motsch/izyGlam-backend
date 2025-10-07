@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import CategoryModel from "../models/category";
 import ShopModel from "../models/shop";
 import { logger } from "../utils/logger";
+import { buildCountryQuery } from '../utils/country';
 
 // -- util: éviter de logguer des secrets par erreur
 function sanitize(obj: any) {
@@ -73,19 +74,43 @@ const calculateDistance = (
   return R * c;
 };
 
-// Catégories disponibles en fonction des shops filtrés (geo OU codes postaux)
-const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
+const normalizeCountry = (v: any): string | undefined =>
+  typeof v === 'string' && v.trim() ? v.trim().toUpperCase() : undefined;
+
+export const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
   try {
-    const { lat, lon, codes } = req.query;
+    const { lat, lon, codes, country } = req.query;
 
-    let shops = await ShopModel.find();
+    const countryQuery = buildCountryQuery(country);
 
-    // Filtrage géo
+    // 1) Pré-check pays : si fourni et aucun shop -> renvoie [] tout de suite
+    if (countryQuery) {
+      const countryCount = await ShopModel.countDocuments({
+        ...countryQuery,
+        // si tu veux être cohérent avec la prod :
+        active: true,
+        status: "approved",
+      });
+      if (countryCount === 0) {
+        return res.json([]); // pour /category/available on renvoie un array de catégories vide
+      }
+    }
+
+    // 2) Base query (réduit le set dès le départ)
+    const baseQuery: any = {
+      ...(countryQuery ?? {}),
+      // idem : filtre prod si souhaité
+      // active: true,
+      // status: "approved",
+    };
+
+    let shops = await ShopModel.find(baseQuery).lean();
+
+    // 3) Filtre géo OU codes (inchangé)
     if (lat && lon) {
       const clientLatitude = parseFloat(lat as string);
       const clientLongitude = parseFloat(lon as string);
 
-      const before = shops.length;
       shops = shops.filter((shop: any) => {
         if (!shop.location || shop.location.latitude == null || shop.location.longitude == null) return false;
         const distance = calculateDistance(
@@ -97,83 +122,40 @@ const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
         return typeof shop.maxDistance === "number" && distance <= shop.maxDistance;
       });
 
-      logger.info({
-        msg: "getCategoriesWithAvailableShops geo filter",
-        route: "GET /api/category/available",
-        method: req.method,
-        url: req.originalUrl,
-        initial: before,
-        filtered: shops.length,
-        lat: clientLatitude,
-        lon: clientLongitude,
-      });
-    }
-    // Filtrage par codes postaux
-    else if (codes) {
+    } else if (codes) {
       let postalCodes: string[] = [];
-      if (typeof codes === "string") postalCodes = (codes as string).split(",").map((c) => c.trim());
-      else if (Array.isArray(codes)) postalCodes = (codes as string[]).map((c) => c.trim());
+      if (typeof codes === "string") postalCodes = (codes as string).split(",").map((c) => c.trim()).filter(Boolean);
+      else if (Array.isArray(codes)) postalCodes = (codes as string[]).map((c) => c.trim()).filter(Boolean);
 
-      const before = shops.length;
       shops = shops.filter((shop: any) => {
         if (!Array.isArray(shop.deliveryPostalCodes)) return false;
         return shop.deliveryPostalCodes.some((deliveryCode: string) => postalCodes.includes(deliveryCode));
       });
-
-      logger.info({
-        msg: "getCategoriesWithAvailableShops postal filter",
-        route: "GET /api/category/available",
-        method: req.method,
-        url: req.originalUrl,
-        initial: before,
-        filtered: shops.length,
-        postalCodesCount: postalCodes.length,
-      });
-    } else {
-      logger.info({
-        msg: "getCategoriesWithAvailableShops no filter",
-        route: "GET /api/category/available",
-        method: req.method,
-        url: req.originalUrl,
-        totalShops: shops.length,
-      });
     }
 
-    // On collecte les clés de trad présentes dans les shops filtrées
+    // 4) Trad keys -> catégories
     const tradKeys = [...new Set(shops.map((s: any) => s.trad).filter(Boolean))];
+    if (tradKeys.length === 0) return res.json([]);
 
     const categories = await CategoryModel.find({
       trad: { $in: tradKeys },
-      // active: true, // décommente si tu veux filtrer que les actives
-    });
-
-    logger.info({
-      msg: "getCategoriesWithAvailableShops success",
-      route: "GET /api/category/available",
-      method: req.method,
-      url: req.originalUrl,
-      categories: categories.length,
-      tradKeys: tradKeys.length,
+      // active: true, // si besoin
     });
 
     return res.json(categories);
   } catch (error: any) {
     logger.error({
-      msg: "getCategoriesWithAvailableShops failed",
-      route: "GET /api/category/available",
-      method: req.method,
-      url: req.originalUrl,
-      params: req.params,
-      query: req.query,
-      errorName: error?.name,
+      msg: "getCategoriesWithAvailableShops.failed",
       errorMessage: error?.message,
       stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
     });
-    res.status(500).json({
-      message: "Erreur lors de la récupération des catégories disponibles",
-    });
+
+    return res.status(500).json({ message: "Erreur lors de la récupération des catégories disponibles" });
   }
 };
+
 
 // Récupérer toutes les catégories triées par position
 const getAllCategories = async (req: Request, res: Response) => {

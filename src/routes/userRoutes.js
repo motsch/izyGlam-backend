@@ -60,6 +60,9 @@ router.get("/users-count-all", authMiddleware, usersController.getUsersAllCount)
 // Authenticated route to update a user by ID
 router.put("/users/:id", authMiddleware, usersController.updateUserById);
 
+// users-country-update route to update a user country by ID
+router.put('/users-country-update/:id', authMiddleware, usersController.updateUserCountryById);
+
 // Authenticated route to update a user's password
 router.put(
   "/users/:id/password",

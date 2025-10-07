@@ -92,6 +92,7 @@ export interface iUser extends Document {
   customerId?: string;
   fidelity: Fidelity;
   language: string; // ✅ langue préférée de l'utilisateur
+  country: string;
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -233,9 +234,45 @@ const userSchema = new Schema<iUser>({
     refreshToken: { type: String },
     tokenExpiresAt: { type: Date },
   },
+  country: { type: String },
   language: {
     type: String,
-    enum: ["fr", "en", "es", "de", "it", "nl", "pt", "pl", "sv", "da", "fi"],
+    enum: [
+      'ar',
+      'be',
+      'bn',
+      'ca',
+      'da',
+      'de',
+      'en',
+      'es',
+      'et',
+      'eu',
+      'fa',
+      'fi',
+      'fr',
+      'gl',
+      'hi',
+      'id',
+      'it',
+      'ja',
+      'ko',
+      'ku',
+      'ms',
+      'nl',
+      'pl',
+      'pt',
+      'ro',
+      'ru',
+      'so',
+      'sq',
+      'sv',
+      'th',
+      'tl',
+      'tr',
+      'uk',
+      'vi',
+      'zh'],
     default: "fr", // ✅ valeur par défaut
   },
 });

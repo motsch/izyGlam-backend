@@ -45,6 +45,7 @@ export interface iShop extends mongoose.Document {
   maxDistance: number;
   idUser: string;
   services: string[];
+  country: string;
   deliveryPostalCodes?: string[];
   trad: string;
   ondaybooking: boolean;
@@ -90,6 +91,7 @@ const defaultDaySchedule: DaySchedule = {
 const shopSchema = new Schema<iShop>(
   {
     name: { type: String, required: true },
+    country: { type: String, required: true },
     description: { type: String, required: true },             // texte final affiché côté app
     description_original: { type: String, required: false },    // trace avant correction
     image: { type: String, required: true, default: "default.png" },

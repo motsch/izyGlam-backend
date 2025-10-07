@@ -45,6 +45,7 @@ const getUserInfo = async (
       favoriteShops: any[];
       fidelity: any[];
       abonnement: string;
+      country: string;
     }) => void;
   }
 ) => {
@@ -67,6 +68,7 @@ const getUserInfo = async (
       bank: any;
       favoriteShops: any[];
       fidelity: any;
+      country: string;
       _id: string;
     };
     const token = req.header("Authorization");
@@ -116,6 +118,7 @@ const getUserInfo = async (
             fidelity,
             abonnement,
             conversationId,
+            country,
           } = user;
 
           logger.info({ msg: "user.getInfo.success", userId: _id?.toString() });
@@ -135,6 +138,7 @@ const getUserInfo = async (
             companyId,
             favoriteShops,
             fidelity,
+            country,
             _id,
           } as UserInfo);
         } else {
@@ -433,6 +437,47 @@ export const resetPassword = async (req: express.Request, res: express.Response)
   }
 };
 
+/**
+ * PUT /users-country-update/:id
+ * Body: { country: string }
+ */
+export const updateUserCountryById = async (req: express.Request, res: express.Response) => {
+  try {
+    const userId = req.params.id?.trim();
+    const { country } = (req.body || {}) as { country?: string };
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID manquant dans l’URL.' });
+    }
+    if (!country || typeof country !== 'string' || !country.trim()) {
+      return res.status(400).json({ message: 'Paramètre "country" invalide.' });
+    }
+
+    // 1) Récupère le user par son ID
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur introuvable.' });
+    }
+
+    // 2) Met à jour le champ
+    user.country = country.trim();
+
+    // 3) Sauvegarde
+    await user.save();
+
+    // 4) Nettoie la réponse (pas de champs sensibles)
+    const { password, resetPasswordToken, resetPasswordExpires, emailVerificationToken, emailVerificationExpires, ...safeUser } =
+      user.toObject();
+
+    return res.json({
+      message: 'Country mis à jour avec succès.',
+      user: safeUser,
+    });
+  } catch (err: any) {
+    console.error('Erreur updateUserCountryById:', err);
+    return res.status(500).json({ message: 'Erreur serveur.', error: err?.message });
+  }
+};
 /* --------------------------
    Create user (send verify)
 --------------------------- */
@@ -1313,6 +1358,7 @@ module.exports = {
   subscribeToPlan,
   getSubscriptionInfo,
   removeEmployeeFromBoss,
+  updateUserCountryById,
   verifyEmail,
   resendVerificationEmail,
   createAndAddEmployeeToBoss,
