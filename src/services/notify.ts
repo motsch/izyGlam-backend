@@ -233,7 +233,7 @@ const CHAT_TEXT_BODY_I18N: Record<string, (sender: string, preview: string) => s
 // --- Firebase Admin (une seule init) ---
 if (!admin.apps.length) {
   const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-  if (!b4) throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 manquant'); // <-- correct var below; keep type safety
+  if (!b64) throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 manquant'); // <-- correct var below; keep type safety
 }
 // Fix: correct typo (keep above block readable)
 if (!admin.apps.length) {
