@@ -58,6 +58,9 @@ export interface iUser extends Document {
     floor: string;
     main: boolean;
   }>;
+  createdAt: string;
+  updatedAt: string;
+  lastSeen: string;
   role: "user" | "entreprise" | "professionnel" | "admin" | "boss";
   managerId?: string; // ID du patron si ce user est un employé
   employeesIds?: string[]; // Liste des IDs des employés si ce user est un boss
@@ -119,6 +122,11 @@ const userSchema = new Schema<iUser>({
   companyId: { type: String, required: false },
   active: { type: Boolean, default: false }, // ✅ par défaut à false
   emailVerificationToken: { type: String },
+
+
+  createdAt: { type: String },
+  updatedAt: { type: String },
+  lastSeen: { type: String },
   emailVerificationExpires: { type: Date },
   abonnement: {
     type: String,
