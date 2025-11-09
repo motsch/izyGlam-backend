@@ -504,29 +504,41 @@ export const updateUserCountryById = async (req: express.Request, res: express.R
 export const createUser = async (req: express.Request, res: express.Response) => {
   try {
     logger.info({ msg: "user.create.start" });
+
     const payload = { ...req.body };
     const lang = resolveLang(req);
 
+    // ne jamais faire confiance au client pour ces champs
     delete (payload as any).active;
     delete (payload as any).emailVerificationToken;
     delete (payload as any).emailVerificationExpires;
 
+    // user inactif tant qu'il n'a pas validé l'email
     const newUser = new UserModel({ ...payload, active: false });
 
+    // token de vérification valable 1h
     const token = randomBytes(32).toString("hex");
     newUser.emailVerificationToken = token;
     newUser.emailVerificationExpires = new Date(Date.now() + 3600000);
     newUser.createdAt = new Date().toString();
     await newUser.save();
 
+    // lien d’activation
     const verifyLink = `${FRONTEND_URL}/verify-email?token=${token}`;
-    const { subject, html } = renderEmailHTML("verify", lang, verifyLink, new Date().getFullYear());
+
+    // rendu i18n de l’email (HTML + subject)
+    const { subject, html } = renderEmailHTML(
+      "verify",
+      lang,
+      verifyLink,
+      new Date().getFullYear()
+    );
 
     const transporter = makeTransport();
 
-    // ✅ Chemin d’asset robuste: part de la racine du projet (process.cwd())
+    // ✅ Chemin robuste depuis la racine du projet (dev & prod)
     const logoPath = path.resolve(process.cwd(), "uploads/images/logo/logo.png");
-    const attachments: any[] = [];
+    const attachments: Array<{ filename: string; path: string; cid: string }> = [];
 
     if (fs.existsSync(logoPath)) {
       attachments.push({ filename: "logo.png", path: logoPath, cid: "logo" });
@@ -539,9 +551,10 @@ export const createUser = async (req: express.Request, res: express.Response) =>
       to: newUser.email,
       subject,
       html,
-      attachments, // n’envoie la pièce jointe que si présente
+      attachments, // seulement si le logo existe
     });
 
+    // renvoyer un user "safe" (pas de secrets)
     const safeUser = newUser.toObject();
     delete (safeUser as any).password;
     delete (safeUser as any).emailVerificationToken;
