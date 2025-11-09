@@ -7,6 +7,7 @@ export interface iCategory extends mongoose.Document {
   icon: string;
   trad: string;
   color: string;
+  filter: string;
   position: number;
   active: boolean;
 }
@@ -14,6 +15,7 @@ export interface iCategory extends mongoose.Document {
 const categorySchema = new mongoose.Schema<iCategory>({
   name: { type: String, required: true },
   description: { type: String, required: true },
+  filter: { type: String, required: true },
   descriptionTrad: { type: String, required: true },
   icon: { type: String, required: true },
   trad: { type: String, required: true },

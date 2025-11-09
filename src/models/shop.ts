@@ -36,6 +36,7 @@ export interface iShop extends mongoose.Document {
   minimumDelay: string;
   type: string;
   ville: string;
+  filter: string;
   district?: string;
   reviews: Array<{
     user: mongoose.Types.ObjectId;
@@ -92,7 +93,8 @@ const shopSchema = new Schema<iShop>(
   {
     name: { type: String, required: true },
     country: { type: String, required: true },
-    description: { type: String, required: true },             // texte final affiché côté app
+    description: { type: String, required: true },
+    filter: { type: String, required: true },            // texte final affiché côté app
     description_original: { type: String, required: false },    // trace avant correction
     image: { type: String, required: true, default: "default.png" },
     note: { type: String, required: true },
@@ -204,4 +206,4 @@ shopSchema.index({ active: 1 });
 shopSchema.index({ "moderation.desc.safe": 1 });
 
 const shopModel = mongoose.model<iShop>("Shop", shopSchema);
-export default shopModel;
+export default shopModel;
