@@ -537,7 +537,7 @@ export const createUser = async (req: express.Request, res: express.Response) =>
     const transporter = makeTransport();
 
     // ✅ Chemin robuste depuis la racine du projet (dev & prod)
-    const logoPath = path.resolve(process.cwd(), "uploads/images/logo/logo.png");
+    const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
     const attachments: Array<{ filename: string; path: string; cid: string }> = [];
 
     if (fs.existsSync(logoPath)) {
