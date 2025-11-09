@@ -196,7 +196,7 @@ mongoose
 
 // Démarrer le serveur HTTP (et donc WS aussi)
 server.listen(port, () => {
-  console.log(`✅ Serveur HTTP + WebSocket démarré sur http://localhost:${port}`);
+  console.log(`✅ Serveur HTTP + WebSocket démarré sur https://izyglam.com`);
 });
 
 const seedCities = async () => {

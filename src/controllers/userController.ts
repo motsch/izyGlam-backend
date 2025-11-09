@@ -8,7 +8,7 @@ import { logger } from "../utils/logger";
 import { randomBytes } from "node:crypto";
 import { makeTransport } from "../utils/mailer";
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:4200";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://izyglam.com";
 
 // import
 require("dotenv").config();
