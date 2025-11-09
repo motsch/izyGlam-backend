@@ -1,4 +1,5 @@
 import UserModel from "../models/user";
+import fs from "fs";
 import * as express from "express";
 import axios from 'axios';
 import path from "path"; // Pour manipuler les chemins locaux
@@ -7,7 +8,6 @@ import { resolveLang } from "../i18n/resolveLang";
 import { logger } from "../utils/logger";
 import { randomBytes } from "node:crypto";
 import { makeTransport } from "../utils/mailer";
-
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://izyglam.com";
 
 // import
@@ -523,14 +523,23 @@ export const createUser = async (req: express.Request, res: express.Response) =>
     const { subject, html } = renderEmailHTML("verify", lang, verifyLink, new Date().getFullYear());
 
     const transporter = makeTransport();
-    const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
+
+    // ✅ Chemin d’asset robuste: part de la racine du projet (process.cwd())
+    const logoPath = path.resolve(process.cwd(), "uploads/images/logo/logo.png");
+    const attachments: any[] = [];
+
+    if (fs.existsSync(logoPath)) {
+      attachments.push({ filename: "logo.png", path: logoPath, cid: "logo" });
+    } else {
+      logger.warn({ msg: "email.logo.missing", triedPath: logoPath });
+    }
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM || `IzyGlam <${process.env.SMTP_USER}>`,
       to: newUser.email,
       subject,
       html,
-      attachments: [{ filename: "logo.png", path: logoPath, cid: "logo" }],
+      attachments, // n’envoie la pièce jointe que si présente
     });
 
     const safeUser = newUser.toObject();
