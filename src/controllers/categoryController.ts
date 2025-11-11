@@ -77,37 +77,72 @@ const calculateDistance = (
 const normalizeCountry = (v: any): string | undefined =>
   typeof v === 'string' && v.trim() ? v.trim().toUpperCase() : undefined;
 
+
+// Helpers
+function toSlug(value?: any): string | null {
+  if (!value) return null;
+  return String(value).trim().toLowerCase();
+}
+
+// SHOPTYPE.X -> x
+function slugFromTrad(trad?: string | null): string | null {
+  if (!trad) return null;
+  const m = String(trad).match(/^[A-Z_]+\.(.+)$/i);
+  if (!m || !m[1]) return null;
+  return toSlug(m[1]);
+}
+
+// Parse "codes" (string "75001,75002" | array)
+function parsePostalCodes(codesParam: unknown): string[] {
+  if (!codesParam) return [];
+  if (typeof codesParam === "string") {
+    return codesParam.split(",").map(c => c.trim()).filter(Boolean);
+  }
+  if (Array.isArray(codesParam)) {
+    return (codesParam as string[]).map(c => c.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 export const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
   try {
     const { lat, lon, codes, country } = req.query;
+    const hasGeo = lat != null && lon != null;
+    const postalCodes = parsePostalCodes(codes);
 
     const countryQuery = buildCountryQuery(country);
 
-    // 1) Pré-check pays : si fourni et aucun shop -> renvoie [] tout de suite
+    // 1) Pré-check pays (cohérent prod)
     if (countryQuery) {
       const countryCount = await ShopModel.countDocuments({
         ...countryQuery,
-        // si tu veux être cohérent avec la prod :
         active: true,
         status: "approved",
       });
       if (countryCount === 0) {
-        return res.json([]); // pour /category/available on renvoie un array de catégories vide
+        return res.json([]); // aucune boutique dans ce pays
       }
     }
 
-    // 2) Base query (réduit le set dès le départ)
+    // 2) Base query (cohérente prod)
     const baseQuery: any = {
       ...(countryQuery ?? {}),
-      // idem : filtre prod si souhaité
-      // active: true,
-      // status: "approved",
+      active: true,
+      status: "approved",
     };
 
-    let shops = await ShopModel.find(baseQuery).lean();
+    // 3) Si filtres "codes" (et PAS de géoloc), on laisse Mongo pré-filtrer
+    if (!hasGeo && postalCodes.length > 0) {
+      baseQuery.deliveryPostalCodes = { $in: postalCodes };
+    }
 
-    // 3) Filtre géo OU codes (inchangé)
-    if (lat && lon) {
+    // 4) Sélection minimale pour charger moins de data
+    let shops = await ShopModel.find(baseQuery)
+      .select("filter type trad location.maxDistance location.latitude location.longitude deliveryPostalCodes")
+      .lean();
+
+    // 5) Filtre géographique OU filtre strict par codes (comme avant)
+    if (hasGeo) {
       const clientLatitude = parseFloat(lat as string);
       const clientLongitude = parseFloat(lon as string);
 
@@ -122,28 +157,38 @@ export const getCategoriesWithAvailableShops = async (req: Request, res: Respons
         return typeof shop.maxDistance === "number" && distance <= shop.maxDistance;
       });
 
-    } else if (codes) {
-      let postalCodes: string[] = [];
-      if (typeof codes === "string") postalCodes = (codes as string).split(",").map((c) => c.trim()).filter(Boolean);
-      else if (Array.isArray(codes)) postalCodes = (codes as string[]).map((c) => c.trim()).filter(Boolean);
-
+    } else if (postalCodes.length > 0) {
+      // stricte vérification côté Node (au cas où)
       shops = shops.filter((shop: any) => {
         if (!Array.isArray(shop.deliveryPostalCodes)) return false;
-        return shop.deliveryPostalCodes.some((deliveryCode: string) => postalCodes.includes(deliveryCode));
+        return shop.deliveryPostalCodes.some((d: string) => postalCodes.includes(d));
       });
     }
 
-    // 4) Trad keys -> catégories
-    const tradKeys = [...new Set(shops.map((s: any) => s.trad).filter(Boolean))];
-    if (tradKeys.length === 0) return res.json([]);
+    // 6) Construire la liste des slugs de catégories à partir des shops
+    // Priorité : shop.filter -> shop.type -> suffixe de shop.trad
+    const slugSet = new Set<string>();
+    for (const s of shops) {
+      const slug = toSlug(s.filter) || toSlug(s.type) || slugFromTrad(s.trad);
+      if (slug) slugSet.add(slug);
+    }
 
+    const slugs = [...slugSet];
+    if (slugs.length === 0) {
+      return res.json([]); // aucun shop éligible => aucune catégorie
+    }
+
+    // 7) Récupérer les catégories correspondantes (actives), triées par position
     const categories = await CategoryModel.find({
-      trad: { $in: tradKeys },
-      // active: true, // si besoin
-    });
+      filter: { $in: slugs },
+      active: true, // commente si tu veux tout, même inactives
+    })
+      .sort({ position: 1 })
+      .lean();
 
     return res.json(categories);
   } catch (error: any) {
+    // ton logger
     logger.error({
       msg: "getCategoriesWithAvailableShops.failed",
       errorMessage: error?.message,
@@ -151,7 +196,6 @@ export const getCategoriesWithAvailableShops = async (req: Request, res: Respons
       route: req.originalUrl,
       method: req.method,
     });
-
     return res.status(500).json({ message: "Erreur lors de la récupération des catégories disponibles" });
   }
 };

@@ -1,4 +1,5 @@
 import UserModel from "../models/user";
+import fs from "fs";
 import * as express from "express";
 import axios from 'axios';
 import path from "path"; // Pour manipuler les chemins locaux
@@ -7,8 +8,7 @@ import { resolveLang } from "../i18n/resolveLang";
 import { logger } from "../utils/logger";
 import { randomBytes } from "node:crypto";
 import { makeTransport } from "../utils/mailer";
-
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:4200";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://izyglam.com";
 
 // import
 require("dotenv").config();
@@ -43,9 +43,11 @@ const getUserInfo = async (
       address: any[];
       proches: any[];
       favoriteShops: any[];
-      fidelity: any[];
+      fidelity: any;
       abonnement: string;
       country: string;
+      _id: string;
+      lastSeen?: string; // ✅ pour exposer lastSeen si tu veux
     }) => void;
   }
 ) => {
@@ -70,15 +72,17 @@ const getUserInfo = async (
       fidelity: any;
       country: string;
       _id: string;
+      lastSeen?: string; // ✅
     };
-    const token = req.header("Authorization");
 
-    if (!token) {
+    const rawAuth = req.header("Authorization");
+    if (!rawAuth) {
       logger.warn({ msg: "user.getInfo.missingToken" });
-      return res
-        .status(401)
-        .json({ message: "Token d'authentification manquant" });
+      return res.status(401).json({ message: "Token d'authentification manquant" });
     }
+
+    // ✅ Support "Bearer x.y.z" ou token brut
+    const token = rawAuth.startsWith("Bearer ") ? rawAuth.slice(7) : rawAuth;
 
     jwt.verify(
       token,
@@ -86,9 +90,7 @@ const getUserInfo = async (
       async (err: any, decodedToken: { userId: any }) => {
         if (err) {
           logger.warn({ msg: "user.getInfo.invalidToken" });
-          return res
-            .status(403)
-            .json({ message: "Token d'authentification invalide" });
+          return res.status(403).json({ message: "Token d'authentification invalide" });
         }
 
         const userId = decodedToken.userId;
@@ -101,6 +103,21 @@ const getUserInfo = async (
               message: "Votre compte n’est pas encore activé. Veuillez vérifier vos emails."
             });
           }
+
+          // ✅ Met à jour lastSeen (et updatedAt) AVANT de répondre
+          try {
+            const nowIso = new Date().toISOString();
+            user.lastSeen = nowIso;
+            user.updatedAt = nowIso; // utile vu que tu n'as pas { timestamps:true }
+            await user.save();
+          } catch (saveErr: any) {
+            // On log juste : ne bloque pas la réponse utilisateur
+            logger.error({
+              msg: "user.getInfo.lastSeenUpdateFailed",
+              errorMessage: saveErr?.message,
+            });
+          }
+
           const {
             lastname,
             email,
@@ -119,6 +136,7 @@ const getUserInfo = async (
             abonnement,
             conversationId,
             country,
+            lastSeen, // ✅ on le renvoie si besoin
           } = user;
 
           logger.info({ msg: "user.getInfo.success", userId: _id?.toString() });
@@ -140,6 +158,7 @@ const getUserInfo = async (
             fidelity,
             country,
             _id,
+            lastSeen, // ✅
           } as UserInfo);
         } else {
           logger.warn({ msg: "user.getInfo.notFound", userId });
@@ -155,6 +174,7 @@ const getUserInfo = async (
     });
   }
 };
+
 
 const refreshToken = async (
   req: { userId: any },
@@ -484,34 +504,57 @@ export const updateUserCountryById = async (req: express.Request, res: express.R
 export const createUser = async (req: express.Request, res: express.Response) => {
   try {
     logger.info({ msg: "user.create.start" });
+
     const payload = { ...req.body };
     const lang = resolveLang(req);
 
+    // ne jamais faire confiance au client pour ces champs
     delete (payload as any).active;
     delete (payload as any).emailVerificationToken;
     delete (payload as any).emailVerificationExpires;
 
+    // user inactif tant qu'il n'a pas validé l'email
     const newUser = new UserModel({ ...payload, active: false });
 
+    // token de vérification valable 1h
     const token = randomBytes(32).toString("hex");
     newUser.emailVerificationToken = token;
     newUser.emailVerificationExpires = new Date(Date.now() + 3600000);
+    newUser.createdAt = new Date().toString();
     await newUser.save();
 
+    // lien d’activation
     const verifyLink = `${FRONTEND_URL}/verify-email?token=${token}`;
-    const { subject, html } = renderEmailHTML("verify", lang, verifyLink, new Date().getFullYear());
+
+    // rendu i18n de l’email (HTML + subject)
+    const { subject, html } = renderEmailHTML(
+      "verify",
+      lang,
+      verifyLink,
+      new Date().getFullYear()
+    );
 
     const transporter = makeTransport();
+
+    // ✅ Chemin robuste depuis la racine du projet (dev & prod)
     const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
+    const attachments: Array<{ filename: string; path: string; cid: string }> = [];
+
+    if (fs.existsSync(logoPath)) {
+      attachments.push({ filename: "logo.png", path: logoPath, cid: "logo" });
+    } else {
+      logger.warn({ msg: "email.logo.missing", triedPath: logoPath });
+    }
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM || `IzyGlam <${process.env.SMTP_USER}>`,
       to: newUser.email,
       subject,
       html,
-      attachments: [{ filename: "logo.png", path: logoPath, cid: "logo" }],
+      attachments, // seulement si le logo existe
     });
 
+    // renvoyer un user "safe" (pas de secrets)
     const safeUser = newUser.toObject();
     delete (safeUser as any).password;
     delete (safeUser as any).emailVerificationToken;
@@ -830,17 +873,21 @@ const updateUserById = async (req: any, res: express.Response) => {
   try {
     const { id } = req.params;
     logger.info({ msg: "user.update.start", id });
-    const updates = { ...req.body };
 
+    // Copie des champs reçus
+    const updates: Record<string, any> = { ...req.body };
+
+    // On protège certains champs sensibles (mais on LAISSE passer 'active')
     delete (updates as any).password;
     delete (updates as any)._id;
     delete (updates as any).email;
-    delete (updates as any).active;
     delete (updates as any).emailVerificationToken;
     delete (updates as any).emailVerificationExpires;
     delete (updates as any).role;
 
-    const token = req.header("Authorization");
+    // Récupération du token (support "Bearer xxx")
+    const rawAuth = req.header("authorization") || req.header("Authorization");
+    const token = rawAuth?.replace(/^Bearer\s+/i, "");
     if (!token) {
       logger.warn({ msg: "user.update.missingToken", id });
       return res.status(401).json({ message: "Token d'authentification manquant" });
@@ -848,32 +895,44 @@ const updateUserById = async (req: any, res: express.Response) => {
 
     jwt.verify(
       token,
-      process.env.SECRET_KEY,
+      process.env.SECRET_KEY as string,
       async (err: any, decodedToken: { userId: string; role: string }) => {
         if (err) {
           logger.warn({ msg: "user.update.invalidToken", id });
           return res.status(403).json({ message: "Token d'authentification invalide" });
         }
 
+        // Marque la MÀJ
+        updates.updatedAt = new Date().toISOString();
+
+        // ⚠️ Si tu veux réserver la MÀJ de 'active' à un rôle précis, décommente et adapte :
+        // if (typeof updates.active !== "undefined" && decodedToken.role !== "admin") {
+        //   delete updates.active;
+        // }
+
         const updatedUser = await UserModel.findByIdAndUpdate(
           id,
-          updates,
-          { new: true, runValidators: true }
+          { $set: updates },
+          { new: true, runValidators: true, context: "query" }
         );
 
         if (!updatedUser) {
           logger.warn({ msg: "user.update.notFound", id });
-          return res.status(404).json({ message: "Utilisateur non trouvé 666" });
+          return res.status(404).json({ message: "Utilisateur non trouvé" });
         }
 
         logger.info({ msg: "user.update.success", id });
-        res.json(updatedUser);
+        return res.json(updatedUser);
       }
     );
   } catch (error: any) {
-    logger.error({ msg: "user.update.error", id: req?.params?.id, errorMessage: error?.message, stack: error?.stack });
-    console.error(error);
-    res.status(500).json({ message: "Erreur serveur lors de la mise à jour" });
+    logger.error({
+      msg: "user.update.error",
+      id: req?.params?.id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({ message: "Erreur serveur lors de la mise à jour" });
   }
 };
 

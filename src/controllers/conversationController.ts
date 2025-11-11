@@ -684,99 +684,85 @@ const getSupportMessages = async (req: express.Request, res: express.Response) =
   }
 };
 
+// Helper de stringify robuste pour les logs
+const j = (o: any) => {
+  try { return JSON.stringify(o); } catch { return String(o); }
+};
+
 /**
  * Ajouter un message à la conversation Support (avec éventuelle réponse de l’agent)
+ * Version simple + logs explicites + stringify sûr
  */
 const addSupportMessage = async (req: express.Request, res: express.Response) => {
   try {
     const { content, messageType, mediaUrl, clientId, language, conversationId } = req.body;
 
+    // URL de l'agent en dur (réseau Docker interne)
+    const AGENT_URL = 'http://host.docker.internal:9000/support/reply';
+
     const authUser = (req as any).user || null;
     const userId = authUser?._id || authUser?.id || null;
 
     if (!content && !mediaUrl) {
-      logger.warn({
-        msg: "addSupportMessage empty message",
-        route: "POST /api/support/message",
-        method: req.method,
-        url: req.originalUrl,
-        body: sanitize(req.body),
-      });
+      logger.warn('[support] empty message ' + j({ bodyKeys: Object.keys(req.body || {}) }));
       return res.status(400).json({ message: "Message vide" });
     }
 
     if (!SUPPORT_USER_ID) {
-      logger.error({
-        msg: "addSupportMessage missing SUPPORT_USER_ID",
-        route: "POST /api/support/message",
-        method: req.method,
-        url: req.originalUrl,
-      });
+      logger.error('[support] missing SUPPORT_USER_ID');
       return res.status(500).json({ message: "Support non configuré (SUPPORT_USER_ID manquant)" });
     }
 
-    const supportOid = new mongoose.Types.ObjectId(String(SUPPORT_USER_ID));
-    let conversation: any = null;
+    let supportOid: mongoose.Types.ObjectId;
+    try {
+      supportOid = new mongoose.Types.ObjectId(String(SUPPORT_USER_ID));
+    } catch {
+      logger.error('[support] invalid SUPPORT_USER_ID ' + String(SUPPORT_USER_ID));
+      return res.status(500).json({ message: "SUPPORT_USER_ID invalide" });
+    }
 
-    // 1) Conversation fournie
+    // ---- 0) Récupérer / créer la conversation
+    let conversation: any = null;
     if (conversationId) {
       conversation = await ConversationModel.findById(conversationId);
       if (!conversation) {
-        logger.warn({
-          msg: "addSupportMessage conversationId not found",
-          route: "POST /api/support/message",
-          method: req.method,
-          url: req.originalUrl,
-          conversationId,
-        });
+        logger.warn('[support] conversationId not found ' + conversationId);
         return res.status(404).json({ message: "Conversation Support non trouvée" });
       }
-      if ((conversation.name || "").toLowerCase() !== "support") {
-        logger.warn({
-          msg: "addSupportMessage conversation not support",
-          route: "POST /api/support/message",
-          method: req.method,
-          url: req.originalUrl,
-          conversationId,
-        });
+      if ((conversation.name || '').toLowerCase() !== 'support') {
+        logger.warn('[support] conversation not support ' + j({ conversationId, name: conversation.name }));
       }
     } else {
-      // 2) Sinon basée sur l'utilisateur authentifié
       if (!userId) {
-        logger.warn({
-          msg: "addSupportMessage missing userId",
-          route: "POST /api/support/message",
-          method: req.method,
-          url: req.originalUrl,
-        });
+        logger.warn('[support] missing userId');
         return res.status(400).json({ message: "Utilisateur non authentifié (userId manquant)" });
       }
       const uid = new mongoose.Types.ObjectId(String(userId));
-
       conversation = await ConversationModel.findOne({
         participants: { $all: [uid, supportOid] },
-        name: "Support",
+        name: 'Support',
       });
-
       if (!conversation) {
         conversation = new ConversationModel({
           participants: [uid, supportOid],
-          name: "Support",
-          language: language || "fr",
+          name: 'Support',
+          language: language || 'fr',
           messages: [],
         });
         await conversation.save();
-        logger.info({
-          msg: "addSupportMessage created conversation",
-          route: "POST /api/support/message",
-          method: req.method,
-          url: req.originalUrl,
-          conversationId: conversation._id?.toString(),
-        });
+        logger.info('[support] conversation created ' + String(conversation._id));
       }
     }
 
-    // ---- 1. Sauvegarder le message utilisateur ----
+    logger.info('[support] conversation loaded ' + j({
+      conversationId: String(conversation._id),
+      lang: conversation.language || language || 'fr',
+      messagesCount: conversation.messages?.length ?? 0
+    }));
+
+    // ---- 1) Sauvegarder le message utilisateur
+    const beforeUserCount = conversation.messages?.length ?? 0;
+
     const senderId = userId
       ? new mongoose.Types.ObjectId(String(userId))
       : conversation.participants.find((p: any) => String(p) !== String(SUPPORT_USER_ID));
@@ -784,8 +770,8 @@ const addSupportMessage = async (req: express.Request, res: express.Response) =>
     const newMessage: IMessage = {
       sender: senderId,
       content,
-      messageType: messageType || "text",
-      mediaUrl: mediaUrl || "",
+      messageType: messageType || 'text',
+      mediaUrl: mediaUrl || '',
       createdAt: new Date(),
       clientId,
     };
@@ -793,123 +779,145 @@ const addSupportMessage = async (req: express.Request, res: express.Response) =>
     conversation.messages.push(newMessage);
     await conversation.save();
 
-    const savedMsg = conversation.messages[conversation.messages.length - 1];
+    const afterUserCount = conversation.messages?.length ?? 0;
+    const savedMsg = conversation.messages[afterUserCount - 1];
 
-    // Diffusion WS
-    const payload = JSON.stringify({ topic: `conversation/${conversation._id}`, message: savedMsg });
-    rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
-      if (client.readyState === WebSocket.OPEN) client.send(payload);
-    });
+    logger.info('[support] user-message saved ' + j({
+      conversationId: String(conversation._id),
+      before: beforeUserCount,
+      after: afterUserCount,
+      userMessageId: String((savedMsg as any)?._id),
+      clientId
+    }));
 
-    // Notif push
+    // Diffusion WS (user) — simple et compatible Set/Array
+    try {
+      const roomKey = `conversation/${conversation._id}`;
+      const payload = JSON.stringify({ topic: roomKey, message: savedMsg });
+      let wsCount = 0;
+      (rooms as any)?.[roomKey]?.forEach?.((client: any) => {
+        wsCount++;
+        if (client.readyState === WebSocket.OPEN) client.send(payload);
+      });
+      logger.info('[support] ws user broadcast ' + j({ roomKey, wsCount }));
+    } catch (e: any) {
+      logger.error('[support] ws user broadcast failed ' + (e?.message || e));
+    }
+
+    // Notif push (user)
     notifyChatMessage(conversation, savedMsg).catch((e) =>
-      logger.error({
-        msg: "notifyChatMessage (user->support) failed",
-        route: "POST /api/support/message",
-        method: req.method,
-        url: req.originalUrl,
-        conversationId: conversation._id?.toString(),
-        messageId: (savedMsg as any)?._id?.toString(),
-        errorMessage: e?.message,
-        stack: e?.stack,
-      })
+      logger.error('[support] push (user->support) failed ' + j({
+        conversationId: String(conversation._id),
+        messageId: String((savedMsg as any)?._id),
+        error: e?.message
+      }))
     );
 
-    // ---- 2. Appeler l’agent IA pour une réponse éventuelle ----
+    // ---- 2) Appeler l’agent IA
     try {
-      const resp = await axios.post(SUPPORT_AGENT_URL, {
+      logger.info('[support] agent call ' + j({
+        url: AGENT_URL,
         conversationId: String(conversation._id),
-        lastMessageId: String((savedMsg as any)?._id),
-        lastMessageText: savedMsg.content,
-        language: language || conversation.language || "fr",
-        userId: String(senderId),
-      });
+        lastMessageId: String((savedMsg as any)?._id)
+      }));
 
-      if (resp.data?.action === "reply" && resp.data?.reply) {
+      const resp = await axios.post(
+        AGENT_URL,
+        {
+          conversationId: String(conversation._id),
+          lastMessageId: String((savedMsg as any)?._id),
+          lastMessageText: savedMsg.content,
+          language: language || conversation.language || 'fr',
+          userId: String(senderId),
+        },
+        { timeout: 25000 }
+      );
+
+      logger.info('[support] agent response ' + j({
+        status: resp?.status,
+        action: resp?.data?.action,
+        intent: resp?.data?.intent
+      }));
+
+      if (resp.data?.action === 'reply' && resp.data?.reply) {
+        const beforeAuto = conversation.messages?.length ?? 0;
+
         const autoReply: IMessage = {
           sender: new mongoose.Types.ObjectId(String(SUPPORT_USER_ID)),
           content: resp.data.reply,
-          messageType: "text",
+          messageType: 'text',
           createdAt: new Date(),
-          clientId: "",
+          clientId: '',
         };
+
         conversation.messages.push(autoReply);
         await conversation.save();
 
-        const savedReply = conversation.messages[conversation.messages.length - 1];
+        const afterAuto = conversation.messages?.length ?? 0;
+        const savedReply = conversation.messages[afterAuto - 1];
 
-        const replyPayload = JSON.stringify({ topic: `conversation/${conversation._id}`, message: savedReply });
-        rooms[`conversation/${conversation._id}`]?.forEach((client: any) => {
-          if (client.readyState === WebSocket.OPEN) client.send(replyPayload);
-        });
+        logger.info('[support] auto-reply saved ' + j({
+          conversationId: String(conversation._id),
+          before: beforeAuto,
+          after: afterAuto,
+          autoReplyId: String((savedReply as any)?._id),
+          replyPreview: String(resp.data.reply).slice(0, 120)
+        }));
 
+        // WS (auto)
+        try {
+          const roomKey = `conversation/${conversation._id}`;
+          const replyPayload = JSON.stringify({ topic: roomKey, message: savedReply });
+          let wsCount = 0;
+          (rooms as any)?.[roomKey]?.forEach?.((client: any) => {
+            wsCount++;
+            if (client.readyState === WebSocket.OPEN) client.send(replyPayload);
+          });
+          logger.info('[support] ws auto broadcast ' + j({ roomKey, wsCount }));
+        } catch (e: any) {
+          logger.error('[support] ws auto broadcast failed ' + (e?.message || e));
+        }
+
+        // Push (auto)
         notifyChatMessage(conversation, savedReply).catch((e) =>
-          logger.error({
-            msg: "notifyChatMessage (support->user) failed",
-            route: "POST /api/support/message",
-            method: req.method,
-            url: req.originalUrl,
-            conversationId: conversation._id?.toString(),
-            messageId: (savedReply as any)?._id?.toString(),
-            errorMessage: e?.message,
-            stack: e?.stack,
-          })
+          logger.error('[support] push (support->user) failed ' + j({
+            conversationId: String(conversation._id),
+            messageId: String((savedReply as any)?._id),
+            error: e?.message
+          }))
         );
-      } else if (resp.data?.action === "escalate") {
-        logger.warn({
-          msg: "addSupportMessage escalate requested",
-          route: "POST /api/support/message",
-          method: req.method,
-          url: req.originalUrl,
-          conversationId: conversation._id?.toString(),
-        });
+      } else if (resp.data?.action === 'escalate') {
+        logger.warn('[support] agent escalate ' + String(conversation._id));
       } else {
-        logger.info({
-          msg: "addSupportMessage noop from agent",
-          route: "POST /api/support/message",
-          method: req.method,
-          url: req.originalUrl,
-          conversationId: conversation._id?.toString(),
-        });
+        logger.info('[support] agent noop ' + String(conversation._id));
       }
     } catch (agentErr: any) {
-      logger.error({
-        msg: "support agent call failed",
-        route: "POST /api/support/message",
-        method: req.method,
-        url: req.originalUrl,
-        conversationId: conversation._id?.toString(),
-        errorName: agentErr?.name,
-        errorMessage: agentErr?.message,
-        stack: agentErr?.stack,
-      });
+      logger.error('[support] agent-call failed ' + j({
+        url: 'http://host.docker.internal:9000/support/reply',
+        status: agentErr?.response?.status,
+        data: agentErr?.response?.data,
+        code: agentErr?.code,          // ENOTFOUND / ECONNREFUSED / ETIMEDOUT
+        message: agentErr?.message
+      }));
       // on n'interrompt pas la réponse HTTP
     }
 
-    logger.info({
-      msg: "addSupportMessage success",
-      route: "POST /api/support/message",
-      method: req.method,
-      url: req.originalUrl,
-      conversationId: conversation._id?.toString(),
-      messageId: (savedMsg as any)?._id?.toString(),
-    });
+    logger.info('[support] addSupportMessage success ' + j({
+      conversationId: String(conversation._id),
+      userMessageId: String((savedMsg as any)?._id)
+    }));
 
     return res.status(200).json(savedMsg);
   } catch (error: any) {
-    logger.error({
-      msg: "addSupportMessage failed",
-      route: "POST /api/support/message",
-      method: req.method,
-      url: req.originalUrl,
-      body: sanitize(req.body),
-      errorName: error?.name,
-      errorMessage: error?.message,
-      stack: error?.stack,
-    });
-    res.status(500).json({ message: "Impossible d'ajouter le message Support" });
+    logger.error('[support] addSupportMessage failed ' + j({
+      name: error?.name,
+      message: error?.message,
+      stack: error?.stack
+    }));
+    return res.status(500).json({ message: "Impossible d'ajouter le message Support" });
   }
 };
+
 
 export {
   createConversation,
