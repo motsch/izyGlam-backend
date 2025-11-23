@@ -66,111 +66,213 @@ function generateDynamicSentence(tones: { name: string }[]): string {
     )} et ${lastTone!.toLowerCase()} ainsi que des posts promotionnels.`;
 }
 
-// Génération des posts mensuels via OpenAI en fonction du profil utilisateur
+// Génération des posts mensuels via OpenAI pour izyGlam
 export const generateMonthlyPostsWithOpenAI = async (
   userId: string,
   month: number,
   year: number,
   socialNetwork: string
 ) => {
-  // Cherche le profil actif de l'utilisateur
-  const userProfile = await ProfileModel.findOne({ userId, active: true });
-  if (!userProfile) {
-    throw new Error("Profil actif non trouvé pour cet utilisateur.");
-  }
-  console.log("userProfile : ", userProfile);
+  // On garde la notion de profil actif si tu veux gérer des droits plus tard,
+  // mais on ne se sert plus de ses champs pour construire le prompt.
 
-  /**
-   * Récupération de l'abonnement actif de l'utilisateur
-   * Vérification de l'abonnement actif de l'utilisateur
-   */
-
-  // En fonction de l'abonnement, déterminer le nombre de publications dans le mois.
+  // Pour l'instant : fréquence fixe. Tu pourras la lier à l'abonnement ensuite.
   const publicationFrequency = 8;
 
-  const tonSentence = generateDynamicSentence(userProfile.tones);
-  const highlightsSentence = generateDynamicHighlightsSentence(
-    userProfile.highlights
-  );
-  const categoriesSentence = generateDynamicCategoriesPrompt(
-    userProfile.categories
-  );
+  const socialNetworkLower = socialNetwork.toLowerCase();
 
-  // Crée un prompt personnalisé avec les informations du profil utilisateur
+  let networkInstructions = "";
+
+  if (socialNetworkLower === "instagram") {
+    networkInstructions = `
+OBJECTIF POUR INSTAGRAM (izyGlam)
+- Cible principale : prestataires beauté indépendants (esthéticiennes, coiffeuses à domicile, prothésistes ongulaires, coiffeurs à domicile, maquilleuses, etc.).
+- But : leur donner envie de rejoindre et d'utiliser la plateforme izyGlam pour développer leur activité.
+- Chaque post doit :
+  - Mettre en avant la sécurité, la simplicité et la fiabilité d'izyGlam.
+  - Expliquer comment izyGlam les aide à lancer ou structurer leur activité sans stress (gestion du planning, prise de rendez-vous en ligne, communication avec les clients, suivi des réservations, etc.).
+  - Rassurer les prestataires qui débutent (peur de ne pas trouver de clients, peur de ne pas être légitimes, peur de la paperasse, peur de se lancer seules, etc.).
+  - Donner des exemples concrets de situations du quotidien d'une prestataire à domicile et montrer comment izyGlam simplifie ces situations.
+  - Inclure des appels à l'action clairs pour inciter à s'inscrire sur izyGlam, à créer son premier salon ou à visiter le site.
+- Ton à privilégier : humain, chaleureux, bienveillant, motivant, très concret.
+- Longueur des légendes : entre 80 et 150 mots, avec une mini histoire, un exemple précis ou un angle clair (pas de texte générique, pas de cliché).
+`;
+  } else if (socialNetworkLower === "linkedin") {
+    networkInstructions = `
+OBJECTIF POUR LINKEDIN (izyGlam)
+- Cible principale : entreprises, services RH, CSE, dirigeants, hôtels, salles de sport, centres de bien-être, réseaux de franchises, etc.
+- But : leur montrer pourquoi proposer izyGlam à leurs salariés ou à leurs clients est un levier intelligent de bien-être, d'expérience client et de marque employeur.
+- Chaque post doit :
+  - Expliquer la valeur business d'izyGlam : amélioration du bien-être au travail, réduction du stress, avantage salarié différenciant, fidélisation des talents, valorisation de la qualité de vie au travail, amélioration de l'expérience client, image de marque moderne et innovante.
+  - Mettre en scène des cas concrets : par exemple un CSE qui propose des prestations beauté à domicile à tarif préférentiel pour les salariés, un hôtel qui offre l'accès à izyGlam à ses clients, une entreprise qui intègre izyGlam dans sa politique QVCT.
+  - Structurer le texte comme un vrai post LinkedIn :
+    1. Accroche forte en une à deux phrases qui interpellent la réalité du lecteur (RH, dirigeant, etc.).
+    2. Développement avec arguments clairs, chiffres potentiels ou exemples concrets de mises en situation.
+    3. Conclusion avec un appel à l'action explicite (demander une démo, prendre contact, en parler à son service RH, tester izyGlam pour un pilote, etc.).
+  - Varier les angles : rétention des talents, réduction du stress, différenciation de la marque employeur, bénéfices pour les clients, innovation dans les avantages, etc.
+- Ton à privilégier : professionnel, stratégique, sérieux mais accessible, avec une vraie profondeur de réflexion.
+- Longueur des textes : entre 150 et 300 mots.
+`;
+  } else {
+    networkInstructions = `
+OBJECTIF GÉNÉRIQUE (izyGlam)
+- Adapter le message au réseau social ${socialNetwork}.
+- Toujours rester centré sur izyGlam, plateforme de mise en relation entre clients et prestataires beauté à domicile.
+- Mettre en avant : sécurité, simplicité, outils pour structurer l'activité, valeur ajoutée pour les clients et pour les entreprises.
+`;
+  }
+
   const prompt = `
-Agis comme un créateur de contenu pour les réseaux sociaux. J'ai besoin d'un calendrier de contenu pour ${socialNetwork}, contenant ${publicationFrequency} publications.
-${categoriesSentence}
-${highlightsSentence}
-${tonSentence}
+Tu es un expert senior en stratégie social media et en copywriting émotionnel pour la marque izyGlam.
 
-Chaque post doit inclure :
-- une légende (en ${userProfile.language})
-- une date et une heure de diffusion idéale pour un post de ${userProfile.activity.name} sur ${socialNetwork}. Ce post sera à à destination du pays : ${userProfile.country}
-- une suggestion d'image en ${userProfile.language}
-- un prompt d'image (en anglais) pour Midjourney, avec description, mots-clés de style (en ${userProfile.language}), type de caméra (en ${userProfile.language}), objectif (en ${userProfile.language}), et techniques de post-traitement (en ${userProfile.language}). Le style de l'image sera ${userProfile.visualStyle}, toujours en FULL HD.
+QUI EST IZYGLAM
+- izyGlam est une plateforme qui met en relation des clients et des prestataires beauté à domicile (coiffure, esthétique, maquillage, manucure, massages bien-être, etc.).
+- La promesse d'izyGlam :
+  - Aider les prestataires à se lancer et à structurer leur activité sans stress.
+  - Offrir aux clients une expérience fluide, rassurante et qualitative.
+  - Permettre aux entreprises de proposer des services de bien-être à domicile à leurs équipes ou à leurs clients.
 
-Certain posts (10%), aborderont cette spécificité: ${userProfile.introduction} 
+OBJECTIF DE LA MISSION
+- Tu dois générer un calendrier éditorial complet pour ${socialNetwork}, avec ${publicationFrequency} publications pour le mois ${month}/${year}.
+- Le calendrier doit être pensé spécifiquement pour izyGlam, pas pour un autre type de business (pas de restaurant, pas d'exemples hors beauté à domicile).
 
-### Structure des publications :
-La réponse doit fournir le calendrier sous une structure unique, sans découpage ni balises inutiles. Voici un exemple de format :
+CONTRAINTE DE LANGUE
+- Tous les textes destinés à l'humain doivent être en français :
+  - "caption"
+  - "hashtags"
+  - "suggested_image"
+  - "image_prompt.style_keywords"
+  - "image_prompt.camera"
+  - "image_prompt.lens"
+  - "image_prompt.post_processing"
+- Seule exception : "image_prompt.description" doit être en anglais, car c'est un prompt pour Midjourney.
+- Le français doit être naturel, fluide, précis et crédible, comme un véritable community manager expérimenté.
+
+CONTRAINTE TYPOGRAPHIQUE
+- N'utilise JAMAIS le caractère suivant : "–" (tiret moyen).
+- Utilise UNIQUEMENT le tiret classique "-" si tu as besoin d'un tiret.
+- Évite les symboles exotiques qui pourraient donner une impression de texte artificiel.
+
+${networkInstructions}
+
+CONTRAINTE QUALITÉ RÉDACTIONNELLE
+- Chaque légende doit donner l'impression d'avoir été écrite par un humain expert en social media dans le domaine de la beauté et du bien-être.
+- Les textes doivent être travaillés, nuancés, avec un vrai raisonnement marketing et psychologique :
+  - peurs des prestataires (manque de clients, instabilité, peur de se lancer),
+  - désirs (liberté, clients réguliers, image professionnelle),
+  - objections (peur de la technologie, peur de la plateforme),
+  - bénéfices concrets (gain de temps, meilleure organisation, visibilité).
+- Varie les accroches, les structures de phrase, le vocabulaire et les appels à l'action.
+- Évite les formulations génériques ou plates (par exemple : "Voici quelques conseils" ou "Dans cet article, nous allons...").
+- N'écris jamais "en tant qu'IA" ou quoi que ce soit qui laisse penser que le texte est généré automatiquement.
+- Utilise le nom izyGlam quand c'est pertinent, sans le sur-utiliser dans toutes les phrases.
+
+SPÉCIFICITÉ À MENTIONNER DANS ENVIRON 10 POUR CENT DES POSTS
+- Certains posts (environ 10 pour cent) doivent mettre en avant une spécificité ou un exemple concret de prestataire utilisant izyGlam (par exemple : "une esthéticienne qui se lance à domicile grâce à izyGlam", "une coiffeuse à domicile qui structure son planning grâce à izyGlam").
+- Ces posts doivent rester réalistes, crédibles et inspirants.
+
+CONTRAINTE FORMAT & JSON
+Tu dois renvoyer STRICTEMENT un objet JSON valide, sans aucun texte avant ou après.
+- Utilise uniquement des doubles guillemets " pour toutes les clés et toutes les valeurs de type string.
+- Ne rajoute aucun commentaire.
+- Respecte exactement cette structure :
 
 {
   "content_calendar": [
     {
       "type": "ton. ex: engaging",
       "date": "date idéale de publication pour le mois de ${month}",
-      heure: "heure de publication idéale pour ce post",
-      "caption": "Texte sur le ton désiré, dans la langue désirée.",
-      "hashtags": ["hashtag", "hashtag", "hashtag"],
-      "suggested_image": "Description de l'image, dans la langue désirée",
+      "heure": "heure de publication idéale pour ce post au format HH:MM",
+      "caption": "Texte du post en français, sur le ton désiré.",
+      "hashtags": ["hashtag_en_francais", "autre_hashtag", "izyglam"],
+      "suggested_image": "Description de l'image, en français.",
       "image_prompt": {
         "description": "Description en anglais pour Midjourney",
-        "style_keywords": ["mot-clé1", "mot-clé2", "mot-clé3"],
-        "camera": "Modèle de caméra",
-        "lens": "Type d'objectif",
-        "post_processing": "Techniques de post-traitement"
+        "style_keywords": ["mot-clé en français", "mot-clé en français", "mot-clé en français"],
+        "camera": "Modèle de caméra (en français)",
+        "lens": "Type d'objectif (en français)",
+        "post_processing": "Techniques de post-traitement (en français)"
       }
-    },
-    // Répéter cette structure pour chaque publication
+    }
   ]
 }
 
-Renvoie uniquement l'objet JSON du calendrier complet et structuré sans coupure. Assure-toi que tout le calendrier soit inclus dans un seul bloc de réponse.
+Génère ${publicationFrequency} objets dans "content_calendar".
+Adapte le contenu de chaque post à l'objectif précis de ${socialNetwork} décrit plus haut et au mois ${month}/${year}.
+Tout doit être cohérent avec l'univers d'izyGlam et la beauté à domicile, jamais avec un autre univers comme la restauration.
 `;
 
   console.log("prompt : ", prompt);
 
-  // Appel à OpenAI pour générer les posts
-  const response = await axios.post(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "Tu es un assistant pour générer des posts personnalisés.",
-        },
-        { role: "user", content: prompt },
-      ],
-      max_tokens: 2000,
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+  const MODEL = process.env.OPENAI_MODEL || "gpt-4.1";
+
+  const supportsResponseFormat =
+    MODEL.startsWith("gpt-4.1") ||
+    MODEL.startsWith("gpt-4o") ||
+    MODEL.startsWith("gpt-5");
+
+  const openAiBody: any = {
+    model: MODEL,
+    messages: [
+      {
+        role: "system",
+        content:
+          "Tu es un assistant expert en stratégie social media pour izyGlam. Tu renvoies toujours UNIQUEMENT un JSON valide respectant strictement la structure demandée.",
       },
-    }
-  );
+      { role: "user", content: prompt },
+    ],
+    max_tokens: 4000,
+    temperature: 0.85,
+  };
 
-  // Parse la réponse JSON et extrait le contenu structuré
-  const generatedContent = JSON.parse(response.data.choices[0].message.content);
+  if (supportsResponseFormat) {
+    openAiBody.response_format = { type: "json_object" };
+  }
 
-  // Vérifie que generatedContent est bien au format attendu
-  if (!generatedContent || !generatedContent.content_calendar) {
+  let rawContent: string;
+
+  try {
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      openAiBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+      }
+    );
+
+    rawContent = response.data.choices[0].message.content;
+  } catch (error: any) {
+    console.error("Erreur lors de l'appel OpenAI :", {
+      status: error?.response?.status,
+      data: error?.response?.data,
+    });
+    throw new Error(
+      `Erreur OpenAI (${error?.response?.status || "unknown"}). Regarde les logs pour plus de détails.`
+    );
+  }
+
+  let generatedContent: any;
+  try {
+    generatedContent = JSON.parse(rawContent);
+  } catch (error) {
+    console.error("Erreur de parsing JSON OpenAI :", error, rawContent);
+    throw new Error(
+      "Le JSON renvoyé par OpenAI est invalide. Contenu brut loggé côté serveur."
+    );
+  }
+
+  if (
+    !generatedContent ||
+    !generatedContent.content_calendar ||
+    !Array.isArray(generatedContent.content_calendar)
+  ) {
+    console.error("Réponse OpenAI mal formatée :", generatedContent);
     throw new Error("Le format de la réponse d'OpenAI n'est pas valide.");
   }
 
-  // Crée les posts à enregistrer dans la base de données
   const generatedPosts = generatedContent.content_calendar.map((post: any) => ({
     userId,
     month,
@@ -181,123 +283,215 @@ Renvoie uniquement l'objet JSON du calendrier complet et structuré sans coupure
   return generatedPosts;
 };
 
-// Génération d'un post afin de faire un update dans la table
-// Génération d'un post afin de faire un update dans la table
-export const generateONEPostsWithOpenAI = async (userId: string, platform: string) => {
-  // Cherche le profil actif de l'utilisateur
+// Génération d'un post unique (update dans la table)
+export const generateONEPostsWithOpenAI = async (
+  userId: string,
+  platform: string
+) => {
+  // On garde la vérification du profil (logique de permissions / abonnement potentielle)
   const userProfile = await ProfileModel.findOne({ userId, active: true });
   if (!userProfile) {
     throw new Error("Profil actif non trouvé pour cet utilisateur.");
   }
-  console.log("userProfile : ", userProfile);
+  console.log(
+    "userProfile trouvé (non utilisé pour le contenu, seulement pour le contexte izyGlam) : ",
+    userProfile
+  );
 
-  // Génère un prompt personnalisé en fonction de la plateforme
-  const platformSpecifics: any = {
-    Facebook: {
-      style: "informel et engageant",
-      structure: "Un post qui connecte personnellement, avec une anecdote ou une réflexion, suivi d'un appel à l'action léger.",
-      hashtagsCount: 5,
-    },
-    Instagram: {
-      style: "visuellement attrayant et émotionnel",
-      structure: "Une légende captivante accompagnée d'une description imagée parfaite pour Instagram.",
-      hashtagsCount: 10,
-    },
-    LinkedIn: {
-      style: "professionnel et éducatif",
-      structure: "Introduction engageante, développement structuré (conseils ou partages d'expérience ou anecdote), une phrase pour engager l'audiance et une conclusion inspirante.",
-      hashtagsCount: 5,
-    },
-    Bluesky: {
-      style: "créatif et léger",
-      structure: "Un post concis, original et souvent accompagné d'une image ou d'un GIF humoristique.",
-      hashtagsCount: 3,
-    },
-    Threads: {
-      style: "authentique et direct",
-      structure: "Un post qui invite à la discussion, souvent sous la forme de courts paragraphes.",
-      hashtagsCount: 5,
-    },
-  };
+  const socialNetworkLower = platform.toLowerCase();
 
-  const specifics = platformSpecifics[platform] || platformSpecifics["Instagram"];
+  let networkInstructions = "";
+
+  if (socialNetworkLower === "instagram") {
+    networkInstructions = `
+OBJECTIF POUR INSTAGRAM (izyGlam)
+- Cible principale : prestataires beauté indépendants (esthéticiennes, coiffeuses à domicile, prothésistes ongulaires, coiffeurs à domicile, maquilleuses, etc.).
+- But : leur donner envie de rejoindre et d'utiliser la plateforme izyGlam pour développer leur activité.
+- Le post doit :
+  - Mettre en avant la sécurité, la simplicité et la fiabilité d'izyGlam.
+  - Expliquer comment izyGlam les aide à lancer ou structurer leur activité sans stress (gestion du planning, prise de rendez-vous en ligne, communication avec les clients, suivi des réservations, etc.).
+  - Rassurer les prestataires qui débutent (peur de ne pas trouver de clients, peur de ne pas être légitimes, peur de la paperasse, peur de se lancer seules, etc.).
+  - Donner un exemple concret d'une situation du quotidien d'une prestataire à domicile et montrer comment izyGlam simplifie cette situation.
+  - Inclure un appel à l'action clair pour inciter à s'inscrire sur izyGlam, à créer son premier salon ou à visiter le site.
+- Ton à privilégier : humain, chaleureux, bienveillant, motivant, très concret.
+- Longueur de la légende : entre 80 et 150 mots, avec une mini histoire, un exemple précis ou un angle clair (pas de texte générique, pas de cliché).
+`;
+  } else if (socialNetworkLower === "linkedin") {
+    networkInstructions = `
+OBJECTIF POUR LINKEDIN (izyGlam)
+- Cible principale : entreprises, services RH, CSE, dirigeants, hôtels, salles de sport, centres de bien-être, réseaux de franchises, etc.
+- But : leur montrer pourquoi proposer izyGlam à leurs salariés ou à leurs clients est un levier intelligent de bien-être, d'expérience client et de marque employeur.
+- Le post doit :
+  - Expliquer la valeur business d'izyGlam : amélioration du bien-être au travail, réduction du stress, avantage salarié différenciant, fidélisation des talents, valorisation de la qualité de vie au travail, amélioration de l'expérience client, image de marque moderne et innovante.
+  - Mettre en scène un cas concret : par exemple un CSE qui propose des prestations beauté à domicile à tarif préférentiel pour les salariés, un hôtel qui offre l'accès à izyGlam à ses clients, une entreprise qui intègre izyGlam dans sa politique QVCT.
+  - Structurer le texte comme un vrai post LinkedIn :
+    1. Accroche forte en une à deux phrases qui interpellent la réalité du lecteur (RH, dirigeant, etc.).
+    2. Développement avec arguments clairs, quelques chiffres ou exemples concrets de mise en situation.
+    3. Conclusion avec un appel à l'action explicite (demander une démo, prendre contact, en parler à son service RH, tester izyGlam pour un pilote, etc.).
+  - Choisir un angle précis (rétention des talents, réduction du stress, différenciation de la marque employeur, bénéfices pour les clients, innovation dans les avantages, etc.).
+- Ton à privilégier : professionnel, stratégique, sérieux mais accessible, avec une vraie profondeur de réflexion.
+- Longueur du texte : entre 150 et 300 mots.
+`;
+  } else {
+    networkInstructions = `
+OBJECTIF GÉNÉRIQUE (izyGlam)
+- Adapter le message au réseau social ${platform}.
+- Toujours rester centré sur izyGlam, plateforme de mise en relation entre clients et prestataires beauté à domicile.
+- Mettre en avant : sécurité, simplicité, outils pour structurer l'activité, valeur ajoutée pour les clients et pour les entreprises.
+`;
+  }
 
   const prompt = `
-Agis comme un créateur de contenu pour les réseaux sociaux. J'ai besoin que tu me crées un post pour ${platform}.
+Tu es un expert senior en stratégie social media et en copywriting émotionnel pour la marque izyGlam.
 
-Je souhaite un post ${specifics.style} devant contenir :
-- une légende engageante (en ${userProfile.language}) suivant cette structure : ${specifics.structure}
-- une suggestion d'image en ${userProfile.language}
-- une liste de ${specifics.hashtagsCount} hashtags spécifiques à ${platform}, optimisés pour un maximum d'engagement (en ${userProfile.language})
-- un prompt d'image (en anglais) pour Midjourney, intégrant une description ultra-détaillée, avec des éléments précis comme le sujet principal, l'environnement, les émotions, les couleurs, les textures, les sources de lumière, les techniques artistiques, les mots-clés de style, ainsi que des détails techniques comme le type de caméra, d'objectif, et les techniques de post-traitement. Précise que l'image doit être extrêmement détaillée et parfaitement nette, mettant en valeur chaque élément avec une grande précision. **L'image ne doit contenir aucune écriture, aucun texte, ni aucun symbole.**
+QUI EST IZYGLAM
+- izyGlam est une plateforme qui met en relation des clients et des prestataires beauté à domicile (coiffure, esthétique, maquillage, manucure, massages bien-être, etc.).
+- La promesse d'izyGlam :
+  - Aider les prestataires à se lancer et à structurer leur activité sans stress.
+  - Offrir aux clients une expérience fluide, rassurante et qualitative.
+  - Permettre aux entreprises de proposer des services de bien-être à domicile à leurs équipes ou à leurs clients.
 
-### Profil utilisateur :
-- Activité : ${userProfile.activity}
-- Introduction : ${userProfile.introduction}
-- Langue : ${userProfile.language}
-- Pays : ${userProfile.country}
+OBJECTIF DE LA MISSION
+- Tu dois générer UN SEUL post pour la plateforme ${platform}.
+- Le post doit être pensé spécifiquement pour izyGlam, pas pour un autre type de business (pas de restaurant, pas d'exemples hors beauté à domicile).
 
-### Structure des publications :
-La réponse doit fournir le contenu structuré dans ce format :
+CONTRAINTE DE LANGUE
+- Tous les textes destinés à l'humain doivent être en français :
+  - "caption"
+  - "hashtags"
+  - "suggested_image"
+  - "image_prompt.style_keywords"
+  - "image_prompt.camera"
+  - "image_prompt.lens"
+  - "image_prompt.post_processing"
+- Seule exception : "image_prompt.description" doit être en anglais, car c'est un prompt pour Midjourney.
+- Le français doit être naturel, fluide, précis et crédible, comme un véritable community manager expérimenté.
+
+CONTRAINTE TYPOGRAPHIQUE
+- N'utilise JAMAIS le caractère suivant : "–" (tiret moyen).
+- Utilise UNIQUEMENT le tiret classique "-" si tu as besoin d'un tiret.
+- Évite les symboles exotiques qui pourraient donner une impression de texte artificiel.
+
+${networkInstructions}
+
+CONTRAINTE QUALITÉ RÉDACTIONNELLE
+- La légende doit donner l'impression d'avoir été écrite par un humain expert en social media dans le domaine de la beauté et du bien-être.
+- Le texte doit être travaillé, nuancé, avec un vrai raisonnement marketing et psychologique :
+  - peurs des prestataires (manque de clients, instabilité, peur de se lancer),
+  - désirs (liberté, clients réguliers, image professionnelle),
+  - objections (peur de la technologie, peur de la plateforme),
+  - bénéfices concrets (gain de temps, meilleure organisation, visibilité).
+- Varie les accroches, les structures de phrase, le vocabulaire et les appels à l'action.
+- Évite les formulations génériques ou plates (par exemple : "Voici quelques conseils" ou "Dans cet article, nous allons...").
+- N'écris jamais "en tant qu'IA" ou quoi que ce soit qui laisse penser que le texte est généré automatiquement.
+- Utilise le nom izyGlam quand c'est pertinent, sans le sur-utiliser dans toutes les phrases.
+
+SPÉCIFICITÉ OPTIONNELLE
+- Tu peux, si c'est pertinent, illustrer le post avec un exemple concret de prestataire utilisant izyGlam (par exemple : "une esthéticienne qui se lance à domicile grâce à izyGlam", "une coiffeuse à domicile qui structure son planning grâce à izyGlam").
+- Le post doit rester réaliste, crédible et inspirant.
+
+CONTRAINTE FORMAT & JSON
+Tu dois renvoyer STRICTEMENT un objet JSON valide, sans aucun texte avant ou après.
+- Utilise uniquement des doubles guillemets " pour toutes les clés et toutes les valeurs de type string.
+- Ne rajoute aucun commentaire.
+- Respecte exactement cette structure :
 
 {
   "content_calendar": [
     {
-      "type": "${specifics.style}",
-      "caption": "Légende en ${userProfile.language} suivant la structure : ${specifics.structure}",
-      "hashtags": ["hashtag1", "hashtag2", "hashtag3", "..."],
-      "suggested_image": "Description en ${userProfile.language} de l'image",
+      "type": "type de ton, par exemple engaging, inspirant, éducatif, etc.",
+      "date": "une date de publication plausible (format libre, par exemple 2025-11-23)",
+      "heure": "une heure de publication idéale pour ce post au format HH:MM",
+      "caption": "Texte du post en français, sur le ton choisi.",
+      "hashtags": ["hashtag_en_francais", "autre_hashtag", "izyglam"],
+      "suggested_image": "Description de l'image, en français.",
       "image_prompt": {
-        "description": "Une description ultra-détaillée en anglais pour Midjourney, précisant le sujet principal (ex. : un chat noir sur une table en bois), l'environnement (ex. : une pièce lumineuse avec des rideaux blancs), les émotions à transmettre (ex. : sérénité, nostalgie), les couleurs dominantes (ex. : tons chauds), les textures (ex. : bois lisse, fourrure douce), et les sources de lumière (ex. : lumière naturelle douce venant d'une fenêtre). **L'image ne doit contenir aucune écriture, aucun texte, ni aucun symbole.**",
-        "style_keywords": ["mot-clé1", "mot-clé2", "mot-clé3"],
-        "camera": "Modèle de caméra spécifique (ex. : Canon EOS 5D Mark IV)",
-        "lens": "Type d'objectif (ex. : objectif 50mm f/1.4 pour une faible profondeur de champ)",
-        "post_processing": "Techniques de post-traitement (ex. : rehaussement des contrastes, ajustement des tons, effet HDR léger)"
+        "description": "Description en anglais pour Midjourney, sans texte ni symbole dans l'image.",
+        "style_keywords": ["mot-clé en français", "mot-clé en français", "mot-clé en français"],
+        "camera": "Modèle de caméra (en français)",
+        "lens": "Type d'objectif (en français)",
+        "post_processing": "Techniques de post-traitement (en français)"
       }
     }
   ]
 }
 
-Renvoie uniquement l'objet JSON du post complet et structuré sans coupure.
+Génère EXACTEMENT 1 objet dans "content_calendar".
+Tout doit être cohérent avec l'univers d'izyGlam et la beauté à domicile, jamais avec un autre univers comme la restauration.
 `;
 
+  console.log("prompt (ONE post) : ", prompt);
 
+  const MODEL = process.env.OPENAI_MODEL || "gpt-4.1";
 
+  const supportsResponseFormat =
+    MODEL.startsWith("gpt-4.1") ||
+    MODEL.startsWith("gpt-4o") ||
+    MODEL.startsWith("gpt-5");
 
-  console.log("prompt : ", prompt);
-
-  // Appel à OpenAI pour générer les posts
-  const response = await axios.post(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "Tu es un assistant pour générer un post personnalisé pour les réseaux sociaux.",
-        },
-        { role: "user", content: prompt },
-      ],
-      max_tokens: 2000,
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+  const openAiBody: any = {
+    model: MODEL,
+    messages: [
+      {
+        role: "system",
+        content:
+          "Tu es un assistant expert en stratégie social media pour izyGlam. Tu renvoies toujours UNIQUEMENT un JSON valide respectant strictement la structure demandée.",
       },
-    }
-  );
+      { role: "user", content: prompt },
+    ],
+    max_tokens: 2000,
+    temperature: 0.85,
+  };
 
-  // Parse la réponse JSON et extrait le contenu structuré
-  const generatedContent = JSON.parse(response.data.choices[0].message.content);
-  console.log("generatedContent 666 : ", generatedContent);
+  if (supportsResponseFormat) {
+    openAiBody.response_format = { type: "json_object" };
+  }
 
-  // Vérifie que generatedContent est bien au format attendu
-  if (!generatedContent || !generatedContent.content_calendar) {
+  let rawContent: string;
+
+  try {
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      openAiBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+      }
+    );
+
+    rawContent = response.data.choices[0].message.content;
+  } catch (error: any) {
+    console.error("Erreur lors de l'appel OpenAI (ONE post) :", {
+      status: error?.response?.status,
+      data: error?.response?.data,
+    });
+    throw new Error(
+      `Erreur OpenAI (${error?.response?.status || "unknown"}). Regarde les logs pour plus de détails.`
+    );
+  }
+
+  let generatedContent: any;
+  try {
+    generatedContent = JSON.parse(rawContent);
+  } catch (error) {
+    console.error("Erreur de parsing JSON OpenAI (ONE post) :", error, rawContent);
+    throw new Error(
+      "Le JSON renvoyé par OpenAI est invalide. Contenu brut loggé côté serveur."
+    );
+  }
+
+  if (
+    !generatedContent ||
+    !generatedContent.content_calendar ||
+    !Array.isArray(generatedContent.content_calendar)
+  ) {
+    console.error("Réponse OpenAI mal formatée (ONE post) :", generatedContent);
     throw new Error("Le format de la réponse d'OpenAI n'est pas valide.");
   }
 
-  // Crée les posts à enregistrer dans la base de données
+  // On s'attend à 1 seul objet, mais on map quand même pour rester cohérent avec ton code existant
   const generatedPosts = generatedContent.content_calendar.map((post: any) => ({
     userId,
     content: JSON.stringify(post),
@@ -305,6 +499,7 @@ Renvoie uniquement l'objet JSON du post complet et structuré sans coupure.
 
   return generatedPosts;
 };
+
 
 // Vérifie les posts existants, génère les posts si nécessaire, puis les retourne
 export const getOrGenerateMonthlyPosts = async (
@@ -324,13 +519,6 @@ export const getOrGenerateMonthlyPosts = async (
     });
 
     console.log("userId : ", userId);
-    console.log("subscription : ", subscription);
-
-    if (!subscription) {
-      return res
-        .status(403)
-        .json({ message: "Vous n'avez pas d'abonnement actif." });
-    }
 
     // Vérifie les posts existants pour le mois et l'année en cours
     const existingPosts = await PostModel.find({
@@ -343,7 +531,7 @@ export const getOrGenerateMonthlyPosts = async (
       return res.status(200).json(existingPosts);
     }// Liste des plateformes cibles
 
-    const socialNetworks = ["Instagram", "Facebook", "Bluesky", "LinkedIn", "TikTok"];
+    const socialNetworks = ["Instagram", "LinkedIn"];
 
     // Variable pour stocker tous les posts générés
     let allGeneratedPosts: any[] = [];
@@ -772,25 +960,25 @@ export const sendPromptToDallE = async (
     console.log("POST ID : ", postId);
 
     let prompt: any = JSON.parse(referencePost.content).image_prompt;
-// Nettoie le prompt avant l'envoi
-const cleanPrompt = (data: any) => {
-  if (typeof data === "object") {
-    return JSON.stringify(data) // Convertit en string si c'est un objet
-      .replace(/\s+/g, " ") // Supprime les espaces multiples
-      .replace(/\\n|\\r/g, " ") // Supprime les retours à la ligne
-      .trim(); // Supprime les espaces au début et à la fin
-  } else if (typeof data === "string") {
-    return data // Retourne directement si c'est déjà une chaîne
-      .replace(/\s+/g, " ") // Supprime les espaces multiples
-      .replace(/\\n|\\r/g, " ") // Supprime les retours à la ligne
-      .trim(); // Supprime les espaces au début et à la fin
-  }
-  return data; // Retourne tel quel si ce n'est ni un objet ni une chaîne
-};
-prompt = prompt.description
-// Utilisation
-console.log(prompt);
-console.log(typeof prompt)
+    // Nettoie le prompt avant l'envoi
+    const cleanPrompt = (data: any) => {
+      if (typeof data === "object") {
+        return JSON.stringify(data) // Convertit en string si c'est un objet
+          .replace(/\s+/g, " ") // Supprime les espaces multiples
+          .replace(/\\n|\\r/g, " ") // Supprime les retours à la ligne
+          .trim(); // Supprime les espaces au début et à la fin
+      } else if (typeof data === "string") {
+        return data // Retourne directement si c'est déjà une chaîne
+          .replace(/\s+/g, " ") // Supprime les espaces multiples
+          .replace(/\\n|\\r/g, " ") // Supprime les retours à la ligne
+          .trim(); // Supprime les espaces au début et à la fin
+      }
+      return data; // Retourne tel quel si ce n'est ni un objet ni une chaîne
+    };
+    prompt = prompt.description
+    // Utilisation
+    console.log(prompt);
+    console.log(typeof prompt)
     // Prépare la requête pour l'API DALL-E
     const response = await axios.post(
       "https://api.openai.com/v1/images/generations",

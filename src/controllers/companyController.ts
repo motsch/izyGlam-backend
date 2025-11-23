@@ -1,6 +1,8 @@
 import CompanyModel from "../models/company";
 import * as express from "express";
 import { logger } from "../utils/logger";
+import UserModel from "../models/user";
+import BookingModel from "../models/booking";
 
 // -- util: éviter de logguer des secrets par erreur
 function sanitize(obj: any) {
@@ -21,7 +23,9 @@ function sanitize(obj: any) {
   return clone;
 }
 
+// ------------------------------------------------------------
 // Créer une nouvelle entreprise
+// ------------------------------------------------------------
 const createCompany = async (req: express.Request, res: express.Response) => {
   try {
     const newCompany = new CompanyModel(req.body);
@@ -54,7 +58,9 @@ const createCompany = async (req: express.Request, res: express.Response) => {
   }
 };
 
+// ------------------------------------------------------------
 // Récupérer toutes les entreprises
+// ------------------------------------------------------------
 const getAllCompanies = async (req: express.Request, res: express.Response) => {
   try {
     const companies = await CompanyModel.find();
@@ -82,7 +88,9 @@ const getAllCompanies = async (req: express.Request, res: express.Response) => {
   }
 };
 
-// Récupérer une entreprise par son ID
+// ------------------------------------------------------------
+// Récupérer une entreprise par ID
+// ------------------------------------------------------------
 const getCompanyById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
@@ -122,7 +130,9 @@ const getCompanyById = async (req: express.Request, res: express.Response) => {
   }
 };
 
-// Mettre à jour une entreprise par son ID
+// ------------------------------------------------------------
+// Mettre à jour une entreprise
+// ------------------------------------------------------------
 const updateCompanyById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
@@ -164,7 +174,9 @@ const updateCompanyById = async (req: express.Request, res: express.Response) =>
   }
 };
 
-// Supprimer une entreprise par son ID
+// ------------------------------------------------------------
+// Supprimer une entreprise
+// ------------------------------------------------------------
 const deleteCompanyById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
@@ -204,7 +216,9 @@ const deleteCompanyById = async (req: express.Request, res: express.Response) =>
   }
 };
 
-// Récupérer toutes les entreprises d'un secteur d'activité spécifique
+// ------------------------------------------------------------
+// Récupérer entreprises par secteur
+// ------------------------------------------------------------
 const getCompaniesByIndustry = async (req: express.Request, res: express.Response) => {
   try {
     const { industry } = req.params;
@@ -228,7 +242,7 @@ const getCompaniesByIndustry = async (req: express.Request, res: express.Respons
         url: req.originalUrl,
         industry,
       });
-      res.status(404).json({ message: "Aucune entreprise trouvée dans ce secteur d'activité" });
+      res.status(404).json({ message: "Aucune entreprise trouvée dans ce secteur" });
     }
   } catch (error: any) {
     logger.error({
@@ -241,7 +255,112 @@ const getCompaniesByIndustry = async (req: express.Request, res: express.Respons
       errorMessage: error?.message,
       stack: error?.stack,
     });
-    res.status(500).json({ message: "Impossible de récupérer les entreprises pour ce secteur d'activité" });
+    res.status(500).json({ message: "Impossible de récupérer les entreprises" });
+  }
+};
+
+// ------------------------------------------------------------
+// Récupérer employés d'une entreprise
+// ------------------------------------------------------------
+
+// Récupérer tous les employés d'une entreprise + nombre de bookings
+const getEmployeesByCompanyId = async (req: express.Request, res: express.Response) => {
+  try {
+    const { companyId } = req.params;
+
+    // 1) On récupère les employés de la company
+    const employees = await UserModel.find({ companyId })
+      .select(
+        "firstname lastname email credit role companyId active createdAt updatedAt lastSeen"
+      )
+      .lean();
+
+    // 2) On récupère le nombre de bookings par employé en une seule agg
+    const employeeIds = employees.map((e: any) => e._id.toString());
+
+    const bookingCounts = await BookingModel.aggregate([
+      { $match: { clientId: { $in: employeeIds } } },
+      {
+        $group: {
+          _id: "$clientId",
+          totalBookings: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const countsMap: Record<string, number> = {};
+    bookingCounts.forEach((b: any) => {
+      countsMap[b._id] = b.totalBookings;
+    });
+
+    const employeesWithStats = employees.map((e: any) => ({
+      ...e,
+      totalBookings: countsMap[e._id.toString()] || 0,
+    }));
+
+    logger.info({
+      msg: "getEmployeesByCompanyId success",
+      route: "GET /api/company/:companyId/employees",
+      method: req.method,
+      url: req.originalUrl,
+      companyId,
+      count: employeesWithStats.length,
+    });
+
+    res.json(employeesWithStats);
+  } catch (error: any) {
+    logger.error({
+      msg: "getEmployeesByCompanyId failed",
+      route: "GET /api/company/:companyId/employees",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    res.status(500).json({
+      message: "Impossible de récupérer les employés de cette entreprise",
+    });
+  }
+};
+
+// ------------------------------------------------------------
+// Récupérer bookings d’un employé
+// ------------------------------------------------------------
+const getEmployeeBookings = async (req: express.Request, res: express.Response) => {
+  try {
+    const { employeeId } = req.params;
+
+    const bookings = await BookingModel.find({ clientId: employeeId })
+      .sort({ start: -1 })
+      .lean();
+
+    logger.info({
+      msg: "getEmployeeBookings success",
+      route: "GET /api/company/employee/:employeeId/bookings",
+      method: req.method,
+      url: req.originalUrl,
+      employeeId,
+      count: bookings.length,
+    });
+
+    res.json(bookings);
+  } catch (error: any) {
+    logger.error({
+      msg: "getEmployeeBookings failed",
+      route: "GET /api/company/employee/:employeeId/bookings",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+
+    res
+      .status(500)
+      .json({ message: "Impossible de récupérer les bookings de cet employé" });
   }
 };
 
@@ -252,4 +371,6 @@ module.exports = {
   updateCompanyById,
   deleteCompanyById,
   getCompaniesByIndustry,
+  getEmployeesByCompanyId,
+  getEmployeeBookings, // 👈 ajouté
 };

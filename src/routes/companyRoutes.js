@@ -19,6 +19,24 @@ router.put("/company/:id", authMiddleware, companyController.updateCompanyById);
 router.delete("/company/:id", authMiddleware, companyController.deleteCompanyById);
 
 // Route to get all companies by industry
-router.get("/companies/industry/:industry", authMiddleware, companyController.getCompaniesByIndustry);
+router.get(
+  "/companies/industry/:industry",
+  authMiddleware,
+  companyController.getCompaniesByIndustry
+);
+
+// Route to get all employees of a company
+router.get(
+  "/company/:companyId/employees",
+  authMiddleware,
+  companyController.getEmployeesByCompanyId
+);
+
+// Route to get all bookings of an employee
+router.get(
+  "/company/employee/:employeeId/bookings",
+  authMiddleware,
+  companyController.getEmployeeBookings
+);
 
 module.exports = router;
