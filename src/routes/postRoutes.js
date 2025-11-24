@@ -9,6 +9,9 @@ router.get("/posts-monthly/:userId", authMiddleware, postController.getOrGenerat
 // Route pour envoyer un prompt à Midjourney
 router.get("/posts-ai-image/:postId", authMiddleware, postController.sendPromptToDallE);
 
+// Génération d'images pour plusieurs posts
+router.post('/posts-multiple-ai-image', authMiddleware, postController.sendPromptsToDallE);
+
 // Route pour mettre à jour un post
 router.get("/posts-update-one/:userId/:postId", authMiddleware, postController.updateUniquePost);
 

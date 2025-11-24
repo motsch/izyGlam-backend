@@ -944,6 +944,65 @@ export const updatePostById = async (
   }
 };
 
+// Génère des images pour une multitude de posts
+export const sendPromptsToDallE = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { postIds } = req.body;
+
+    if (!Array.isArray(postIds) || postIds.length === 0) {
+      return res.status(400).json({
+        message: "Le champ 'postIds' doit être un tableau non vide.",
+      });
+    }
+
+    const results: {
+      postId: string;
+      success: boolean;
+      imageUrl?: string;
+      post?: any;
+      error?: string;
+    }[] = [];
+
+    // Traitement séquentiel (plus simple / limite la casse niveau rate limit)
+    for (const postId of postIds) {
+      try {
+        const result = await generateImageForPost(postId);
+        results.push({
+          postId,
+          success: true,
+          imageUrl: result.imageUrl,
+          post: result.post,
+        });
+      } catch (err: any) {
+        console.error(`Erreur pour le post ${postId} :`, err);
+        results.push({
+          postId,
+          success: false,
+          error: err?.message || "Erreur inconnue",
+        });
+      }
+    }
+
+    res.status(200).json({
+      message: "Traitement terminé.",
+      results, // tableau avec success/error pour chaque post
+    });
+  } catch (error) {
+    console.error(
+      "Erreur lors de la génération des images pour plusieurs posts :",
+      error
+    );
+    res.status(500).json({
+      message:
+        "Erreur serveur, impossible de générer les images pour plusieurs posts.",
+    });
+  }
+};
+
+
 // Génère une image avec DALL-E, télécharge l'image générée, l'enregistre localement et met à jour le post
 export const sendPromptToDallE = async (
   req: express.Request,
@@ -1037,6 +1096,105 @@ export const sendPromptToDallE = async (
   }
 };
 
+// Fonction utilitaire interne pour générer une image pour un post
+// Fonction utilitaire interne pour générer une image pour un post
+const generateImageForPost = async (postId: string) => {
+  const referencePost = await PostModel.findById(postId);
+  if (!referencePost) {
+    throw new Error("Post introuvable");
+  }
+
+  console.log("POST ID : ", postId);
+
+  // Récupération du prompt
+  let prompt: any = JSON.parse(referencePost.content).image_prompt;
+  prompt = prompt.description;
+
+  console.log("PROMPT UTILISÉ :", prompt);
+
+  try {
+    const response = await axios.post(
+      "https://api.openai.com/v1/images/generations",
+      {
+        model: "gpt-image-1", // ou "dall-e-2" selon ce que tu utilises
+        prompt,
+        n: 1,
+        size: "1024x1024",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+      }
+    );
+
+    // 🔍 Sécurisation de la récupération de l'output
+    const imageData = response.data?.data?.[0];
+    if (!imageData) {
+      console.error("Réponse OpenAI inattendue :", response.data);
+      throw new Error("Réponse OpenAI invalide : data[0] manquant.");
+    }
+
+    // On log juste les clés pour debug léger
+    console.log("Clés retournées par OpenAI pour data[0] :", Object.keys(imageData));
+
+    let imageBuffer: Buffer;
+
+    if (imageData.url) {
+      // ✅ Cas URL classique
+      const imageUrl = imageData.url;
+      console.log("Image URL retournée par OpenAI :", imageUrl);
+
+      const imageResponse = await axios.get(imageUrl, {
+        responseType: "arraybuffer",
+      });
+      imageBuffer = Buffer.from(imageResponse.data, "binary");
+    } else if (imageData.b64_json) {
+      // ✅ Cas base64 (aucun GET nécessaire)
+      console.log("Image retournée en base64 (b64_json)");
+      imageBuffer = Buffer.from(imageData.b64_json, "base64");
+    } else {
+      console.error("Ni url ni b64_json dans la réponse OpenAI :", imageData);
+      throw new Error("Réponse OpenAI sans url ni b64_json.");
+    }
+
+    // Nom de fichier
+    const imageName = `izyGlow_image_${postId}_${Date.now()}.png`;
+    const imagePath = path.join(__dirname, "../../uploads/images", imageName);
+
+    // Sauvegarde locale
+    fs.writeFileSync(imagePath, imageBuffer);
+
+    // Mise à jour du post
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      postId,
+      { imageUrl: `/uploads/images/${imageName}` },
+      { new: true }
+    );
+
+    if (!updatedPost) {
+      throw new Error("Post non trouvé après mise à jour");
+    }
+
+    return {
+      postId,
+      imageUrl: updatedPost.imageUrl,
+      post: updatedPost,
+    };
+  } catch (err: any) {
+    console.error(
+      `Erreur OpenAI pour le post ${postId} :`,
+      err?.response?.data || err.message || err
+    );
+    throw new Error(
+      err?.response?.data?.error?.message ||
+        "Erreur lors de l'appel à l'API d'images."
+    );
+  }
+};
+
+
 
 // Mise à jour de l'image URL pour un post
 export const updatePostImageUrl = async (
@@ -1086,6 +1244,8 @@ export default {
   updatePostById,
   getPostById,
   improveInstagramPost,
+  generateImageForPost,
   sendPromptToDallE,
+  sendPromptsToDallE,
   updatePostImageUrl,
 };
