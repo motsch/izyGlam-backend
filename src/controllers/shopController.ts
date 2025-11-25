@@ -7,7 +7,7 @@ import axios from 'axios';
 import path from "path";
 import fs from "fs";
 import UserModel from "../models/user";
-import serviceModel from "../models/service";
+
 import { logger } from "../utils/logger";
 import { resolveLang } from "../utils/lang"; // ajuste le chemin si besoin
 import { buildCountryQuery } from '../utils/country';
@@ -58,6 +58,123 @@ const getShopsByIds = async (req: any, res: express.Response) => {
     res.status(500).json({ message: 'Erreur lors de la récupération des shops favoris' });
   }
 };
+/**
+ * Traitement IA de l'image principale d'un shop
+ * - AUCUN upload depuis le front : on part de l'image déjà stockée
+ * - req.body.shopId : obligatoire
+ */
+const processShopImage = async (req: any, res: express.Response) => {
+  try {
+    // 1) On récupère l'id du shop (body ou query, au choix)
+    const shopId = req.body.shopId || req.query.shopId;
+
+    if (!shopId) {
+      return res.status(400).json({ message: 'shopId is required' });
+    }
+
+    // 2) On va chercher le shop en base
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) {
+      return res.status(404).json({ message: 'Shop not found' });
+    }
+
+    if (!shop.image) {
+      return res.status(400).json({ message: 'Shop has no image to process' });
+    }
+
+    // 3) On reconstruit le chemin physique vers l’image existante
+    //    En base tu stockes soit "profile18.png", soit "uploads/images/xxx.png"
+    let storedPath: string = shop.image;
+    storedPath = storedPath.replace(/^\/+/, ''); // enlève les "/" de début
+
+    if (!storedPath.startsWith('uploads/')) {
+      // Si tu ne stockes que "profile18.png"
+      storedPath = `uploads/images/${storedPath}`;
+    }
+
+    const filePath = path.join(process.cwd(), storedPath);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Image file not found on server' });
+    }
+
+    // 4) Lecture de l'image locale
+    const imageBuffer: Buffer = fs.readFileSync(filePath);
+
+    // 5) Construction du form-data pour OpenAI (version Node, pas DOM)
+    const FormData = require('form-data');
+    const formData: any = new FormData();
+
+    formData.append('model', 'gpt-image-1');
+    formData.append(
+      'image',
+      imageBuffer as any, // Buffer -> any pour éviter l’erreur de type "Blob"
+      {
+        filename: path.basename(filePath),
+        contentType: 'image/png',
+      }
+    );
+
+    // Prompt : harmonisation visuelle, fond gris clair, t-shirt blanc, même visage
+    formData.append(
+      'prompt',
+      [
+        'Keep the exact same person, face, facial features, skin tone and expression so they remain easily recognizable.',
+        'Do not change the face shape, eyes, nose, mouth, freckles, moles or haircut.',
+        'Replace the clothing with a plain white t-shirt with a simple round collar, no logo, no text, no pattern.',
+        'Use a very light grey studio background, uniform and clean, with no objects or textures.',
+        'Center the person in the frame, head and upper torso visible, facing the camera.',
+        'Use soft, natural studio lighting, no harsh shadows, realistic photographic style.',
+        'Enhance image quality (sharpness, contrast, colors) but avoid beauty filters that could alter the person’s identity.',
+        'All portraits on the platform must look consistent: same light, same light grey background, same white t-shirt style.',
+      ].join(' ')
+    );
+
+    let improvedImageBuffer: Buffer | null = null;
+
+    try {
+      const response = await axios.post(
+        'https://api.openai.com/v1/images/edits',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            ...(formData as any).getHeaders(), // getHeaders() existe sur form-data (node)
+          },
+          responseType: 'json',
+        }
+      );
+
+      const base64: string = response.data.data[0].b64_json;
+      improvedImageBuffer = Buffer.from(base64, 'base64');
+
+      // 6) On écrase l'image d'origine par la version IA
+      fs.writeFileSync(filePath, improvedImageBuffer);
+    } catch (err) {
+      const e: any = err;
+      console.error(
+        'Erreur OpenAI image :',
+        e?.response?.data || e?.message
+      );
+      // En cas d’erreur on garde l’image originale
+      improvedImageBuffer = imageBuffer;
+    }
+
+    // 7) On renvoie le shop et le nom de l'image (inchangé)
+    return res.json({
+      success: true,
+      message: 'Image processed successfully',
+      image: shop.image,
+      shop,
+    });
+  } catch (err) {
+    console.error('Erreur processShopImage :', err);
+    return res.status(500).json({ message: 'Error processing image' });
+  }
+};
+
+
+
 
 // Créer une nouvelle boutique (shop)
 const createShop = async (req: express.Request, res: express.Response) => {
@@ -166,7 +283,7 @@ Rewrite if viable; otherwise create from scratch.`
     let formattedDescription = response.data.choices[0].message?.content?.trim() || "";
     formattedDescription = formattedDescription.replace(/^["']|["']$/g, "");
 
-    const newProduct = await serviceModel.findById(product._id);
+    const newProduct = await ServiceModel.findById(product._id);
     if (!newProduct) {
       return res.status(404).json({ message: "Produit introuvable." });
     }
@@ -1090,6 +1207,7 @@ module.exports = {
   incrementImpression,
   updateShopDisplayTime,
   bulkUpdateShopStats,
+  processShopImage,
   searchShopsWithServices,
   getIzyGlamDescription,
   uploadServiceImageAI,

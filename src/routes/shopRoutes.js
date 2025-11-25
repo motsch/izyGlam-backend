@@ -7,15 +7,30 @@ const multer = require('multer'); // Importer Multer pour gérer les fichiers
 
 // Configurer Multer pour stocker les images dans le dossier "uploads/images/gallery"
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'uploads/images/gallery'); // Dossier de stockage
-    },
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname); // Nom unique pour chaque fichier
-    }
-  });
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/images/gallery'); // Dossier de stockage
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Nom unique pour chaque fichier
+  }
+});
 
 const upload = multer({ storage: storage });
+
+/**
+ * ✅ Storage pour l'image PRINCIPALE d'un shop
+ *    (dossier séparé pour être clean)
+ */
+const storageShop = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/images/shops'); // Assure-toi que ce dossier existe
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const uploadShopImage = multer({ storage: storageShop });
 
 // Route to create a new shop
 router.post("/shop", authMiddleware, shopController.createShop);
@@ -28,6 +43,18 @@ router.post("/shop-description", authMiddleware, shopController.getIzyGlamDescri
 
 // Route to retrieve all shops
 router.post("/prestation-image", authMiddleware, shopController.uploadServiceImageAI);
+
+/**
+ * ✅ Nouvelle route : upload + traitement IA de l'image principale d'un shop
+ *    Endpoint appelé par ShopService.processShopImage()
+ *    champ de fichier = "image", champ texte optionnel = "shopId"
+ */
+router.post(
+  "/shop-image/process",
+  authMiddleware,
+  shopController.processShopImage
+);
+
 
 // Route to retrieve all shops
 router.get("/shop", shopController.getAllShops);

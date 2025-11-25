@@ -861,14 +861,20 @@ export const improveInstagramPost = async (
   }
 };
 
-// Fonction pour obtenir tous les posts d'un utilisateur
+// Fonction pour obtenir tous les posts d'un utilisateur avec status "pending"
 export const getAllPosts = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
     const { userId } = req.params;
-    const posts = await PostModel.find({ userId });
+
+    // On filtre par userId + status = 'pending'
+    const posts = await PostModel.find({
+      userId,
+      status: 'pending'
+    });
+
     res.status(200).json(posts);
   } catch (error) {
     console.error("Erreur lors de la récupération des posts :", error);
@@ -877,6 +883,7 @@ export const getAllPosts = async (
       .json({ message: "Erreur serveur, impossible de récupérer les posts." });
   }
 };
+
 
 // Fonction pour supprimer un post par ID
 export const deletePostById = async (

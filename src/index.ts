@@ -8,9 +8,8 @@ import CityModel from "./models/city";
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import ConversationModel from './models/conversation';
-import AdvertisementModel from './models/advertisement';
-import ShopModel from './models/shop';
 import { seedDatabase } from './seeds/seeder';
+import "./cron/b2bLeadImport.cron";
 require('dotenv').config();
 
 const app = express();
@@ -63,6 +62,7 @@ const cityRoutes = require("./routes/cityRoutes");
 const subscriptionRoutes = require("./routes/subscription");
 const notifyRoutes = require('./routes/notify');
 const devicesRoutes = require('./routes/devices');
+const b2bLeadRoutes = require("./routes/b2bLeadRoutes");
 
 // Utilisation des routes
 app.use("/api", prospectionRoutes);
@@ -100,6 +100,7 @@ app.use("/api", subscriptionRoutes);
 app.use('/api', notifyRoutes);
 app.use('/api', devicesRoutes);
 app.use('/api', countryRoutes);
+app.use("/api", b2bLeadRoutes);
 
 // Middleware pour servir les fichiers statiques
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));

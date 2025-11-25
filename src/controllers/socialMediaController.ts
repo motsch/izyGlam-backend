@@ -3,34 +3,92 @@ import * as express from "express";
 import UserModel from "../models/user";
 import { logger } from "../utils/logger";
 
+import dotenv from "dotenv";
+import PostModel from "../models/post";
+
+dotenv.config();
+
+const INSTAGRAM_USER_ID = process.env.INSTAGRAM_USER_ID;
+const META_IG_ACCESS_TOKEN = process.env.META_IG_ACCESS_TOKEN;
+const GRAPH_VERSION = "v17.0"; // ou v21.0 suivant ce que tu utilises
+
+if (!INSTAGRAM_USER_ID || !META_IG_ACCESS_TOKEN) {
+  throw new Error("Instagram config missing (INSTAGRAM_USER_ID or META_IG_ACCESS_TOKEN)");
+}
+
+
+const LINKEDIN_USER_ID = process.env.LINKEDIN_USER_ID; // identifiant perso (sans "urn:li:person:")
+const LINKEDIN_ACCESS_TOKEN = process.env.LINKEDIN_ACCESS_TOKEN; // token OAuth généré côté LinkedIn
+
+if (!LINKEDIN_USER_ID || !LINKEDIN_ACCESS_TOKEN) {
+  throw new Error("LinkedIn config missing (LINKEDIN_USER_ID or LINKEDIN_ACCESS_TOKEN)");
+}
+
 // Publier sur LinkedIn
 const postOnLinkedIn = async (req: express.Request, res: express.Response) => {
-  logger.info({ msg: "social.linkedin.post.start", route: req.originalUrl, method: req.method });
+  logger.info({
+    msg: "social.linkedin.post.start",
+    route: req.originalUrl,
+    method: req.method,
+    userId: (req as any).user?.id,
+  });
+
   try {
-    const { content/* , accessToken */ } = req.body;
+    const { content, postId } = req.body;
+
+    if (!content) {
+      return res.status(400).json({
+        message: "content est obligatoire pour publier sur LinkedIn",
+      });
+    }
+
+    if (!postId) {
+      return res.status(400).json({
+        message: "postId est obligatoire pour mettre à jour le statut",
+      });
+    }
+
+    // ⚠️ Important : LinkedIn attend urn:li:member:<id>
+    const authorUrn = `urn:li:member:${LINKEDIN_USER_ID}`;
+
+    const payload = {
+      author: authorUrn,
+      lifecycleState: "PUBLISHED",
+      specificContent: {
+        "com.linkedin.ugc.ShareContent": {
+          shareCommentary: { text: content },
+          shareMediaCategory: "NONE", // Pour l’instant, post texte
+        },
+      },
+      visibility: {
+        "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC",
+      },
+    };
+
     const response = await axios.post(
       "https://api.linkedin.com/v2/ugcPosts",
-      {
-        author: `urn:li:person:${process.env.LINKEDIN_USER_ID}`,
-        lifecycleState: "PUBLISHED",
-        specificContent: {
-          "com.linkedin.ugc.ShareContent": {
-            shareCommentary: { text: content },
-            shareMediaCategory: "NONE",
-          },
-        },
-        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
-      },
+      payload,
       {
         headers: {
-          Authorization: `Bearer ${req.body.accessToken}`, // ne pas logger
+          Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}`,
           "Content-Type": "application/json",
           "X-Restli-Protocol-Version": "2.0.0",
         },
       }
     );
-    logger.info({ msg: "social.linkedin.post.success", id: response.data?.id });
-    res.status(200).json({ message: "Post publié sur LinkedIn", data: response.data });
+
+    // Mettre à jour le statut du post en "send"
+    await PostModel.findByIdAndUpdate(postId, { status: "send" });
+
+    logger.info({
+      msg: "social.linkedin.post.success",
+      id: response.data?.id,
+    });
+
+    return res.status(200).json({
+      message: "Post publié sur LinkedIn",
+      data: response.data,
+    });
   } catch (error: any) {
     logger.error({
       msg: "social.linkedin.post.error",
@@ -40,25 +98,89 @@ const postOnLinkedIn = async (req: express.Request, res: express.Response) => {
       route: req.originalUrl,
       method: req.method,
     });
-    res.status(500).json({ message: "Erreur lors de la publication sur LinkedIn" });
+
+    return res.status(500).json({
+      message: "Erreur lors de la publication sur LinkedIn",
+      error: error?.response?.data || error.message,
+    });
   }
 };
 
+
 // Publier sur Instagram
 const postOnInstagram = async (req: express.Request, res: express.Response) => {
-  logger.info({ msg: "social.instagram.post.start", route: req.originalUrl, method: req.method });
+  logger.info({
+    msg: "social.instagram.post.start",
+    route: req.originalUrl,
+    method: req.method,
+    userId: (req as any).user?.id,
+  });
+  console.log("FRANCIS 666666666 :")
+  console.log(JSON.stringify(req.body))
+
   try {
-    const { imageUrl, caption, accessToken } = req.body;
+    const { imageUrl, caption, postId, _id, id } = req.body;
+
+    if (!imageUrl || !caption) {
+      return res.status(400).json({
+        message: "imageUrl et caption sont obligatoires",
+      });
+    }
+
+    // On accepte postId, _id ou id
+    const mongoPostId = postId || _id || id;
+
+    if (!mongoPostId) {
+      return res.status(400).json({
+        message: "postId (ou _id) est obligatoire pour mettre à jour le statut",
+      });
+    }
+
+    // 1. Créer le container
     const containerResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${process.env.INSTAGRAM_USER_ID}/media`,
-      { image_url: imageUrl, caption: caption, access_token: accessToken }
+      `https://graph.facebook.com/${GRAPH_VERSION}/${INSTAGRAM_USER_ID}/media`,
+      {
+        image_url: imageUrl,
+        caption: caption,
+        access_token: META_IG_ACCESS_TOKEN,
+      }
     );
-    const response = await axios.post(
-      `https://graph.facebook.com/v17.0/${process.env.INSTAGRAM_USER_ID}/media_publish`,
-      { creation_id: containerResponse.data.id, access_token: accessToken }
+
+    const creationId = containerResponse.data?.id;
+
+    if (!creationId) {
+      logger.error({
+        msg: "social.instagram.post.no_creation_id",
+        data: containerResponse.data,
+      });
+      return res.status(500).json({
+        message: "Impossible de créer le container média Instagram",
+      });
+    }
+
+    // 2. Publier le container
+    const publishResponse = await axios.post(
+      `https://graph.facebook.com/${GRAPH_VERSION}/${INSTAGRAM_USER_ID}/media_publish`,
+      {
+        creation_id: creationId,
+        access_token: META_IG_ACCESS_TOKEN,
+      }
     );
-    logger.info({ msg: "social.instagram.post.success", containerId: containerResponse.data?.id, publishId: response.data?.id });
-    res.status(200).json({ message: "Post publié sur Instagram", data: response.data });
+
+    // 3. Mettre à jour le statut du post en "send"
+    await PostModel.findByIdAndUpdate(mongoPostId, { status: "send" });
+
+    logger.info({
+      msg: "social.instagram.post.success",
+      containerId: creationId,
+      publishId: publishResponse.data?.id,
+    });
+
+    return res.status(200).json({
+      message: "Post publié sur Instagram",
+      data: publishResponse.data,
+      containerId: creationId,
+    });
   } catch (error: any) {
     logger.error({
       msg: "social.instagram.post.error",
@@ -68,7 +190,11 @@ const postOnInstagram = async (req: express.Request, res: express.Response) => {
       route: req.originalUrl,
       method: req.method,
     });
-    res.status(500).json({ message: "Erreur lors de la publication sur Instagram" });
+
+    return res.status(500).json({
+      message: "Erreur lors de la publication sur Instagram",
+      error: error?.response?.data || error.message,
+    });
   }
 };
 
