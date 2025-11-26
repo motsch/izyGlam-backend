@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require('path');
+require('dotenv').config();
 import fs from 'fs';
 import CityModel from "./models/city";
 import http from 'http';
@@ -10,7 +11,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import ConversationModel from './models/conversation';
 import { seedDatabase } from './seeds/seeder';
 import "./cron/b2bLeadImport.cron";
-require('dotenv').config();
+import "./cron/proLeadImport.cron";
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -26,9 +28,9 @@ app.get("/", (req: any, res: any) => {
 });
 
 // Routes
-// Routes
 const prospectionRoutes = require("./routes/prospectionRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const proLeadRoutes = require("./routes/proLeadRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const serviceTemplateRoutes = require("./routes/serviceTemplateRoutes");
 const shopRoutes = require("./routes/shopRoutes");
@@ -72,6 +74,7 @@ app.use("/api", serviceRoutes);
 app.use("/api", serviceTemplateRoutes);
 app.use("/api", shopRoutes);
 app.use("/api", userRoutes);
+app.use("/api", proLeadRoutes);
 app.use("/api", scheduleRoutes);
 app.use("/api", companyRoutes);
 app.use('/api', categoryRoutes);

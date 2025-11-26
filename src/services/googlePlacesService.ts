@@ -1,149 +1,145 @@
+// src/services/googlePlacesService.ts
 import axios from "axios";
-import { logger } from "../utils/logger";
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY as string;
 
 if (!GOOGLE_PLACES_API_KEY) {
-  logger.warn({
-    msg: "GOOGLE_PLACES_API_KEY is not defined in environment variables",
-  });
+  throw new Error("GOOGLE_PLACES_API_KEY is not set in environment");
 }
 
-// extraction simple du CP dans l'adresse (pattern FR: 5 chiffres)
-function extractPostalCode(address?: string): string | undefined {
-  if (!address) return undefined;
-  const match = address.match(/\b\d{5}\b/);
-  return match ? match[0] : undefined;
-}
+const TEXT_SEARCH_URL =
+  "https://maps.googleapis.com/maps/api/place/textsearch/json";
+const DETAILS_URL =
+  "https://maps.googleapis.com/maps/api/place/details/json";
 
-// extrait une ville très simple depuis l'adresse (ça restera approximatif)
-function extractCity(address?: string): string | undefined {
-  if (!address) return undefined;
-  // Exemple d'adresse : "12 Rue de Paris, 44000 Nantes, France"
-  const parts = address.split(",");
-  if (parts.length >= 2) {
-    return parts[1].trim(); // "44000 Nantes" -> pas parfait mais suffisant pour début
-  }
-  return undefined;
-}
-
-export interface GooglePlaceResult {
-  name: string;
-  formatted_address?: string;
+export interface GooglePlaceSummary {
   place_id: string;
+  name: string;
+  formatted_address: string;
 }
 
-// Recherche des entreprises par code postal via Text Search
-export async function searchPlacesByPostalCode(
-  postalCode: string,
+// Petit helper pour next_page_token
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Coeur de la recherche texte (utilisé par searchPlacesByText & searchPlacesByPostalCode)
+ */
+async function textSearch(
+  query: string,
   limit: number
-): Promise<GooglePlaceResult[]> {
-  if (!GOOGLE_PLACES_API_KEY) {
-    logger.error({
-      msg: "searchPlacesByPostalCode: missing GOOGLE_PLACES_API_KEY",
-    });
-    return [];
-  }
+): Promise<GooglePlaceSummary[]> {
+  const results: GooglePlaceSummary[] = [];
+  let nextPageToken: string | undefined;
+  let page = 0;
 
-  try {
-    const url = "https://maps.googleapis.com/maps/api/place/textsearch/json";
-
-    // On cible des "entreprises" en général, par code postal, en France
-    const params = {
-      key: GOOGLE_PLACES_API_KEY,
-      query: `entreprise ${postalCode} France`,
-      language: "fr",
-    };
-
-    const response = await axios.get(url, { params });
-
-    if (response.data.status !== "OK" && response.data.status !== "ZERO_RESULTS") {
-      logger.warn({
-        msg: "Google Places Text Search returned non-OK status",
-        status: response.data.status,
-        error_message: response.data.error_message,
-        postalCode,
-      });
+  do {
+    if (nextPageToken) {
+      // Google demande ~2s avant d'utiliser next_page_token
+      await wait(2000);
     }
 
-    const results: GooglePlaceResult[] = (response.data.results || []).map(
-      (item: any) => ({
-        name: item.name,
-        formatted_address: item.formatted_address,
-        place_id: item.place_id,
+    const params: any = {
+      query,
+      key: GOOGLE_PLACES_API_KEY,
+      language: "fr",
+    };
+    if (nextPageToken) params.pagetoken = nextPageToken;
+
+    const { data } = await axios.get(TEXT_SEARCH_URL, { params });
+
+    if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+      throw new Error(
+        `TextSearch error: status=${data.status}, message=${data.error_message}`
+      );
+    }
+
+    const pageResults: GooglePlaceSummary[] = (data.results || []).map(
+      (r: any) => ({
+        place_id: r.place_id,
+        name: r.name,
+        formatted_address: r.formatted_address,
       })
     );
 
-    // On tronque à "limit"
-    return results.slice(0, limit);
-  } catch (error: any) {
-    logger.error({
-      msg: "searchPlacesByPostalCode failed",
-      postalCode,
-      errorName: error?.name,
-      errorMessage: error?.message,
-      stack: error?.stack,
-    });
-    return [];
-  }
+    for (const r of pageResults) {
+      if (results.length >= limit) break;
+      results.push(r);
+    }
+
+    nextPageToken =
+      results.length < limit ? data.next_page_token : undefined;
+    page += 1;
+  } while (nextPageToken && results.length < limit && page < 3); // max 3 pages
+
+  return results;
 }
 
-// Récupère les détails (site web, téléphone...) pour un place_id
+/**
+ * Recherche générique par texte (utilisée par le service Pro leads)
+ * ex: "coiffure à domicile 44000 France"
+ */
+export async function searchPlacesByText(
+  query: string,
+  limit: number
+): Promise<GooglePlaceSummary[]> {
+  return textSearch(query, limit);
+}
+
+/**
+ * Recherche par code postal (utilisée par le service B2B leads)
+ * On fait juste un Text Search "44000 France"
+ */
+export async function searchPlacesByPostalCode(
+  postalCode: string,
+  limit: number
+): Promise<GooglePlaceSummary[]> {
+  const query = `${postalCode} France`;
+  return textSearch(query, limit);
+}
+
+/**
+ * Détails d'un lieu (utilisé par B2B et Pro)
+ */
 export async function getPlaceDetails(placeId: string): Promise<{
-  website?: string;
-  phoneNumber?: string;
   address?: string;
   postalCode?: string;
   city?: string;
+  website?: string;
+  phoneNumber?: string;
 }> {
-  if (!GOOGLE_PLACES_API_KEY) {
-    return {};
+  const params = {
+    place_id: placeId,
+    key: GOOGLE_PLACES_API_KEY,
+    language: "fr",
+    fields:
+      "name,formatted_address,website,international_phone_number,address_component",
+  };
+
+  const { data } = await axios.get(DETAILS_URL, { params });
+
+  if (data.status !== "OK") {
+    throw new Error(
+      `PlaceDetails error: status=${data.status}, message=${data.error_message}`
+    );
   }
 
-  try {
-    const url = "https://maps.googleapis.com/maps/api/place/details/json";
+  const r = data.result || {};
+  const components: any[] = r.address_components || [];
 
-    const params = {
-      key: GOOGLE_PLACES_API_KEY,
-      place_id: placeId,
-      language: "fr",
-      fields:
-        "name,formatted_address,website,formatted_phone_number,address_components",
-    };
+  const postalComp = components.find((c) =>
+    c.types.includes("postal_code")
+  );
+  const cityComp = components.find((c) =>
+    c.types.includes("locality")
+  );
 
-    const response = await axios.get(url, { params });
-
-    if (response.data.status !== "OK") {
-      logger.warn({
-        msg: "getPlaceDetails non-OK status",
-        status: response.data.status,
-        error_message: response.data.error_message,
-        placeId,
-      });
-      return {};
-    }
-
-    const result = response.data.result;
-
-    const address: string | undefined = result.formatted_address;
-    const postalCode = extractPostalCode(address);
-    const city = extractCity(address);
-
-    return {
-      website: result.website,
-      phoneNumber: result.formatted_phone_number,
-      address,
-      postalCode,
-      city,
-    };
-  } catch (error: any) {
-    logger.error({
-      msg: "getPlaceDetails failed",
-      placeId,
-      errorName: error?.name,
-      errorMessage: error?.message,
-      stack: error?.stack,
-    });
-    return {};
-  }
+  return {
+    address: r.formatted_address,
+    postalCode: postalComp?.long_name,
+    city: cityComp?.long_name,
+    website: r.website,
+    phoneNumber: r.international_phone_number,
+  };
 }

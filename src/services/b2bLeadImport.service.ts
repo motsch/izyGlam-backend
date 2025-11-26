@@ -57,6 +57,7 @@ export async function importB2BLeadsFromGooglePlaces() {
           // Comme on n'a pas d'email, on ne remplit PAS contactEmail.
           // On pourra l'ajouter plus tard quand on enrichira les données.
           const update = {
+            googlePlaceId: place.place_id,
             companyName,
             address,
             postalCode,
@@ -68,9 +69,9 @@ export async function importB2BLeadsFromGooglePlaces() {
             source: "api",
           };
 
-          // On évite les doublons (même companyName + postalCode)
+          // On évite les doublons avec googlePlaceId (un établissement = un lead)
           const lead = await B2BLeadModel.findOneAndUpdate(
-            { companyName, postalCode },
+            { googlePlaceId: place.place_id },
             { $set: update },
             { new: true, upsert: true }
           );

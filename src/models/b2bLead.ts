@@ -2,6 +2,9 @@ import mongoose, { Document, Schema } from "mongoose";
 
 // Interface TypeScript pour un lead B2B
 export interface IB2BLead extends Document {
+  // Identifiant Google Places (pour éviter les doublons)
+  googlePlaceId?: string;
+
   // Infos entreprise
   companyName: string;
   website?: string;
@@ -14,9 +17,12 @@ export interface IB2BLead extends Document {
   contactFirstName?: string;
   contactLastName?: string;
   contactJobTitle?: string;
-  contactEmail: string;
+  contactEmail?: string;          // <- plus required
   contactPhone?: string;
   linkedInUrl?: string;
+
+  // Autres emails éventuels
+  extraEmails?: string[];
 
   // Suivi & qualification
   status:
@@ -59,6 +65,8 @@ export interface IB2BLead extends Document {
 const b2bLeadSchema = new Schema<IB2BLead>(
   {
     // --- Infos entreprise ---
+    googlePlaceId: { type: String, trim: true, index: true },
+
     companyName: { type: String, required: true, trim: true },
     website: { type: String, trim: true },
     address: { type: String, trim: true },
@@ -78,6 +86,9 @@ const b2bLeadSchema = new Schema<IB2BLead>(
     },
     contactPhone: { type: String, trim: true },
     linkedInUrl: { type: String, trim: true },
+
+    // --- Autres emails ---
+    extraEmails: [{ type: String, lowercase: true, trim: true }],
 
     // --- Suivi & qualification ---
     status: {
@@ -129,8 +140,11 @@ const b2bLeadSchema = new Schema<IB2BLead>(
   }
 );
 
-// Un email de contact = un lead (tu peux changer si tu veux dupli)
-b2bLeadSchema.index({ contactEmail: 1 }, { unique: true });
+// Un email peut être unique, mais seulement quand il est défini
+b2bLeadSchema.index({ contactEmail: 1 }, { unique: true, sparse: true });
+
+// Un même établissement Google Places ne doit exister qu'une seule fois
+b2bLeadSchema.index({ googlePlaceId: 1 }, { unique: true, sparse: true });
 
 // Création du modèle
 const B2BLeadModel = mongoose.model<IB2BLead>("B2BLead", b2bLeadSchema);

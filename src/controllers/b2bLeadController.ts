@@ -1,6 +1,8 @@
 import B2BLeadModel from "../models/b2bLead";
 import * as express from "express";
 import { logger } from "../utils/logger";
+// src/controllers/b2bLeadController.ts
+import { enrichBatchB2BLeads } from "../services/emailEnrichment.service";
 
 // -- util: éviter de logguer des secrets par erreur
 function sanitize(obj: any) {
@@ -244,10 +246,44 @@ const deleteB2BLeadById = async (
   }
 };
 
+const enrichEmailsForLeads = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+
+    await enrichBatchB2BLeads(limit);
+
+    logger.info({
+      msg: "enrichEmailsForLeads triggered",
+      route: "POST /api/b2b-leads/enrich-emails",
+      limit,
+      userId: (req as any).user?._id,
+    });
+
+    res.json({
+      message: "Email enrichment triggered",
+      limit,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "enrichEmailsForLeads failed",
+      route: "POST /api/b2b-leads/enrich-emails",
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    res.status(500).json({ message: "Impossible de lancer l'enrichissement" });
+  }
+};
+
+
 module.exports = {
   createB2BLead,
   getAllB2BLeads,
   getB2BLeadById,
   updateB2BLeadById,
   deleteB2BLeadById,
+  enrichEmailsForLeads,
 };

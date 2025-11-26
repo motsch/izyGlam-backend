@@ -4,7 +4,7 @@ import { importB2BLeadsFromGooglePlaces } from "../services/b2bLeadImport.servic
 
 // Planification : tous les jours à 03:00 du matin
 // "0 3 * * *" => minute heure jourDuMois mois jourDeLaSemaine
-cron.schedule("0 3 * * *", async () => {
+cron.schedule("0 3 * * *", async () => {  //cron.schedule("*/2 * * * *", async () => {//
   logger.info({
     msg: "Cron job started: importB2BLeadsFromGooglePlaces",
     schedule: "0 3 * * *",

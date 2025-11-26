@@ -13,12 +13,14 @@ export interface iCompany extends mongoose.Document {
   industry: string; // Secteur d'activité de l'entreprise
   createdAt: Date; // Date de création du compte
   updatedAt: Date; // Date de la dernière mise à jour du compte
+  nbEmployees: number;
 }
 
 const companySchema = new mongoose.Schema<iCompany>({
   name: { type: String, required: true },
   adminId: { type: String, required: true },
   credit: { type: Number, required: true, default: 0 },
+  nbEmployees: { type: Number, required: true, default: 0 },
   siret: { type: String, required: true, unique: true },
   address: { type: String, required: true },
   phone: { type: String, required: true },

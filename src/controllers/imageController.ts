@@ -18,7 +18,7 @@ const uploadImage = async (req: MulterRequest, res: express.Response) => {
       });
       return res.status(400).json({ message: "Aucun fichier uploadé" });
     }
-    const imageUrl = `/uploads/images/${req.file.filename}`;
+    const imageUrl = `${req.file.filename}`;
 
     logger.info({
       msg: "uploadImage success",

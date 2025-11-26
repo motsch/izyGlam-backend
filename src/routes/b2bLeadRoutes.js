@@ -30,4 +30,10 @@ router.delete(
   b2bLeadController.deleteB2BLeadById
 );
 
+router.post(
+  "/b2b-leads/enrich-emails",
+  authMiddleware,
+  b2bLeadController.enrichEmailsForLeads
+);
+
 module.exports = router;
