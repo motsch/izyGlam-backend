@@ -4,6 +4,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 const multer = require('multer'); // Importer Multer pour gérer les fichiers
+const path = require('path');     // Pour récupérer les extensions de fichiers
 
 // Configurer Multer pour stocker les images dans le dossier "uploads/images/gallery"
 const storage = multer.diskStorage({
@@ -14,6 +15,7 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + file.originalname); // Nom unique pour chaque fichier
   }
 });
+
 
 const upload = multer({ storage: storage });
 
@@ -31,6 +33,22 @@ const storageShop = multer.diskStorage({
 });
 
 const uploadShopImage = multer({ storage: storageShop });
+
+/**
+ * ✅ Storage pour les documents de vérification (CNI, Assurance, Kbis)
+ *    Les fichiers sont stockés dans "uploads/docs"
+ */
+const storageDocs = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/docs'); // Dossier de stockage des docs
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + '-' + Math.round(Math.random() * 1e9) + ext);
+  }
+});
+
+const uploadVerificationDocs = multer({ storage: storageDocs });
 
 // Route to create a new shop
 router.post("/shop", authMiddleware, shopController.createShop);
@@ -55,6 +73,34 @@ router.post(
   shopController.processShopImage
 );
 
+router.post(
+  '/:id/verification-docs',
+  uploadVerificationDocs.fields([
+    { name: 'identityDoc', maxCount: 1 },
+    { name: 'insuranceDoc', maxCount: 1 },
+    { name: 'kbisDoc', maxCount: 1 }
+  ]),
+  shopController.updateVerificationDocs
+);
+
+// ✅ Upload des documents de vérification (Step 2)
+router.post(
+  "/shop/:id/verification-docs",
+  authMiddleware,
+  uploadVerificationDocs.fields([
+    { name: "identityDoc", maxCount: 1 },
+    { name: "insuranceDoc", maxCount: 1 },
+    { name: "kbisDoc", maxCount: 1 },
+  ]),
+  shopController.uploadVerificationDocs
+);
+
+// ✅ Récupérer le statut de vérification d'un shop
+router.get(
+  "/shop/:id/verification",
+  authMiddleware,
+  shopController.getShopVerificationStatus
+);
 
 // Route to retrieve all shops
 router.get("/shop", shopController.getAllShops);
@@ -89,7 +135,6 @@ router.post('/shop-gallery/:id/gallery/upload', authMiddleware, upload.array('ga
 // Route to get all gallery images for a shop
 router.get('/shop-gallery/:id/gallery', shopController.getGalleryImages);
 
-
 // Route to get all gallery images for a shop
 router.post('/shops-by-ids', shopController.getShopsByIds);
 
@@ -109,5 +154,11 @@ router.put("/shop-stats/bulk-update", authMiddleware, shopController.bulkUpdateS
 
 router.get('/shops-search', shopController.searchShopsWithServices);
 router.get("/shops-by-boss", authMiddleware, shopController.getShopsByBoss);
+
+router.post(
+  "/shop/validate-document",
+  authMiddleware,
+  shopController.validateVerificationDoc
+);
 
 module.exports = router;

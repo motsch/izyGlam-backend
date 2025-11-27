@@ -108,6 +108,8 @@ app.use("/api", b2bLeadRoutes);
 // Middleware pour servir les fichiers statiques
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));
 
+app.use('/uploads/docs', express.static(path.join(__dirname, '../uploads/docs')));
+
 // Créer le serveur HTTP basé sur Express
 const server = http.createServer(app);
 

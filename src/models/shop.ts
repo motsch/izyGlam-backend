@@ -26,6 +26,22 @@ type Moderation = {
   source?: "ai" | "human";
 };
 
+type VerificationDocStatus = "missing" | "pending" | "approved" | "rejected";
+
+type VerificationDoc = {
+  file?: string;                 // chemin du fichier ex: /uploads/docs/xxx.pdf
+  status: VerificationDocStatus; // état du doc
+  checkedAt?: Date | null;       // date de validation / refus
+};
+
+type Verification = {
+  identity: VerificationDoc;     // CNI / Passeport / Titre de séjour
+  insurance: VerificationDoc;    // Assurance obligatoire
+  kbis?: VerificationDoc;        // Kbis optionnel
+  globalStatus: "unverified" | "pending" | "verified" | "rejected";
+  method?: "manual" | "stripe_identity" | "mixed"; // pour plus tard, Stripe Identity
+};
+
 export interface iShop extends mongoose.Document {
   name: string;
   description: string;               // description corrigée (si approuvée)
@@ -81,6 +97,9 @@ export interface iShop extends mongoose.Document {
   status?: "pending" | "approved" | "blocked" | "needs_manual_review";
   flags?: string[];           // raisons synthétiques (mots-clés)
   moderation?: Moderation;    // détail de modération IA/humain
+
+  // ✅ Vérification pro & documents
+  verification?: Verification;
 }
 
 const defaultDaySchedule: DaySchedule = {
@@ -166,6 +185,47 @@ const shopSchema = new Schema<iShop>(
         morning: { type: Object, default: { start: "09:00", end: "12:00" } },
         afternoon: { type: Object, default: { start: "13:00", end: "18:00" } },
         closed: { type: Boolean, default: false },
+      },
+    },
+
+    // ✅ Vérification & documents
+    verification: {
+      identity: {
+        file: { type: String },
+        status: {
+          type: String,
+          enum: ["missing", "pending", "approved", "rejected"],
+          default: "missing",
+        },
+        checkedAt: { type: Date, default: null },
+      },
+      insurance: {
+        file: { type: String },
+        status: {
+          type: String,
+          enum: ["missing", "pending", "approved", "rejected"],
+          default: "missing",
+        },
+        checkedAt: { type: Date, default: null },
+      },
+      kbis: {
+        file: { type: String },
+        status: {
+          type: String,
+          enum: ["missing", "pending", "approved", "rejected"],
+          default: "missing",
+        },
+        checkedAt: { type: Date, default: null },
+      },
+      globalStatus: {
+        type: String,
+        enum: ["unverified", "pending", "verified", "rejected"],
+        default: "unverified",
+      },
+      method: {
+        type: String,
+        enum: ["manual", "stripe_identity", "mixed"],
+        default: "manual",
       },
     },
 

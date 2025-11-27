@@ -58,6 +58,7 @@ const getShopsByIds = async (req: any, res: express.Response) => {
     res.status(500).json({ message: 'Erreur lors de la récupération des shops favoris' });
   }
 };
+
 /**
  * Traitement IA de l'image principale d'un shop
  * - AUCUN upload depuis le front : on part de l'image déjà stockée
@@ -172,9 +173,6 @@ const processShopImage = async (req: any, res: express.Response) => {
     return res.status(500).json({ message: 'Error processing image' });
   }
 };
-
-
-
 
 // Créer une nouvelle boutique (shop)
 const createShop = async (req: express.Request, res: express.Response) => {
@@ -1188,6 +1186,295 @@ const getShopsByBoss = async (req: express.Request, res: express.Response) => {
   }
 };
 
+/**
+ * ✅ Upload des documents de vérification (pièce d’identité, assurance, Kbis)
+ * - Endpoint : POST /shop/:id/verification-docs
+ * - Champs de fichiers : identityDoc, insuranceDoc, kbisDoc
+ */
+const uploadVerificationDocs = async (req: any, res: express.Response) => {
+  logger.info({ msg: "shop.verification.upload.start", route: req.originalUrl, method: req.method, params: req.params });
+  try {
+    const { id } = req.params;
+    const files = (req.files || {}) as {
+      [field: string]: Express.Multer.File[];
+    };
+
+    const shop = await ShopModel.findById(id);
+    if (!shop) {
+      logger.warn({ msg: "shop.verification.upload.not_found", id });
+      return res.status(404).json({ message: "Boutique non trouvée" });
+    }
+
+    const identityFile = files.identityDoc?.[0];
+    const insuranceFile = files.insuranceDoc?.[0];
+    const kbisFile = files.kbisDoc?.[0];
+
+    if (!shop.verification) {
+      (shop as any).verification = {
+        identity: { status: "missing" },
+        insurance: { status: "missing" },
+        kbis: { status: "missing" },
+        globalStatus: "unverified",
+        method: "manual",
+      };
+    }
+
+    const verification: any = shop.verification || {};
+
+    if (identityFile) {
+      verification.identity = {
+        file: `/uploads/docs/${identityFile.filename}`,
+        status: "pending",
+        checkedAt: null,
+      };
+    }
+
+    if (insuranceFile) {
+      verification.insurance = {
+        file: `/uploads/docs/${insuranceFile.filename}`,
+        status: "pending",
+        checkedAt: null,
+      };
+    }
+
+    if (kbisFile) {
+      verification.kbis = {
+        file: `/uploads/docs/${kbisFile.filename}`,
+        status: "pending",
+        checkedAt: null,
+      };
+    }
+
+    const hasMandatoryDocs =
+      verification.identity?.file && verification.insurance?.file;
+
+    if (hasMandatoryDocs) {
+      verification.globalStatus = "pending";
+    } else if (!verification.identity?.file && !verification.insurance?.file) {
+      verification.globalStatus = "unverified";
+    }
+
+    shop.verification = verification;
+    await shop.save();
+
+    logger.info({
+      msg: "shop.verification.upload.success",
+      id,
+      hasIdentity: !!verification.identity?.file,
+      hasInsurance: !!verification.insurance?.file,
+      hasKbis: !!verification.kbis?.file,
+      globalStatus: verification.globalStatus,
+    });
+
+    return res.status(200).json({
+      message: "Documents uploadés avec succès",
+      verification: shop.verification,
+      shop,
+    });
+  } catch (error: any) {
+    console.error("Erreur uploadVerificationDocs :", error);
+    logger.error({
+      msg: "shop.verification.upload.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
+    return res.status(500).json({ message: "Erreur lors de l'upload des documents" });
+  }
+};
+
+/**
+ * ✅ Récupérer le statut de vérification pour un shop
+ * - Endpoint : GET /shop/:id/verification
+ */
+const getShopVerificationStatus = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.verification.get.start", route: req.originalUrl, method: req.method, params: req.params });
+  try {
+    const { id } = req.params;
+    const shop = await ShopModel.findById(id);
+
+    if (!shop) {
+      logger.warn({ msg: "shop.verification.get.not_found", id });
+      return res.status(404).json({ message: "Boutique non trouvée" });
+    }
+
+    const verification =
+      shop.verification ||
+      {
+        identity: { status: "missing" },
+        insurance: { status: "missing" },
+        kbis: { status: "missing" },
+        globalStatus: "unverified",
+        method: "manual",
+      };
+
+    logger.info({ msg: "shop.verification.get.success", id, globalStatus: verification.globalStatus });
+    return res.status(200).json(verification);
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.verification.get.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
+    return res.status(500).json({ message: "Erreur lors de la récupération du statut de vérification" });
+  }
+};
+
+
+export const updateVerificationDocs = async (req: Request, res: Response) => {
+  try {
+    const shopId = req.params.id;
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) return res.status(404).send({ error: "Shop not found" });
+
+    const files = req.files as { [key: string]: Express.Multer.File[] };
+
+    if (!shop.verification) {
+      shop.verification = {
+        identity: { status: "missing" },
+        insurance: { status: "missing" },
+        kbis: { status: "missing" },
+        globalStatus: "pending",
+        method: "manual"
+      };
+    }
+
+    if (files.identityDoc?.[0]) {
+      shop.verification.identity = {
+        file: `/uploads/docs/${files.identityDoc[0].filename}`,
+        status: "pending",
+        checkedAt: undefined
+      };
+    }
+
+    if (files.insuranceDoc?.[0]) {
+      shop.verification.insurance = {
+        file: `/uploads/docs/${files.insuranceDoc[0].filename}`,
+        status: "pending",
+        checkedAt: undefined
+      };
+    }
+
+    if (files.kbisDoc?.[0]) {
+      shop.verification.kbis = {
+        file: `/uploads/docs/${files.kbisDoc[0].filename}`,
+        status: "pending",
+        checkedAt: undefined
+      };
+    }
+
+    shop.verification.globalStatus = "pending";
+
+    await shop.save();
+
+    res.send({ success: true, verification: shop.verification });
+
+  } catch (err) {
+    console.error("Erreur updateVerificationDocs :", err);
+    res.status(500).send({ error: "Server error" });
+  }
+};
+
+// ✅ Validation manuelle d’un document de vérification
+// body: { shopId: string, docType: 'identity' | 'insurance' | 'kbis', status: 'missing' | 'pending' | 'approved' | 'rejected' }
+const validateVerificationDoc = async (req: express.Request, res: express.Response) => {
+  try {
+    const { shopId, docType, status } = req.body as {
+      shopId?: string;
+      docType?: 'identity' | 'insurance' | 'kbis';
+      status?: 'missing' | 'pending' | 'approved' | 'rejected';
+    };
+
+    if (!shopId || !docType || !status) {
+      return res.status(400).json({ message: "Missing parameters" });
+    }
+
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) {
+      return res.status(404).json({ message: "Shop not found" });
+    }
+
+    // -------------------------------------------------
+    // 🔐 On récupère un objet "verification" toujours défini
+    // -------------------------------------------------
+    const verification: any =
+      shop.verification || {
+        identity: {
+          file: undefined,
+          status: "missing",
+          checkedAt: null,
+        },
+        insurance: {
+          file: undefined,
+          status: "missing",
+          checkedAt: null,
+        },
+        kbis: {
+          file: undefined,
+          status: "missing",
+          checkedAt: null,
+        },
+        globalStatus: "unverified",
+        method: "manual",
+      };
+
+    // -------------------------------------------------
+    // ✏️ Mise à jour du doc ciblé
+    // -------------------------------------------------
+    if (docType === "identity" || docType === "insurance" || docType === "kbis") {
+      const current = verification[docType] || {};
+      verification[docType] = {
+        ...current,
+        status,
+        checkedAt: new Date(),
+      };
+    }
+
+    // -------------------------------------------------
+    // 🌐 Recalcul du statut global
+    // -------------------------------------------------
+    const allDocs: Array<'identity' | 'insurance' | 'kbis'> = [
+      "identity",
+      "insurance",
+      "kbis",
+    ];
+
+    const statuses = allDocs
+      .map((d) => verification[d]?.status as string | undefined)
+      .filter(Boolean) as Array<'missing' | 'pending' | 'approved' | 'rejected'>;
+
+    if (statuses.length === 0) {
+      verification.globalStatus = "unverified";
+    } else if (statuses.every((s) => s === "approved")) {
+      verification.globalStatus = "verified";
+    } else if (statuses.some((s) => s === "rejected")) {
+      verification.globalStatus = "rejected";
+    } else {
+      verification.globalStatus = "pending";
+    }
+
+    // -------------------------------------------------
+    // 💾 Sauvegarde
+    // -------------------------------------------------
+    shop.verification = verification;
+    await shop.save();
+
+    return res.status(200).json({
+      message: "Verification updated",
+      verification: shop.verification,
+    });
+  } catch (error: any) {
+    console.error("Erreur validateVerificationDoc :", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+
 module.exports = {
   getShopsByBoss,
   getShopsAllCount,
@@ -1202,6 +1489,7 @@ module.exports = {
   getShopsByUserId,
   uploadGalleryImages,
   getGalleryImages,
+  updateVerificationDocs,
   getShopsByIds,
   addShopReview,
   incrementImpression,
@@ -1209,8 +1497,11 @@ module.exports = {
   bulkUpdateShopStats,
   processShopImage,
   searchShopsWithServices,
+  validateVerificationDoc,
   getIzyGlamDescription,
   uploadServiceImageAI,
   getIzyGlamProductDescription,
   getShopsByPostalCodesWithCategories,
+  uploadVerificationDocs,
+  getShopVerificationStatus,
 };
