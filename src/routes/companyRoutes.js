@@ -39,4 +39,47 @@ router.get(
   companyController.getEmployeeBookings
 );
 
+
+
+// --- B2B: gestion des employés & crédits ---
+
+// Créer un employé pour une company (B2B)
+router.post(
+  "/company/:companyId/employees",
+  authMiddleware,
+  companyController.createCompanyEmployee
+);
+
+// Mettre à jour le crédit courant d'un employé (solde)
+router.patch(
+  "/company/:companyId/employees/:employeeId/credit",
+  authMiddleware,
+  companyController.updateEmployeeCurrentCredit
+);
+
+// Mettre à jour l'allocation mensuelle d'un employé (cible)
+router.patch(
+  "/company/:companyId/employees/:employeeId/monthly-credit",
+  authMiddleware,
+  companyController.updateEmployeeMonthlyCredit
+);
+
+// Activer / désactiver un employé (désactivation => retour du crédit sur l'entreprise)
+router.patch(
+  "/company/:companyId/employees/:employeeId/status",
+  authMiddleware,
+  companyController.updateEmployeeStatus
+);
+
+// Reset global des allocations (optionnel, pour plus tard)
+router.post(
+  "/company/:companyId/reset-allocations",
+  authMiddleware,
+  companyController.resetCompanyAllocations
+);
+
+
+
+
+
 module.exports = router;

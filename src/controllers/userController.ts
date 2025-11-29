@@ -8,6 +8,7 @@ import { resolveLang } from "../i18n/resolveLang";
 import { logger } from "../utils/logger";
 import { randomBytes } from "node:crypto";
 import { makeTransport } from "../utils/mailer";
+import CompanyModel from "../models/company";
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://izyglam.com";
 
 // import
@@ -702,6 +703,121 @@ const getAllByAdminOptions = async (req: any, res: express.Response) => {
     res.status(500).json({ message: "Impossible de récupérer les utilisateurs" });
   }
 };
+
+
+/**
+ * POST /users/:id/reset-company-password
+ * Réinitialise le mot de passe d'un employé avec le mot de passe par défaut
+ * défini sur l'entreprise (company.defaultPassword).
+ *
+ * Accès : admin / entreprise / boss
+ */
+const resetEmployeePasswordFromCompany = async (
+  req: any,
+  res: express.Response
+) => {
+  try {
+    const employeeId = (req.params.id || "").trim();
+    logger.info({ msg: "user.resetCompanyPassword.start", employeeId });
+
+    if (!employeeId) {
+      return res.status(400).json({ message: "ID employé manquant dans l’URL." });
+    }
+
+    // ✅ authMiddleware doit avoir posé req.user
+    const requester = req.user;
+    if (!requester) {
+      logger.warn({ msg: "user.resetCompanyPassword.noRequester", employeeId });
+      return res.status(401).json({ message: "Non authentifié." });
+    }
+
+    const allowedRoles = ["admin", "entreprise", "boss"];
+    if (!allowedRoles.includes(requester.role)) {
+      logger.warn({
+        msg: "user.resetCompanyPassword.forbiddenRole",
+        employeeId,
+        role: requester.role,
+      });
+      return res.status(403).json({
+        message: "Accès refusé : seuls admin / entreprise / boss peuvent réinitialiser un mot de passe employé.",
+      });
+    }
+
+    // 🔎 On récupère l’employé
+    const employee = await UserModel.findById(employeeId);
+    if (!employee) {
+      logger.warn({ msg: "user.resetCompanyPassword.employeeNotFound", employeeId });
+      return res.status(404).json({ message: "Employé introuvable." });
+    }
+
+    // 🔗 On attend un companyId sur l’employé
+    const companyId = employee.companyId;
+    if (!companyId) {
+      logger.warn({
+        msg: "user.resetCompanyPassword.noCompanyId",
+        employeeId,
+      });
+      return res.status(400).json({
+        message:
+          "Cet utilisateur n'est pas rattaché à une entreprise (companyId manquant).",
+      });
+    }
+
+    // 🏢 Récupérer la company pour lire defaultPassword
+    const company = await CompanyModel.findById(companyId);
+    if (!company) {
+      logger.warn({
+        msg: "user.resetCompanyPassword.companyNotFound",
+        employeeId,
+        companyId,
+      });
+      return res.status(404).json({ message: "Entreprise introuvable pour cet employé." });
+    }
+
+    // 🔐 Mot de passe par défaut : priorité à company.defaultPassword
+    let defaultPassword: string;
+
+    if (company.defaultPassword && typeof company.defaultPassword === "string") {
+      defaultPassword = company.defaultPassword;
+    } else {
+      // Fallback de sécurité si jamais defaultPassword n’est pas défini
+      defaultPassword = "izyGl@m" + new Date().getFullYear() + "!";
+    }
+
+    // ✅ On applique le nouveau mot de passe
+    employee.password = defaultPassword;
+    await employee.save(); // hook mongoose => hash du mot de passe
+
+    // On nettoie la réponse (pas de password ni tokens)
+    const safeEmployee = employee.toObject();
+    delete (safeEmployee as any).password;
+    delete (safeEmployee as any).resetPasswordToken;
+    delete (safeEmployee as any).resetPasswordExpires;
+
+    logger.info({
+      msg: "user.resetCompanyPassword.success",
+      employeeId,
+      companyId,
+    });
+
+    return res.status(200).json({
+      message: "Mot de passe réinitialisé avec succès pour cet employé.",
+      employee: safeEmployee,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "user.resetCompanyPassword.error",
+      employeeId: (req as any)?.params?.id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    console.error("Erreur resetCompanyPassword:", error);
+    return res.status(500).json({
+      message: "Erreur serveur lors de la réinitialisation du mot de passe.",
+    });
+  }
+};
+
 
 const getUserById = async (req: any, res: express.Response) => {
   try {
@@ -1418,6 +1534,7 @@ module.exports = {
   getSubscriptionInfo,
   removeEmployeeFromBoss,
   updateUserCountryById,
+  resetEmployeePasswordFromCompany,
   verifyEmail,
   resendVerificationEmail,
   createAndAddEmployeeToBoss,

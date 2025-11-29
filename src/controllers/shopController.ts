@@ -124,10 +124,10 @@ const processShopImage = async (req: any, res: express.Response) => {
         'Do not change the face shape, eyes, nose, mouth, freckles, moles or haircut.',
         'Replace the clothing with a plain white t-shirt with a simple round collar, no logo, no text, no pattern.',
         'Use a very light grey studio background, uniform and clean, with no objects or textures.',
-        'Center the person in the frame, head and upper torso visible, facing the camera.',
+        'Center the person in the frame, with the head, shoulders and upper chest fully visible (avoid close-up cropping).',
         'Use soft, natural studio lighting, no harsh shadows, realistic photographic style.',
         'Enhance image quality (sharpness, contrast, colors) but avoid beauty filters that could alter the person’s identity.',
-        'All portraits on the platform must look consistent: same light, same light grey background, same white t-shirt style.',
+        'All portraits on the platform must look consistent: same light, same light grey background, same white t-shirt style.'
       ].join(' ')
     );
 

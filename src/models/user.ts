@@ -31,6 +31,10 @@ export interface iUser extends Document {
   bank?: BankInformation;
   linkedin: any;
   bluesky: any;
+    companyMonthlyCredit?: number; // allocation mensuelle "théorique" de l'employé
+  companyRole?: "employee" | "manager" | "executive"; // rôle interne à l'entreprise
+  companyContractEnd?: Date | null; // date de fin de contrat (pour gérer les 90 jours de grâce)
+
   x: any;
   thread: any;
   tiktok: any;
@@ -123,6 +127,13 @@ const userSchema = new Schema<iUser>({
   active: { type: Boolean, default: false }, // ✅ par défaut à false
   emailVerificationToken: { type: String },
 
+  companyMonthlyCredit: { type: Number, default: 0 },
+  companyRole: {
+    type: String,
+    enum: ["employee", "manager", "executive"],
+    default: "employee",
+  },
+  companyContractEnd: { type: Date },
 
   createdAt: { type: String },
   updatedAt: { type: String },

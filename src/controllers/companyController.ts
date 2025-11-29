@@ -1,8 +1,8 @@
-import CompanyModel from "../models/company";
 import * as express from "express";
 import { logger } from "../utils/logger";
 import UserModel from "../models/user";
 import BookingModel from "../models/booking";
+import CompanyModel, { CompanyRoleKey, RoleCreditConfig } from "../models/company";
 
 // -- util: éviter de logguer des secrets par erreur
 function sanitize(obj: any) {
@@ -136,6 +136,25 @@ const getCompanyById = async (req: express.Request, res: express.Response) => {
 const updateCompanyById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    const updates = req.body || {};
+
+    // 🔒 Si on tente de modifier le crédit de l'entreprise, on vérifie que
+    // le nouveau crédit n'est pas inférieur à la somme des crédits employés.
+    if (typeof updates.credit === "number") {
+      const employees = await UserModel.find({ companyId: id }).select("credit").lean();
+      const totalEmployeesCredit = employees.reduce(
+        (sum, e: any) => sum + (Number(e.credit) || 0),
+        0
+      );
+
+      if (updates.credit < totalEmployeesCredit) {
+        return res.status(400).json({
+          message:
+            "Impossible de diminuer le crédit entreprise en dessous du total alloué aux employés.",
+          totalEmployeesCredit,
+        });
+      }
+    }
     const updatedCompany = await CompanyModel.findByIdAndUpdate(id, req.body, { new: true });
 
     if (updatedCompany) {
@@ -364,12 +383,448 @@ const getEmployeeBookings = async (req: express.Request, res: express.Response) 
   }
 };
 
+
+
+// ------------------------------------------------------------
+// Créer un employé rattaché à une entreprise (B2B)
+// ------------------------------------------------------------
+const createCompanyEmployee = async (req: express.Request, res: express.Response) => {
+  try {
+    const { companyId } = req.params;
+    const {
+      firstname,
+      lastname,
+      email,
+      phone,
+      sex,
+      initialCredit = 0,
+      companyRole = "employee",
+      companyMonthlyCredit,   // optionnel, sinon calculé via role
+      companyContractEnd,     // optionnel
+    } = req.body;
+
+    const company = await CompanyModel.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ message: "Entreprise introuvable" });
+    }
+
+    // Vérifie qu'on n'a pas déjà un user avec cet email
+    const existing = await UserModel.findOne({ email });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "Un utilisateur avec cet email existe déjà" });
+    }
+
+    // -------------------------------
+    // Détermine l'allocation mensuelle
+    // -------------------------------
+    const roleKey: CompanyRoleKey =
+      (companyRole as CompanyRoleKey) || "employee";
+
+    const roleConfig: RoleCreditConfig = company.roleCreditConfig || {
+      employee: 0,
+      manager: 0,
+      executive: 0,
+    };
+
+    const defaultMonthly =
+      typeof companyMonthlyCredit === "number"
+        ? companyMonthlyCredit
+        : (roleConfig[roleKey] ?? company.monthlyBaseCreditPerEmployee);
+
+    // Montant à allouer à la création
+    const creditToAllocate = Math.max(0, Number(initialCredit) || 0);
+
+    // Vérification du solde entreprise
+    if (creditToAllocate > 0 && company.credit < creditToAllocate) {
+      return res.status(400).json({
+        message:
+          "Crédit entreprise insuffisant pour allouer ce montant à l'employé.",
+        companyCredit: company.credit,
+        requested: creditToAllocate,
+      });
+    }
+
+    // Mot de passe par défaut
+    const defaultPassword =
+      company.defaultPassword || "izyGl@m" + new Date().getFullYear() + "!";
+
+    const newUser = new UserModel({
+      firstname,
+      lastname,
+      email,
+      phone,
+      sex,
+      password: defaultPassword,
+      role: "user", // tu peux changer en "entreprise" si besoin
+      companyId: companyId,
+      credit: creditToAllocate,
+      companyMonthlyCredit: defaultMonthly,
+      companyRole: roleKey,
+      companyContractEnd: companyContractEnd ? new Date(companyContractEnd) : null,
+      active: true,
+      conversationId: "",
+      abonnement: "free",
+      favoriteShops: [],
+      proches: [],
+      address: [],
+      fidelity: {
+        stars: 0,
+        card_expiration: new Date(),
+        rewards_history: [],
+      },
+      country: "",
+      language: "fr",
+    });
+
+    await newUser.save();
+
+    // Mise à jour company: solde + nbEmployees + monthlyTotalAmount
+    if (creditToAllocate > 0) {
+      company.credit -= creditToAllocate;
+    }
+    company.nbEmployees = company.nbEmployees + 1;
+    company.monthlyTotalAmount =
+      Number(company.monthlyTotalAmount || 0) + Number(defaultMonthly || 0);
+    await company.save();
+
+    logger.info({
+      msg: "createCompanyEmployee success",
+      route: "POST /api/company/:companyId/employees",
+      companyId,
+      userId: newUser._id?.toString(),
+    });
+
+    res.status(201).json({
+      employee: newUser,
+      company,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "createCompanyEmployee failed",
+      route: "POST /api/company/:companyId/employees",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      body: sanitize(req.body),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    res
+      .status(500)
+      .json({ message: "Impossible de créer l'employé pour cette entreprise" });
+  }
+};
+
+
+// ------------------------------------------------------------
+// Mettre à jour le crédit courant d'un employé (solde user.credit)
+// en ajustant company.credit en conséquence
+// ------------------------------------------------------------
+const updateEmployeeCurrentCredit = async (req: express.Request, res: express.Response) => {
+  try {
+    const { companyId, employeeId } = req.params;
+    const { newCredit } = req.body as { newCredit: number };
+
+    const company = await CompanyModel.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ message: "Entreprise introuvable" });
+    }
+
+    const user = await UserModel.findById(employeeId);
+    if (!user || user.companyId !== companyId) {
+      return res.status(404).json({ message: "Employé introuvable pour cette entreprise" });
+    }
+
+    const currentCredit = Number(user.credit) || 0;
+    const targetCredit = Math.max(0, Number(newCredit) || 0);
+    const diff = targetCredit - currentCredit;
+
+    // Si on augmente le crédit de l'employé => on prélève sur l'entreprise
+    if (diff > 0) {
+      if (company.credit < diff) {
+        return res.status(400).json({
+          message:
+            "Crédit entreprise insuffisant pour augmenter le crédit de cet employé.",
+          companyCredit: company.credit,
+          requestedIncrease: diff,
+        });
+      }
+      company.credit -= diff;
+    }
+
+    // Si on baisse le crédit de l'employé => on rembourse l'entreprise
+    if (diff < 0) {
+      company.credit += Math.abs(diff);
+    }
+
+    user.credit = targetCredit;
+    await user.save();
+    await company.save();
+
+    logger.info({
+      msg: "updateEmployeeCurrentCredit success",
+      route: "PATCH /api/company/:companyId/employees/:employeeId/credit",
+      companyId,
+      employeeId,
+      diff,
+    });
+
+    res.json({ employee: user, company });
+  } catch (error: any) {
+    logger.error({
+      msg: "updateEmployeeCurrentCredit failed",
+      route: "PATCH /api/company/:companyId/employees/:employeeId/credit",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      body: sanitize(req.body),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    res
+      .status(500)
+      .json({ message: "Impossible de mettre à jour le crédit de l'employé" });
+  }
+};
+
+// ------------------------------------------------------------
+// Mettre à jour l'allocation mensuelle (companyMonthlyCredit)
+// et ajuster monthlyTotalAmount pour l'entreprise
+// ------------------------------------------------------------
+const updateEmployeeMonthlyCredit = async (req: express.Request, res: express.Response) => {
+  try {
+    const { companyId, employeeId } = req.params;
+    const { newMonthlyCredit } = req.body as { newMonthlyCredit: number };
+
+    const company = await CompanyModel.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ message: "Entreprise introuvable" });
+    }
+
+    const user = await UserModel.findById(employeeId);
+    if (!user || user.companyId !== companyId) {
+      return res.status(404).json({ message: "Employé introuvable pour cette entreprise" });
+    }
+
+    const currentMonthly = Number(user.companyMonthlyCredit) || 0;
+    const targetMonthly = Math.max(0, Number(newMonthlyCredit) || 0);
+    const diff = targetMonthly - currentMonthly;
+
+    user.companyMonthlyCredit = targetMonthly;
+    company.monthlyTotalAmount =
+      Number(company.monthlyTotalAmount || 0) + Number(diff || 0);
+
+    await user.save();
+    await company.save();
+
+    logger.info({
+      msg: "updateEmployeeMonthlyCredit success",
+      route: "PATCH /api/company/:companyId/employees/:employeeId/monthly-credit",
+      companyId,
+      employeeId,
+      diff,
+    });
+
+    res.json({ employee: user, company });
+  } catch (error: any) {
+    logger.error({
+      msg: "updateEmployeeMonthlyCredit failed",
+      route: "PATCH /api/company/:companyId/employees/:employeeId/monthly-credit",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      body: sanitize(req.body),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    res.status(500).json({
+      message: "Impossible de mettre à jour l'allocation mensuelle de l'employé",
+    });
+  }
+};
+
+// ------------------------------------------------------------
+// Mise à jour du statut d'un employé (active / inactive)
+// Désactivation => retour du crédit + retrait du montant mensuel
+// ------------------------------------------------------------
+const updateEmployeeStatus = async (req: express.Request, res: express.Response) => {
+  try {
+    const { companyId, employeeId } = req.params;
+    const { active } = req.body as { active: boolean };
+
+    const company = await CompanyModel.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ message: "Entreprise introuvable" });
+    }
+
+    const user = await UserModel.findById(employeeId);
+    if (!user || user.companyId !== companyId) {
+      return res.status(404).json({ message: "Employé introuvable pour cette entreprise" });
+    }
+
+    const wasActive = !!user.active;
+    const willBeActive = !!active;
+
+    if (!wasActive && willBeActive) {
+      // Réactivation : il ne récupère pas de crédit magique,
+      // mais on le réintègre dans monthlyTotalAmount
+      company.monthlyTotalAmount =
+        Number(company.monthlyTotalAmount || 0) +
+        Number(user.companyMonthlyCredit || 0);
+    }
+
+    if (wasActive && !willBeActive) {
+      // Désactivation : on rembourse son solde à l'entreprise
+      const refund = Number(user.credit) || 0;
+      if (refund > 0) {
+        company.credit += refund;
+        user.credit = 0;
+      }
+      // et on le retire du mois Stripe
+      company.monthlyTotalAmount =
+        Number(company.monthlyTotalAmount || 0) -
+        Number(user.companyMonthlyCredit || 0);
+    }
+
+    user.active = willBeActive;
+
+    await user.save();
+    await company.save();
+
+    logger.info({
+      msg: "updateEmployeeStatus success",
+      route: "PATCH /api/company/:companyId/employees/:employeeId/status",
+      companyId,
+      employeeId,
+      active: willBeActive,
+    });
+
+    res.json({ employee: user, company });
+  } catch (error: any) {
+    logger.error({
+      msg: "updateEmployeeStatus failed",
+      route: "PATCH /api/company/:companyId/employees/:employeeId/status",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      body: sanitize(req.body),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    res.status(500).json({
+      message: "Impossible de mettre à jour le statut de l'employé",
+    });
+  }
+};
+
+// ------------------------------------------------------------
+// Reset des crédits de tous les employés sur la base du barème
+// de l'entreprise (roleCreditConfig / monthlyBaseCreditPerEmployee)
+// Sans dépasser le solde entreprise
+// ------------------------------------------------------------
+const resetCompanyAllocations = async (req: express.Request, res: express.Response) => {
+  try {
+    const { companyId } = req.params;
+
+    const company = await CompanyModel.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ message: "Entreprise introuvable" });
+    }
+
+    const employees = await UserModel.find({ companyId, active: true });
+
+    // Montant total souhaité
+    let totalNeeded = 0;
+    const targetByUser = new Map<string, number>();
+
+    const roleConfig = company.roleCreditConfig || {
+      employee: 0,
+      manager: 0,
+      executive: 0,
+    };
+
+    employees.forEach((u) => {
+      const roleKey: CompanyRoleKey =
+        (u.companyRole as CompanyRoleKey) || "employee";
+
+      const target =
+        roleConfig[roleKey] ?? company.monthlyBaseCreditPerEmployee;
+
+      targetByUser.set(u._id.toString(), target);
+      totalNeeded += target;
+    });
+
+    if (totalNeeded > company.credit) {
+      return res.status(400).json({
+        message:
+          "Crédit entreprise insuffisant pour appliquer le reset à tous les employés.",
+        companyCredit: company.credit,
+        totalNeeded,
+      });
+    }
+
+    // On remet tous les crédits à 0, puis on alloue
+    for (const u of employees) {
+      const current = Number(u.credit) || 0;
+      if (current > 0) {
+        company.credit += current; // on rembourse d'abord tout
+      }
+
+      const target = targetByUser.get(u._id.toString()) || 0;
+      u.credit = target;
+      u.companyMonthlyCredit = target;
+      company.credit -= target;
+
+      await u.save();
+    }
+
+    company.monthlyTotalAmount = totalNeeded;
+    await company.save();
+
+    logger.info({
+      msg: "resetCompanyAllocations success",
+      route: "POST /api/company/:companyId/reset-allocations",
+      companyId,
+      employeesCount: employees.length,
+      totalAllocated: totalNeeded,
+    });
+
+    res.json({ company, employees });
+  } catch (error: any) {
+    logger.error({
+      msg: "resetCompanyAllocations failed",
+      route: "POST /api/company/:companyId/reset-allocations",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      body: sanitize(req.body),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    res.status(500).json({
+      message: "Impossible de réinitialiser les allocations de l'entreprise",
+    });
+  }
+};
+
 module.exports = {
   createCompany,
   getAllCompanies,
   getCompanyById,
   updateCompanyById,
+  createCompanyEmployee,
+  updateEmployeeStatus,
+  resetCompanyAllocations,
   deleteCompanyById,
+  updateEmployeeMonthlyCredit,
+  updateEmployeeCurrentCredit,
   getCompaniesByIndustry,
   getEmployeesByCompanyId,
   getEmployeeBookings, // 👈 ajouté

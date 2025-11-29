@@ -7,7 +7,12 @@ const router = express.Router();
 // Forgot password functionality
 router.post("/forgot-password", usersController.forgotPassword);
 router.post("/reset-password", usersController.resetPassword);
-
+// ✅ Nouvelle route : reset mot de passe employé par l’entreprise/admin
+router.post(
+  "/users/:id/reset-company-password",
+  authMiddleware,
+  usersController.resetEmployeePasswordFromCompany
+);
 // Route to update the user's abonnement
 router.post("/update-abonnement", usersController.updateAbonnement);
 
