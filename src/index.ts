@@ -12,6 +12,7 @@ import ConversationModel from './models/conversation';
 import { seedDatabase } from './seeds/seeder';
 import "./cron/b2bLeadImport.cron";
 import "./cron/proLeadImport.cron";
+import { startB2BDripCron } from "./cron/b2bDripCron";
 
 
 const app = express();
@@ -193,6 +194,7 @@ mongoose
   .then(async () => {
     await seedDatabase();
     await seedCities();
+    await startB2BDripCron();
     console.log("Connexion à la base de données réussie");
   })
   .catch((err: any) => {
@@ -204,6 +206,8 @@ mongoose
 server.listen(port, () => {
   console.log(`✅ Serveur HTTP + WebSocket démarré sur https://izyglam.com`);
 });
+// 🔥 Démarrer le cron DRIP B2B APRÈS la connexion DB
+startB2BDripCron();
 
 const seedCities = async () => {
   const count = await CityModel.countDocuments();

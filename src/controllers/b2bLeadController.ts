@@ -1,8 +1,12 @@
+// src/controllers/b2bLeadController.ts
 import B2BLeadModel from "../models/b2bLead";
 import * as express from "express";
 import { logger } from "../utils/logger";
-// src/controllers/b2bLeadController.ts
 import { enrichBatchB2BLeads } from "../services/emailEnrichment.service";
+import {
+  sendDripEmailForLead,
+  processDripQueue,
+} from "../services/b2bDripEmail.service";
 
 // -- util: éviter de logguer des secrets par erreur
 function sanitize(obj: any) {
@@ -53,7 +57,6 @@ const createB2BLead = async (req: express.Request, res: express.Response) => {
       stack: error?.stack,
     });
 
-    // gestion du cas email déjà utilisé (unique index)
     if (error?.code === 11000) {
       return res
         .status(409)
@@ -278,6 +281,110 @@ const enrichEmailsForLeads = async (
   }
 };
 
+// --- Envoi manuel d'un email X pour un lead ---
+const sendDripEmailToLead = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  const { id, step } = req.params;
+
+  try {
+    const stepNumber = Number(step);
+    const updatedLead = await sendDripEmailForLead(id, stepNumber);
+
+    logger.info({
+      msg: "sendDripEmailToLead success",
+      route: "POST /api/b2b-leads/:id/send-email/:step",
+      method: req.method,
+      url: req.originalUrl,
+      leadId: id,
+      step: stepNumber,
+      userId: (req as any).user?._id,
+    });
+
+    res.json(updatedLead);
+  } catch (error: any) {
+    logger.error({
+      msg: "sendDripEmailToLead failed",
+      route: "POST /api/b2b-leads/:id/send-email/:step",
+      method: req.method,
+      url: req.originalUrl,
+      leadId: id,
+      step,
+      userId: (req as any).user?._id,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+
+    if (
+      error?.message === "Lead introuvable" ||
+      error?.message?.includes("introuvable")
+    ) {
+      return res.status(404).json({ message: "Lead B2B non trouvé" });
+    }
+
+    if (error?.message === "Ce lead n'a pas d'email de contact") {
+      return res
+        .status(400)
+        .json({ message: "Ce lead n'a pas d'email principal" });
+    }
+
+    if (error?.message?.includes("déjà été envoyé")) {
+      return res.status(409).json({ message: error.message });
+    }
+
+    if (error?.message?.includes("step doit être entre 1 et 5")) {
+      return res
+        .status(400)
+        .json({ message: "L'étape d'email doit être comprise entre 1 et 5." });
+    }
+
+    res.status(500).json({
+      message: "Impossible d'envoyer l'email pour le moment",
+    });
+  }
+};
+
+// --- Job auto : lancer le traitement de la file DRIP ---
+const runDripAutomation = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const limit = req.query.limit ? Number(req.query.limit) : 50;
+    const stats = await processDripQueue(limit);
+
+    logger.info({
+      msg: "runDripAutomation success",
+      route: "POST /api/b2b-leads/drip/process",
+      method: req.method,
+      url: req.originalUrl,
+      limit,
+      stats,
+      userId: (req as any).user?._id,
+    });
+
+    res.json({
+      message: "Drip queue processed",
+      ...stats,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "runDripAutomation failed",
+      route: "POST /api/b2b-leads/drip/process",
+      method: req.method,
+      url: req.originalUrl,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+
+    res
+      .status(500)
+      .json({ message: "Impossible de traiter la file DRIP pour le moment" });
+  }
+};
 
 module.exports = {
   createB2BLead,
@@ -286,4 +393,6 @@ module.exports = {
   updateB2BLeadById,
   deleteB2BLeadById,
   enrichEmailsForLeads,
+  sendDripEmailToLead,
+  runDripAutomation,
 };

@@ -120,16 +120,31 @@ const processShopImage = async (req: any, res: express.Response) => {
     formData.append(
       'prompt',
       [
-        'Keep the exact same person, face, facial features, skin tone and expression so they remain easily recognizable.',
-        'Do not change the face shape, eyes, nose, mouth, freckles, moles or haircut.',
+        // 1) Identité : miroir de la photo d'origine
+        'Use the original input photo as a strict identity reference.',
+        'The person in the edited image must look exactly like the person in the original photo, as if it were a perfect mirror.',
+        'Do not change the person’s age, ethnicity, gender, head shape or facial proportions.',
+        'Do not change the distance between the eyes, the size or shape of the nose, the lips, the jawline, the ears, or the forehead.',
+        'Do not modify or remove any distinctive marks such as freckles, moles, scars or skin texture.',
+        'Absolutely no beauty filters: do not smooth the skin, do not reduce pores, do not erase wrinkles, do not change skin tone or facial structure.',
+
+        // 2) Vêtements + fond
         'Replace the clothing with a plain white t-shirt with a simple round collar, no logo, no text, no pattern.',
         'Use a very light grey studio background, uniform and clean, with no objects or textures.',
-        'Center the person in the frame, with the head, shoulders and upper chest fully visible (avoid close-up cropping).',
-        'Use soft, natural studio lighting, no harsh shadows, realistic photographic style.',
-        'Enhance image quality (sharpness, contrast, colors) but avoid beauty filters that could alter the person’s identity.',
-        'All portraits on the platform must look consistent: same light, same light grey background, same white t-shirt style.'
+
+        // 3) Cadrage + format
+        'Generate a perfectly square image (1:1 aspect ratio).',
+        'Center the person in the frame.',
+        'The head, neck, shoulders and upper torso must be fully visible, and the crop must go down clearly below the chest level (do not crop above the chest).',
+
+        // 4) Style photo
+        'Use soft, natural studio lighting, with realistic photographic rendering, no illustration style.',
+        'Enhance image quality (sharpness, contrast, colors) but without altering the person’s identity or facial details.',
+        'All portraits on the platform must look consistent: same lighting, same light grey background, same white t-shirt style.'
       ].join(' ')
     );
+
+
 
     let improvedImageBuffer: Buffer | null = null;
 

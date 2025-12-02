@@ -1,3 +1,4 @@
+// src/routes/b2bLeadRoutes.js
 const express = require("express");
 const router = express.Router();
 const b2bLeadController = require("../controllers/b2bLeadController");
@@ -30,10 +31,25 @@ router.delete(
   b2bLeadController.deleteB2BLeadById
 );
 
+// Enrichissement d'emails (déjà existant)
 router.post(
   "/b2b-leads/enrich-emails",
   authMiddleware,
   b2bLeadController.enrichEmailsForLeads
+);
+
+// Envoi manuel d'un email X de la séquence à un lead
+router.post(
+  "/b2b-leads/:id/send-email/:step",
+  authMiddleware,
+  b2bLeadController.sendDripEmailToLead
+);
+
+// Lancer le traitement automatique de la file DRIP
+router.post(
+  "/b2b-leads/drip/process",
+  authMiddleware,
+  b2bLeadController.runDripAutomation
 );
 
 module.exports = router;
