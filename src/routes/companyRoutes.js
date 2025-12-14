@@ -39,8 +39,6 @@ router.get(
   companyController.getEmployeeBookings
 );
 
-
-
 // --- B2B: gestion des employés & crédits ---
 
 // Créer un employé pour une company (B2B)
@@ -64,22 +62,31 @@ router.patch(
   companyController.updateEmployeeMonthlyCredit
 );
 
-// Activer / désactiver un employé (désactivation => retour du crédit sur l'entreprise)
+// Activer / désactiver un employé
 router.patch(
   "/company/:companyId/employees/:employeeId/status",
   authMiddleware,
   companyController.updateEmployeeStatus
 );
 
-// Reset global des allocations (optionnel, pour plus tard)
+// Reset global des allocations
 router.post(
   "/company/:companyId/reset-allocations",
   authMiddleware,
   companyController.resetCompanyAllocations
 );
 
+// ✅ Stripe Billing (B2B)
+router.post(
+  "/company/:companyId/billing/checkout",
+  authMiddleware,
+  companyController.createCompanyBillingCheckout
+);
 
-
-
+router.post(
+  "/company/:companyId/billing/sync",
+  authMiddleware,
+  companyController.syncCompanySubscription
+);
 
 module.exports = router;
