@@ -4,10 +4,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
-import cron from "node-cron";
-
-import stripeWebhookRouter from "./routes/stripeWebhook";
-import { runCompanyCreditsExpiryJob } from "./jobs/companyCreditsExpiryJob";
 
 import fs from "fs";
 import CityModel from "./models/city";
@@ -72,9 +68,7 @@ const notifyRoutes = require("./routes/notify");
 const devicesRoutes = require("./routes/devices");
 const b2bLeadRoutes = require("./routes/b2bLeadRoutes");
 
-// Utilisation des routes// ⚠️ Webhook Stripe en RAW (avant express.json)
-app.use("/api", stripeWebhookRouter); // ce router contient /webhooks/stripe en POST
-
+// Utilisation des routes
 app.use("/api", prospectionRoutes);
 app.use("/api", bookingRoutes);
 app.use("/api", advertisementRoutes);
@@ -112,7 +106,7 @@ app.use("/api", notifyRoutes);
 app.use("/api", devicesRoutes);
 app.use("/api", countryRoutes);
 app.use("/api", b2bLeadRoutes);
-app.use(express.json());
+
 // Middleware pour servir les fichiers statiques
 app.use(
   "/uploads/images",
@@ -238,9 +232,6 @@ mongoose
     console.log("[INIT] Démarrage PRO DAILY BOOKINGS CRON...");
     startProBookingsSummaryCron();
 
-    cron.schedule("0 3 * * *", async () => {
-      await runCompanyCreditsExpiryJob();
-    });
     // Démarrer le serveur HTTP (et donc WS aussi)
     server.listen(port, () => {
       console.log(

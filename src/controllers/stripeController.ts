@@ -8,7 +8,7 @@ import { logger } from "../utils/logger";
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
+  apiVersion: "2025-01-27.acacia", // laissé tel quel
 });
 
 /**

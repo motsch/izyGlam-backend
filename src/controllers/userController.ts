@@ -47,7 +47,6 @@ const getUserInfo = async (
       fidelity: any;
       abonnement: string;
       country: string;
-      credit: any;
       _id: string;
       lastSeen?: string; // ✅ pour exposer lastSeen si tu veux
     }) => void;
@@ -71,7 +70,6 @@ const getUserInfo = async (
       proches: any[];
       bank: any;
       favoriteShops: any[];
-      credit: any;
       fidelity: any;
       country: string;
       _id: string;
@@ -131,7 +129,6 @@ const getUserInfo = async (
             phone,
             sex,
             customerId,
-            credit,
             bank,
             companyId,
             _id,
@@ -153,7 +150,6 @@ const getUserInfo = async (
             proches,
             phone,
             conversationId,
-            credit,
             sex,
             bank,
             abonnement,
