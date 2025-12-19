@@ -2,6 +2,7 @@ const serviceController = require("../controllers/serviceController");
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const router = express.Router();
+const { uploadCsv } = require("../middlewares/uploadCsv");
 
 const upload = require("../middlewares/multer");
 
@@ -62,6 +63,21 @@ router.delete(
   "/service-delete-all-by-shop/:shopId",
   authMiddleware,
   serviceController.deleteAllServicesByShop
+);
+
+
+// Export CSV des services d'un shop
+router.get(
+  "/shop-csv-download/:shopId/services/export/csv",
+  authMiddleware,
+  serviceController.exportServicesCsvByShop
+);
+
+router.post(
+  "/shop-csv-upload/:shopId/services/import/csv",
+  authMiddleware,
+  uploadCsv.single("csv"), // field name = "csv"
+  serviceController.importServicesCsvByShop
 );
 
 module.exports = router;

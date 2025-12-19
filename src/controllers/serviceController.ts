@@ -430,15 +430,282 @@ const deleteAllServicesByShop = async (req: express.Request, res: express.Respon
 };
 
 
+// Petit helper CSV (sans lib externe)
+function csvEscape(value: any): string {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  // Si contient ; " \n -> on quote et on échappe "
+  if (/[;"\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+const exportServicesCsvByShop = async (req: Request, res: Response) => {
+  try {
+    const { shopId } = req.params;
+
+    if (!shopId) {
+      return res.status(400).json({ message: "shopId manquant" });
+    }
+
+    // Récupérer uniquement les champs utiles (évite d'exporter des trucs internes)
+    const services = await ServiceModel
+      .find({ shopId })
+      .sort({ createdAt: 1 })
+      .select(
+        "blocked name description description_original image type price duration shopId color flags moderation createdAt updatedAt"
+      )
+      .lean();
+
+    // Colonnes CSV (ordre stable)
+    const headers = [
+      "name",
+      "description",
+      "description_original",
+      "image",
+      "type",
+      "price",
+      "duration",
+      "color",
+    ];
+
+    const lines: string[] = [];
+    lines.push(headers.join(";")); // séparateur ; (Excel FR)
+
+    for (const s of services) {
+      const row = [
+        csvEscape(s._id),
+        csvEscape(s.blocked),
+        csvEscape(s.name),
+        csvEscape(s.description),
+        csvEscape(s.description_original),
+        csvEscape(s.image),
+        csvEscape(s.type),
+        csvEscape(s.price),
+        csvEscape(s.duration),
+        csvEscape(s.color),
+      ];
+
+      lines.push(row.join(";"));
+    }
+
+    // UTF-8 BOM pour Excel (évite les accents cassés)
+    const csvContent = "\uFEFF" + lines.join("\n");
+
+    const filename = `services_${shopId}_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    return res.status(200).send(csvContent);
+  } catch (err) {
+    console.error("exportServicesCsvByShop error:", err);
+    return res.status(500).json({ message: "Erreur export CSV" });
+  }
+};
+
+
+
+
+
+
+// CSV helpers
+function normalizeHeader(h: string) {
+  return h.trim().toLowerCase();
+}
+function parseCsv(content: string, separator = ";") {
+  // Parser simple (supporte guillemets "...")
+  const rows: string[][] = [];
+  let cur = "";
+  let inQuotes = false;
+  const row: string[] = [];
+
+  const pushCell = () => {
+    row.push(cur);
+    cur = "";
+  };
+  const pushRow = () => {
+    rows.push([...row]);
+    row.length = 0;
+  };
+
+  for (let i = 0; i < content.length; i++) {
+    const ch = content[i];
+
+    if (ch === '"') {
+      // double quote => échappement
+      const next = content[i + 1];
+      if (inQuotes && next === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (!inQuotes && ch === separator) {
+      pushCell();
+      continue;
+    }
+
+    if (!inQuotes && (ch === "\n" || ch === "\r")) {
+      // gérer \r\n
+      if (ch === "\r" && content[i + 1] === "\n") i++;
+      pushCell();
+      pushRow();
+      continue;
+    }
+
+    cur += ch;
+  }
+
+  // dernière cellule/ligne
+  pushCell();
+  // éviter d'ajouter une ligne vide finale
+  if (row.some((c) => c.trim() !== "")) pushRow();
+
+  return rows;
+}
+
+function toNumber(value: string, field: string) {
+  if (value === undefined || value === null) return NaN;
+  const v = value.toString().trim().replace(",", "."); // support virgule
+  const n = Number(v);
+  return n;
+}
+
+const importServicesCsvByShop = async (req: Request, res: Response) => {
+  try {
+    const { shopId } = req.params;
+
+    if (!shopId) return res.status(400).json({ message: "shopId manquant" });
+
+    // multer.memoryStorage -> req.file.buffer
+    const file = (req as any).file as Express.Multer.File | undefined;
+    if (!file) return res.status(400).json({ message: "Fichier CSV manquant (field: csv)" });
+
+    // lecture texte + suppression BOM éventuel
+    const raw = file.buffer.toString("utf-8").replace(/^\uFEFF/, "");
+
+    const rows = parseCsv(raw, ";");
+    if (rows.length < 2) {
+      return res.status(400).json({ message: "CSV vide ou sans lignes de données" });
+    }
+
+    // headers
+    const headers = rows[0].map(normalizeHeader);
+
+    const required = ["name", "description", "description_original", "price", "duration"];
+    const missing = required.filter((r) => !headers.includes(r));
+    if (missing.length) {
+      return res.status(400).json({
+        message: "Colonnes manquantes dans le CSV",
+        missing,
+        expected: required,
+      });
+    }
+
+    const idx = (col: string) => headers.indexOf(col);
+
+    // construire la liste des services à insérer
+    const toInsert: any[] = [];
+    const errors: { line: number; error: string }[] = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const line = rows[i];
+
+      // skip ligne vide
+      if (!line || line.every((c) => (c ?? "").trim() === "")) continue;
+
+      const name = (line[idx("name")] ?? "").trim();
+      const description = (line[idx("description")] ?? "").trim();
+      const description_original = (line[idx("description_original")] ?? "").trim();
+
+      const priceRaw = (line[idx("price")] ?? "").trim();
+      const durationRaw = (line[idx("duration")] ?? "").trim();
+
+      const price = toNumber(priceRaw, "price");
+      const duration = toNumber(durationRaw, "duration");
+
+      if (!name) errors.push({ line: i + 1, error: "name vide" });
+      if (!description) errors.push({ line: i + 1, error: "description vide" });
+      if (!Number.isFinite(price)) errors.push({ line: i + 1, error: `price invalide: "${priceRaw}"` });
+      if (!Number.isFinite(duration)) errors.push({ line: i + 1, error: `duration invalide: "${durationRaw}"` });
+
+      if (errors.length) continue;
+
+      // valeurs par défaut
+      toInsert.push({
+        name,
+        description,
+        description_original,
+        price,
+        duration,
+        type: "service", // ✅ valeur par défaut (obligatoire dans ton schema)
+        color: "#ff4081",
+
+        image: undefined,
+      });
+    }
+
+    if (errors.length) {
+      return res.status(400).json({
+        message: "CSV invalide (erreurs de validation)",
+        errors,
+      });
+    }
+
+    // Remplacement total (transaction si possible)
+    // Si tu n'as pas de replica set, la transaction ne marchera pas. On fait safe fallback.
+    const session = await ServiceModel.startSession();
+
+    try {
+      await session.withTransaction(async () => {
+        await ServiceModel.deleteMany({ shopId }).session(session);
+        if (toInsert.length) await ServiceModel.insertMany(toInsert, { session });
+      });
+
+      session.endSession();
+
+      return res.status(200).json({
+        message: "Import CSV terminé (remplacement complet)",
+        shopId,
+        deletedAndReplaced: true,
+        insertedCount: toInsert.length,
+      });
+    } catch (txErr) {
+      session.endSession();
+
+      // fallback sans transaction
+      await ServiceModel.deleteMany({ shopId });
+      if (toInsert.length) await ServiceModel.insertMany(toInsert);
+
+      return res.status(200).json({
+        message: "Import CSV terminé (sans transaction)",
+        shopId,
+        deletedAndReplaced: true,
+        insertedCount: toInsert.length,
+      });
+    }
+  } catch (err: any) {
+    console.error("importServicesCsvByShop error:", err);
+    return res.status(500).json({ message: err?.message || "Erreur import CSV" });
+  }
+};
+
+
 module.exports = {
   createService,
   getAllServices,
   getServiceById,
   updateServiceById,
   deleteServiceById,
+  exportServicesCsvByShop,
   getServicesByShop,
   createMultipleServices,
   uploadGalleryImages,
   getGalleryImages,
   deleteAllServicesByShop,
+  importServicesCsvByShop,
 };
