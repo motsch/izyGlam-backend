@@ -13,7 +13,7 @@ import { seedDatabase } from './seeds/seeder';
 import "./cron/b2bLeadImport.cron";
 import "./cron/proLeadImport.cron";
 import { startB2BDripCron } from "./cron/b2bDripCron";
-
+import sitemapRouter from './routes/sitemap';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,7 +22,7 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
 app.use(cors());
-
+app.use('/', sitemapRouter);
 // Point d'entrée de l'API
 app.get("/", (req: any, res: any) => {
   res.send("Bienvenue sur l'API de mon application.");
