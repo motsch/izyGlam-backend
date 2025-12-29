@@ -9,6 +9,12 @@ router.get("/stripe/get-cards", stripeController.getCards);
 // Route pour enregistrer une nouvelle carte
 router.post("/stripe/save-card", stripeController.saveCard);
 
+// Statut Stripe prestataire
+router.get("/stripe/connect/status", stripeController.getStripeStatus);
+
+// Route pour le onboarding prestataires
+router.post("/stripe/connect/onboarding-link", stripeController.createOnboardingLink);
+
 // Route pour définir la carte principale
 router.post("/stripe/set-primary-card", stripeController.setPrimaryCard);
 

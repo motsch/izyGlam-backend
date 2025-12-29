@@ -12,6 +12,126 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
 });
 
+// POST /api/stripe/connect/onboarding-link
+export async function createOnboardingLink(req: express.Request, res: express.Response) {
+  try {
+    const { userId } = req.body;
+
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(500).json({ message: "Missing STRIPE_SECRET_KEY env var" });
+    }
+    if (!process.env.FRONT_URL) {
+      return res.status(500).json({ message: "Missing FRONT_URL env var" });
+    }
+    if (!userId) {
+      return res.status(400).json({ message: "Missing userId" });
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // 1) créer le connected account si nécessaire
+    if (!user.stripe?.accountId) {
+      console.log("Stripe: creating connected account for", user.email);
+
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: "FR",
+        email: user.email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: "individual",
+      });
+
+      user.stripe = {
+        accountId: account.id,
+        onboardingStatus: "pending",
+        chargesEnabled: false,
+        payoutsEnabled: false,
+      };
+
+      await user.save();
+      console.log("Stripe: connected account created:", account.id);
+    }
+
+    const accountId = user.stripe?.accountId;
+    if (!accountId) {
+      return res.status(500).json({ message: "Stripe accountId missing after creation" });
+    }
+
+    console.log("Stripe: creating account link for:", accountId);
+
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      type: "account_onboarding",
+      refresh_url: `${process.env.FRONT_URL}/finance?stripe=refresh`,
+      return_url: `${process.env.FRONT_URL}/finance?stripe=return`,
+    });
+
+    console.log("Stripe: account link created");
+
+    return res.json({ url: accountLink.url });
+  } catch (e: any) {
+    console.error("Stripe error:", e);
+
+    return res.status(500).json({
+      message: "Stripe onboarding link failed",
+      stripeMessage: e?.message,
+      stripeType: e?.type,
+      stripeCode: e?.code,
+      raw: e?.raw,
+    });
+  }
+}
+
+// GET /api/stripe/connect/status
+export async function getStripeStatus(req: express.Request, res: express.Response) {
+  try {
+    const { userId } = req.query;
+
+    const user = await UserModel.findById(userId);
+    if (!user || !user.stripe?.accountId) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const account = await stripe.accounts.retrieve(user.stripe.accountId);
+
+    user.stripe.onboardingStatus = account.details_submitted ? "complete" : "pending";
+    user.stripe.chargesEnabled = account.charges_enabled;
+    user.stripe.payoutsEnabled = account.payouts_enabled;
+
+    // 👉 BONUS : config payout hebdo UNE SEULE FOIS
+    if (
+      account.payouts_enabled &&
+      !user.stripe.weeklyPayoutConfigured // champ à ajouter
+    ) {
+      await stripe.accounts.update(user.stripe.accountId, {
+        settings: {
+          payouts: {
+            schedule: {
+              interval: "weekly",
+              weekly_anchor: "monday",
+            },
+          },
+        },
+      });
+
+      user.stripe.weeklyPayoutConfigured = true;
+    }
+
+    await user.save();
+    return res.json(user);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: "Unable to retrieve Stripe status" });
+  }
+}
+
+
+
+
 /**
  * Traite un remboursement en utilisant l'API Stripe.
  * Le corps de la requête doit contenir paymentIntentId et peut contenir amount.

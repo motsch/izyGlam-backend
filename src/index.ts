@@ -14,6 +14,7 @@ import "./cron/b2bLeadImport.cron";
 import "./cron/proLeadImport.cron";
 import { startB2BDripCron } from "./cron/b2bDripCron";
 import sitemapRouter from './routes/sitemap';
+import { scheduleWeeklyPayouts } from './cron/weeklyPayoutJob';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -195,6 +196,7 @@ mongoose
     await seedDatabase();
     await seedCities();
     await startB2BDripCron();
+    await scheduleWeeklyPayouts();
     console.log("Connexion à la base de données réussie");
   })
   .catch((err: any) => {

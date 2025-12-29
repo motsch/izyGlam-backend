@@ -20,6 +20,15 @@ interface BankInformation {
   country?: string;
 }
 
+// ✅ AJOUT STRIPE (Connect)
+interface StripeInformation {
+  accountId?: string; // acct_...
+  onboardingStatus?: "not_started" | "pending" | "complete";
+  chargesEnabled?: boolean;
+  payoutsEnabled?: boolean;
+  weeklyPayoutConfigured?: boolean; // 👈 AJOUT
+}
+
 export interface iUser extends Document {
   lastname: string;
   firstname: string;
@@ -29,9 +38,10 @@ export interface iUser extends Document {
   facebook: any;
   instagram: any;
   bank?: BankInformation;
+  stripe?: StripeInformation; // ✅ AJOUT STRIPE
   linkedin: any;
   bluesky: any;
-    companyMonthlyCredit?: number; // allocation mensuelle "théorique" de l'employé
+  companyMonthlyCredit?: number; // allocation mensuelle "théorique" de l'employé
   companyRole?: "employee" | "manager" | "executive"; // rôle interne à l'entreprise
   companyContractEnd?: Date | null; // date de fin de contrat (pour gérer les 90 jours de grâce)
 
@@ -115,6 +125,21 @@ const BankInformationSchema = new Schema(
   { _id: false }
 );
 
+// ✅ Sous-schema Stripe Connect
+const StripeInformationSchema = new Schema(
+  {
+    accountId: { type: String },
+    onboardingStatus: {
+      type: String,
+      enum: ["not_started", "pending", "complete"],
+      default: "not_started",
+    },
+    chargesEnabled: { type: Boolean, default: false },
+    payoutsEnabled: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema<iUser>({
   lastname: { type: String, required: true },
   firstname: { type: String, required: true },
@@ -122,6 +147,7 @@ const userSchema = new Schema<iUser>({
   password: { type: String, required: true },
   phone: { type: String, required: true },
   bank: { type: BankInformationSchema, required: false },
+  stripe: { type: StripeInformationSchema, required: false }, // ✅ AJOUT STRIPE
   conversationId: { type: String, required: false },
   companyId: { type: String, required: false },
   active: { type: Boolean, default: false }, // ✅ par défaut à false
@@ -257,41 +283,42 @@ const userSchema = new Schema<iUser>({
   language: {
     type: String,
     enum: [
-      'ar',
-      'be',
-      'bn',
-      'ca',
-      'da',
-      'de',
-      'en',
-      'es',
-      'et',
-      'eu',
-      'fa',
-      'fi',
-      'fr',
-      'gl',
-      'hi',
-      'id',
-      'it',
-      'ja',
-      'ko',
-      'ku',
-      'ms',
-      'nl',
-      'pl',
-      'pt',
-      'ro',
-      'ru',
-      'so',
-      'sq',
-      'sv',
-      'th',
-      'tl',
-      'tr',
-      'uk',
-      'vi',
-      'zh'],
+      "ar",
+      "be",
+      "bn",
+      "ca",
+      "da",
+      "de",
+      "en",
+      "es",
+      "et",
+      "eu",
+      "fa",
+      "fi",
+      "fr",
+      "gl",
+      "hi",
+      "id",
+      "it",
+      "ja",
+      "ko",
+      "ku",
+      "ms",
+      "nl",
+      "pl",
+      "pt",
+      "ro",
+      "ru",
+      "so",
+      "sq",
+      "sv",
+      "th",
+      "tl",
+      "tr",
+      "uk",
+      "vi",
+      "zh",
+    ],
     default: "fr", // ✅ valeur par défaut
   },
 });
