@@ -1,8 +1,15 @@
+// import helmet from "helmet";
+const helmet = require("helmet");
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require('path');
+import rateLimit from "express-rate-limit";
+import slowDown from "express-slow-down";
+
+
+
 require('dotenv').config();
 import fs from 'fs';
 import CityModel from "./models/city";
@@ -15,18 +22,98 @@ import "./cron/proLeadImport.cron";
 import { startB2BDripCron } from "./cron/b2bDripCron";
 import sitemapRouter from './routes/sitemap';
 import { scheduleWeeklyPayouts } from './cron/weeklyPayoutJob';
+import { Request, Response, NextFunction } from "express";
+
 
 const app = express();
+app.set("trust proxy", 1);
+
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(bodyParser.json({ limit: '20mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
 app.use(cors());
 app.use('/', sitemapRouter);
 // Point d'entrée de l'API
 app.get("/", (req: any, res: any) => {
   res.send("Bienvenue sur l'API de mon application.");
+});
+
+app.use(helmet());
+
+// limite les attaques par gros JSON / form flood
+const bigJson = express.json({ limit: "20mb" });
+const bigUrl = express.urlencoded({ extended: true, limit: "20mb" });
+
+const smallJson = express.json({ limit: "500kb" });
+const smallUrl = express.urlencoded({ extended: true, limit: "500kb" });
+
+// ⚠️ routes “probables” d’images/docs (pour ne pas casser l’existant)
+const BIG_BODY_PATHS = [
+  "/api/upload",
+  "/api/uploads",
+  "/api/image",
+  "/api/images",
+  "/api/avatar",
+  "/api/photo",
+  "/api/photos",
+  "/api/document",
+  "/api/documents",
+  "/api/docs",
+];
+
+app.use(BIG_BODY_PATHS, bigJson, bigUrl);
+app.use(smallJson);
+app.use(smallUrl);
+
+// Limite “générale” API
+const apiLimiter = rateLimit({
+  windowMs: 60_000,      // 1 min
+  max: 120,              // 120 req/min/IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests" },
+});
+
+// Ralentissement progressif (très efficace)
+const apiSpeedLimiter = slowDown({
+  windowMs: 60_000,      // 1 min
+  delayAfter: 60,        // à partir de 60 req/min
+  delayMs: () => 250,    // +250ms par requête au-delà
+});
+
+// Zone sensible: auth/login/register/reset
+const authLimiter = rateLimit({
+  windowMs: 15 * 60_000, // 15 min
+  max: 30,               // 30 tentatives / 15 min / IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many auth attempts" },
+});
+
+app.use("/api", apiLimiter, apiSpeedLimiter);
+
+let inflight = 0;
+const MAX_INFLIGHT = 200;
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  inflight++;
+
+  if (inflight > MAX_INFLIGHT) {
+    inflight--;
+    return res.status(503).json({ error: "Server busy" });
+  }
+
+  res.on("finish", () => inflight--);
+  res.on("close", () => inflight--);
+
+  next();
+});
+
+app.get("/ip-check", (req: Request, res: Response) => {
+  res.json({
+    ip: req.ip,
+    xff: req.headers["x-forwarded-for"],
+  });
 });
 
 // Routes
