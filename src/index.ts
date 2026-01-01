@@ -158,6 +158,7 @@ const subscriptionRoutes = require("./routes/subscription");
 const notifyRoutes = require('./routes/notify');
 const devicesRoutes = require('./routes/devices');
 const b2bLeadRoutes = require("./routes/b2bLeadRoutes");
+const fakePost = require("./routes/fakePost");
 
 // Utilisation des routes
 app.use("/api", prospectionRoutes);
@@ -197,6 +198,7 @@ app.use('/api', notifyRoutes);
 app.use('/api', devicesRoutes);
 app.use('/api', countryRoutes);
 app.use("/api", b2bLeadRoutes);
+app.use("/api", fakePost);
 
 // Middleware pour servir les fichiers statiques
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));

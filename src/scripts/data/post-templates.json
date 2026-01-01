@@ -1,0 +1,2565 @@
+{
+  "version": 2,
+  "templates": [
+    {
+      "id": "ig_coiffure_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "premium",
+      "text": "✂️ Coiffeuse à domicile, par passion.\n\nChez {{shopName}}, chaque rendez-vous est pensé comme un vrai moment pour vous.\nPas de salon bruyant, pas d’attente : je viens à vous, avec la même exigence et la même précision.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#coiffureadomicile #izyglam #coiffeuseindependante #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_coiffure_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "expert",
+      "text": "Une belle coupe, ce n’est pas qu’un coup de ciseaux.\nC’est une écoute, une analyse du visage, du cheveu, et de votre quotidien.\n\nC’est exactement ce que je prends le temps de faire chez {{shopName}}.\n👉 {{shopLink}}\n\n#coiffureprofessionnelle #expertise #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "comfort",
+      "text": "Et si votre prochain rendez-vous coiffure se faisait… chez vous ?\n\nDans le calme, sans stress, sans déplacement.\nJe m’occupe de tout, vous profitez du résultat.\n👉 {{shopLink}}\n\n#confort #coiffureadomicile #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nCoupe, brushing, rafraîchissement…\nJe me déplace à domicile sur {{city}}.\n👉 Réservation rapide : {{shopLink}}\n\n#disponibilites #coiffureadomicile #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a une vraie personne.\nQuelqu’un qui écoute, qui respecte vos envies et qui prend le temps.\n\nMerci pour votre confiance 💛\n\n#coiffeuseadomicile #izyglam #confiance"
+    },
+    {
+      "id": "ig_coiffure_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "advice",
+      "text": "✨ Conseil de coiffeuse\n\nChanger de coupe, oui.\nMais toujours en respectant la nature de vos cheveux.\nUn bon résultat, c’est un résultat qui dure.\n👉 {{shopLink}}\n\n#conseilcoiffure #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "time",
+      "text": "Entre le travail, la famille et le quotidien…\nPrendre du temps pour soi devient compliqué.\n\nLa coiffure à domicile, c’est du temps gagné sans compromis sur la qualité.\n👉 {{shopLink}}\n\n#tempspours oi #coiffureadomicile #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "positioning",
+      "text": "Être coiffeuse indépendante, c’est un choix.\nCelui de travailler avec passion, liberté et exigence.\n\nChez {{shopName}}, chaque cliente compte vraiment.\n\n#independante #izyglam #coiffureadomicile"
+    },
+    {
+      "id": "ig_coiffure_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "trust",
+      "text": "Vous hésitez à changer de coupe ?\nOn en parle, on ajuste, on prend le temps.\n\nRien n’est imposé, tout est expliqué.\n👉 {{shopLink}}\n\n#confiance #coiffurefemme #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "routine",
+      "text": "Une coupe réussie, c’est aussi une routine adaptée.\nJe conseille toujours en fonction de vos cheveux, pas d’une tendance.\n👉 {{shopLink}}\n\n#routinecapillaire #coiffureadomicile #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "socialproof",
+      "text": "Ce que mes clientes apprécient le plus ?\nLe calme. Le temps. L’attention.\nEt un résultat qui leur ressemble.\n\nMerci pour votre confiance 🤍\n\n#avisclients #izyglam #coiffureadomicile"
+    },
+    {
+      "id": "ig_coiffure_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "premium",
+      "text": "Le luxe aujourd’hui, c’est le temps et l’attention.\nPas besoin de salon haut de gamme pour une prestation de qualité.\n👉 {{shopLink}}\n\n#premium #coiffureadomicile #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "local",
+      "text": "Coiffeuse à domicile sur {{city}} et alentours ✂️\nProximité, ponctualité et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #coiffureadomicile #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "care",
+      "text": "Chaque personne est différente.\nChaque chevelure aussi.\n\nC’est pour ça que je prends le temps de m’adapter à vous.\n\n#bienveillance #coiffureadomicile #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : changer de coupe sans tenir compte de son quotidien.\n\nUne coiffure réussie doit être facile à vivre.\nBesoin d’un vrai conseil ?\n👉 {{shopLink}}\n\n#conseilcoiffure #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "subtle",
+      "text": "Parfois, un simple ajustement change tout.\nUne coupe mieux structurée, un volume mieux placé.\n\nC’est souvent là que la magie opère ✨\n\n#coiffure #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste un rendez-vous coiffure.\nC’est un moment pour vous, chez vous.\n👉 {{shopLink}}\n\n#signature #izyglam #coiffureadomicile"
+    },
+    {
+      "id": "ig_coiffure_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "season",
+      "text": "Nouvelle saison, nouvelles envies ✂️\n\nC’est souvent le bon moment pour rafraîchir sa coupe.\n👉 {{shopLink}}\n\n#changement #coiffureadomicile #izyglam"
+    },
+    {
+      "id": "ig_coiffure_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "story",
+      "text": "J’ai choisi la coiffure à domicile pour remettre l’humain au centre.\nMoins de vitesse, plus de qualité.\n\nMerci de faire partie de cette aventure 🤍\n\n#parcours #izyglam #coiffeuseindependante"
+    },
+    {
+      "id": "ig_coiffure_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["coiffure"],
+      "tone": "cta-soft",
+      "text": "Envie d’un rendez-vous coiffure sans stress ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#coiffureadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_manucure_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "premium",
+      "text": "💅 Manucure à domicile, pensée pour vous.\n\nChez {{shopName}}, chaque rendez-vous est un moment de soin, de précision et de détente.\nSans déplacement, sans attente.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#manucureadomicile #izyglam #onglesparfaits #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_manucure_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "expert",
+      "text": "Une belle manucure, ce n’est pas seulement une couleur.\nC’est une préparation soignée, une pose maîtrisée et un rendu durable.\n\nC’est exactement ce que je vous propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#manucureprofessionnelle #expertise #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "comfort",
+      "text": "Et si votre prochain rendez-vous manucure se faisait… chez vous ?\n\nDans le calme, sans stress, à votre rythme.\nJe m’occupe de tout.\n👉 {{shopLink}}\n\n#confort #manucureadomicile #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nManucure, vernis semi-permanent, soin des ongles.\nJe me déplace à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #manucureadomicile #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a une vraie passion.\nLe goût du détail, le respect de vos ongles, et l’envie de vous faire sentir bien.\n\nMerci pour votre confiance 💖\n\n#proximite #izyglam #manucureadomicile"
+    },
+    {
+      "id": "ig_manucure_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "advice",
+      "text": "✨ Conseil pro\n\nDes ongles fragilisés ?\nUn bon soin et une pose adaptée font toute la différence.\nBesoin d’un avis personnalisé ?\n👉 {{shopLink}}\n\n#conseilmanucure #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "time",
+      "text": "Pas le temps de courir en institut ?\n\nLa manucure à domicile, c’est un gain de temps sans compromis sur la qualité.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #manucureadomicile #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "positioning",
+      "text": "Être prothésiste ongulaire indépendante, c’est un choix.\nCelui de travailler avec exigence, liberté et attention.\n\nChez {{shopName}}, chaque cliente compte vraiment.\n\n#independante #izyglam #manucureadomicile"
+    },
+    {
+      "id": "ig_manucure_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "trust",
+      "text": "Vous hésitez sur une forme ou une couleur ?\nOn échange, on ajuste, on respecte vos envies.\n\nRien n’est imposé.\n👉 {{shopLink}}\n\n#confiance #manucure #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "routine",
+      "text": "De beaux ongles, c’est aussi une routine adaptée.\nJe vous conseille toujours en fonction de votre quotidien.\n👉 {{shopLink}}\n\n#routineongles #manucureadomicile #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "socialproof",
+      "text": "Ce que mes clientes aiment le plus ?\nLa précision, la douceur, et le résultat.\n\nMerci pour votre fidélité 🤍\n\n#avisclients #izyglam #manucureadomicile"
+    },
+    {
+      "id": "ig_manucure_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "premium",
+      "text": "Le vrai luxe aujourd’hui ?\nUn soin personnalisé, sans se déplacer.\nLa manucure à domicile, tout simplement.\n👉 {{shopLink}}\n\n#premium #manucureadomicile #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "local",
+      "text": "Manucure à domicile sur {{city}} 💅\nPonctualité, hygiène et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #manucureadomicile #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "care",
+      "text": "Chaque main est différente.\nChaque ongle mérite une attention particulière.\n\nC’est pour ça que je prends le temps.\n\n#bienveillance #manucureadomicile #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : négliger la préparation de l’ongle.\n\nUne pose réussie commence toujours par une base saine.\n👉 {{shopLink}}\n\n#conseilmanucure #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "subtle",
+      "text": "Parfois, un détail change tout.\nUne forme mieux adaptée, une finition plus nette.\n\nLa différence est là ✨\n\n#manucure #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste une manucure.\nC’est un moment pour vous, chez vous.\n👉 {{shopLink}}\n\n#signature #izyglam #manucureadomicile"
+    },
+    {
+      "id": "ig_manucure_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "season",
+      "text": "Nouvelle saison, nouvelles envies 💅\n\nC’est souvent le bon moment pour rafraîchir sa manucure.\n👉 {{shopLink}}\n\n#nouveautes #manucureadomicile #izyglam"
+    },
+    {
+      "id": "ig_manucure_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "story",
+      "text": "J’ai choisi la manucure à domicile pour proposer un service plus humain.\nMoins de rythme, plus de qualité.\n\nMerci de me faire confiance 🤍\n\n#parcours #izyglam #prothesisteongulaire"
+    },
+    {
+      "id": "ig_manucure_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["manucure"],
+      "tone": "cta-soft",
+      "text": "Envie de jolis ongles sans stress ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#manucureadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_massage_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "premium",
+      "text": "💆‍♀️ Massage à domicile, pensé pour votre bien-être.\n\nChez {{shopName}}, chaque séance est un moment de détente profonde, dans le calme et le respect de votre corps.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#massageadomicile #izyglam #bienetre #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_massage_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "expert",
+      "text": "Un bon massage ne se résume pas à des gestes.\nC’est une écoute du corps, des tensions, du rythme.\n\nC’est exactement l’approche que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#massageprofessionnel #expertise #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "comfort",
+      "text": "Et si vous n’aviez plus besoin de vous déplacer pour vous détendre ?\n\nJe viens à vous, avec tout le nécessaire, pour un massage à domicile en toute sérénité.\n👉 {{shopLink}}\n\n#confort #massageadomicile #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nMassage relaxant, détente ou récupération.\nJe me déplace à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #massageadomicile #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a une vraie intention.\nPrendre soin de vous, à votre rythme, sans jugement.\n\nMerci pour votre confiance 🤍\n\n#massagebienetre #izyglam #confiance"
+    },
+    {
+      "id": "ig_massage_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "advice",
+      "text": "✨ Conseil bien-être\n\nLes tensions s’installent souvent sans qu’on s’en rende compte.\nUn massage régulier aide le corps à relâcher durablement.\n👉 {{shopLink}}\n\n#conseilbienetre #massage #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "time",
+      "text": "Manque de temps, charge mentale, fatigue…\n\nLe massage à domicile permet de vraiment lâcher prise, sans contrainte.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #massageadomicile #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "positioning",
+      "text": "Être praticienne indépendante, c’est un choix.\nCelui de proposer des massages personnalisés, loin des protocoles standardisés.\n\nChez {{shopName}}, chaque séance est unique.\n\n#independante #izyglam #massageadomicile"
+    },
+    {
+      "id": "ig_massage_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "trust",
+      "text": "Vous n’avez jamais fait de massage à domicile ?\nOn échange, on s’adapte, on respecte vos limites.\n\nVotre confort passe avant tout.\n👉 {{shopLink}}\n\n#confiance #massagebienetre #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "routine",
+      "text": "Le massage n’est pas un luxe.\nC’est une vraie routine de bien-être.\n\nPrendre soin de son corps, c’est aussi prévenir.\n👉 {{shopLink}}\n\n#routinebienetre #massageadomicile #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "socialproof",
+      "text": "Ce que mes clientes ressentent le plus souvent après une séance ?\nUn apaisement profond.\nUn corps plus léger.\n\nMerci pour votre confiance 🤍\n\n#avisclients #massagebienetre #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "premium",
+      "text": "Le vrai luxe aujourd’hui, c’est le calme.\nUn massage chez soi, sans précipitation, sans stress.\n👉 {{shopLink}}\n\n#premium #massageadomicile #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "local",
+      "text": "Massage à domicile sur {{city}} et alentours 💆‍♀️\nPonctualité, discrétion et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #massageadomicile #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "care",
+      "text": "Chaque corps est différent.\nChaque massage doit s’adapter.\n\nC’est pour ça que je prends toujours le temps d’écouter avant de commencer.\n\n#bienveillance #massage #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : attendre d’être complètement épuisé pour consulter.\n\nLe massage aide aussi à prévenir les tensions.\n👉 {{shopLink}}\n\n#prevention #massagebienetre #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "subtle",
+      "text": "Parfois, une seule séance suffit pour ressentir la différence.\nUne respiration plus profonde.\nUn corps plus détendu.\n\n✨\n\n#massage #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste un massage.\nC’est un moment pour vous reconnecter à votre corps.\n👉 {{shopLink}}\n\n#signature #massageadomicile #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "season",
+      "text": "Changement de saison, fatigue accumulée…\nC’est souvent le bon moment pour prendre soin de soi.\n👉 {{shopLink}}\n\n#detente #massageadomicile #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "story",
+      "text": "J’ai choisi le massage à domicile pour proposer des séances plus humaines, plus respectueuses.\nMoins de rythme, plus d’écoute.\n\nMerci de me faire confiance 🤍\n\n#parcours #massagebienetre #izyglam"
+    },
+    {
+      "id": "ig_massage_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["massage"],
+      "tone": "cta-soft",
+      "text": "Besoin de relâcher les tensions, sans sortir de chez vous ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#massageadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_visage_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "premium",
+      "text": "✨ Soin du visage à domicile, pensé pour votre peau.\n\nChez {{shopName}}, chaque soin est adapté à votre type de peau, à vos besoins et à votre rythme.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#soinduvisage #izyglam #peauradieuse #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_visage_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "expert",
+      "text": "Un soin du visage efficace commence toujours par un bon diagnostic.\nObserver, écouter, comprendre votre peau.\n\nC’est exactement l’approche que je privilégie chez {{shopName}}.\n👉 {{shopLink}}\n\n#expertiseskin #izyglam #soinduvisage"
+    },
+    {
+      "id": "ig_visage_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "comfort",
+      "text": "Et si votre prochain soin du visage se faisait… chez vous ?\n\nDans le calme, sans stress, avec des gestes doux et maîtrisés.\n👉 {{shopLink}}\n\n#confort #soinduvisageadomicile #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nSoin hydratant, éclat, détente.\nJe me déplace à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #soinduvisage #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a une vraie attention.\nPrendre soin de votre peau, sans jugement, avec douceur et respect.\n\nMerci pour votre confiance 🤍\n\n#bienveillance #izyglam #soinduvisage"
+    },
+    {
+      "id": "ig_visage_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "advice",
+      "text": "✨ Conseil visage\n\nInutile de multiplier les produits.\nUne routine simple et adaptée suffit souvent à révéler l’éclat de la peau.\n👉 {{shopLink}}\n\n#conseilpeau #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "time",
+      "text": "Manque de temps pour prendre soin de votre peau ?\n\nLe soin du visage à domicile permet de vraiment vous accorder une pause.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #soinduvisage #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "positioning",
+      "text": "Être esthéticienne indépendante, c’est faire le choix de soins personnalisés.\nPas de protocole automatique, mais une vraie écoute.\n\nChez {{shopName}}, chaque soin est unique.\n\n#independante #izyglam #soinduvisage"
+    },
+    {
+      "id": "ig_visage_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "trust",
+      "text": "Vous n’avez jamais fait de soin du visage à domicile ?\nOn échange, on s’adapte, on respecte votre peau.\n\nVotre confort passe avant tout.\n👉 {{shopLink}}\n\n#confiance #soinduvisage #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "routine",
+      "text": "Le soin du visage n’est pas réservé aux occasions spéciales.\nC’est une vraie routine de bien-être et d’équilibre.\n👉 {{shopLink}}\n\n#routinepeau #soinduvisage #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "socialproof",
+      "text": "Ce que mes clientes remarquent le plus après un soin ?\nUne peau plus souple.\nUn teint plus lumineux.\n\nMerci pour votre confiance 🤍\n\n#avisclients #soinduvisage #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est un soin du visage dans le calme, chez soi.\nSans précipitation, sans contrainte.\n👉 {{shopLink}}\n\n#premium #soinduvisageadomicile #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "local",
+      "text": "Soin du visage à domicile sur {{city}} ✨\nDouceur, hygiène et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #soinduvisage #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "care",
+      "text": "Chaque peau est différente.\nChaque soin doit s’adapter.\n\nC’est pour cela que je prends toujours le temps d’observer et d’écouter.\n\n#respectdelapeau #izyglam #soinduvisage"
+    },
+    {
+      "id": "ig_visage_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : utiliser des soins trop agressifs.\n\nLa peau a besoin de douceur et de régularité.\n👉 {{shopLink}}\n\n#conseilpeau #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "subtle",
+      "text": "Parfois, un simple soin suffit pour redonner de l’éclat.\nUn teint plus frais.\nUne sensation de confort.\n\n✨\n\n#soinduvisage #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas qu’un soin du visage.\nC’est un moment pour vous reconnecter à votre peau.\n👉 {{shopLink}}\n\n#signature #izyglam #soinduvisage"
+    },
+    {
+      "id": "ig_visage_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "season",
+      "text": "Changement de saison, peau fragilisée…\nC’est souvent le bon moment pour lui apporter ce dont elle a besoin.\n👉 {{shopLink}}\n\n#peauenbonne sante #soinduvisage #izyglam"
+    },
+    {
+      "id": "ig_visage_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "story",
+      "text": "J’ai choisi les soins du visage à domicile pour proposer des moments plus doux, plus humains.\nMoins de rythme, plus d’attention.\n\nMerci de me faire confiance 🤍\n\n#parcours #izyglam #soinduvisage"
+    },
+    {
+      "id": "ig_visage_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["visage"],
+      "tone": "cta-soft",
+      "text": "Envie d’un teint plus lumineux, sans sortir de chez vous ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#soinduvisageadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_epilation_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "premium",
+      "text": "✨ Épilation à domicile, tout en douceur.\n\nChez {{shopName}}, chaque prestation est réalisée avec soin, discrétion et respect de votre peau.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#epilationadomicile #izyglam #douceur #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_epilation_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "expert",
+      "text": "Une épilation réussie, ce n’est pas seulement une question de technique.\nC’est aussi une bonne préparation et une attention particulière à votre peau.\n\nC’est l’approche que je privilégie chez {{shopName}}.\n👉 {{shopLink}}\n\n#epilationprofessionnelle #expertise #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "comfort",
+      "text": "Et si votre prochaine épilation se faisait… chez vous ?\n\nDans un environnement rassurant, sans stress, à votre rythme.\n👉 {{shopLink}}\n\n#confort #epilationadomicile #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nJambes, aisselles, maillot…\nJe me déplace à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #epilationadomicile #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "human",
+      "text": "L’épilation peut être un moment délicat.\nC’est pour cela que je mets un point d’honneur à travailler avec respect, discrétion et bienveillance.\n\nMerci pour votre confiance 🤍\n\n#bienveillance #epilation #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "advice",
+      "text": "✨ Conseil pro\n\nHydrater sa peau régulièrement aide à une repousse plus douce et plus confortable.\nBesoin de conseils personnalisés ?\n👉 {{shopLink}}\n\n#conseilepilation #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "time",
+      "text": "Pas besoin de vous déplacer ni d’attendre.\n\nL’épilation à domicile, c’est du confort et du temps gagné.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #epilationadomicile #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "positioning",
+      "text": "Être esthéticienne indépendante, c’est choisir une relation de confiance durable.\nPas de chaîne, pas de précipitation.\n\nChez {{shopName}}, chaque cliente est unique.\n\n#independante #izyglam #epilationadomicile"
+    },
+    {
+      "id": "ig_epilation_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "trust",
+      "text": "Vous appréhendez l’épilation ?\nOn prend le temps, on échange, on s’adapte.\n\nVotre confort est toujours la priorité.\n👉 {{shopLink}}\n\n#confiance #epilation #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "routine",
+      "text": "L’épilation fait partie d’une routine bien-être.\nLorsqu’elle est réalisée régulièrement, elle devient plus confortable.\n👉 {{shopLink}}\n\n#routinebeaute #epilationadomicile #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "socialproof",
+      "text": "Ce que mes clientes apprécient le plus ?\nLa douceur, la discrétion et le respect.\n\nMerci pour votre fidélité 🤍\n\n#avisclients #epilationadomicile #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "premium",
+      "text": "Le vrai luxe aujourd’hui, c’est une épilation dans le calme, chez soi.\nSans stress, sans regard extérieur.\n👉 {{shopLink}}\n\n#premium #epilationadomicile #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "local",
+      "text": "Épilation à domicile sur {{city}} ✨\nPonctualité, hygiène et discrétion.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #epilationadomicile #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "care",
+      "text": "Chaque peau réagit différemment.\nC’est pour cela que j’adapte toujours la méthode et les gestes.\n\n#respectdelapeau #epilation #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : s’épiler trop fréquemment.\n\nRespecter le cycle du poil permet une repousse plus nette et plus confortable.\n👉 {{shopLink}}\n\n#conseilepilation #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "subtle",
+      "text": "Parfois, une épilation bien réalisée change tout.\nUne peau plus douce.\nUne sensation de confort.\n\n✨\n\n#epilation #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste une épilation.\nC’est un moment réalisé avec respect et attention.\n👉 {{shopLink}}\n\n#signature #izyglam #epilationadomicile"
+    },
+    {
+      "id": "ig_epilation_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "season",
+      "text": "À l’approche des beaux jours, l’épilation devient une priorité pour beaucoup.\n\nAnticipez en toute sérénité.\n👉 {{shopLink}}\n\n#saison #epilationadomicile #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "story",
+      "text": "J’ai choisi l’épilation à domicile pour offrir un service plus respectueux, plus intime.\nMoins de stress, plus de confort.\n\nMerci pour votre confiance 🤍\n\n#parcours #epilation #izyglam"
+    },
+    {
+      "id": "ig_epilation_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["epilation"],
+      "tone": "cta-soft",
+      "text": "Besoin d’une épilation sans stress, chez vous ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#epilationadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_maquillage_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "premium",
+      "text": "💄 Maquillage à domicile, pensé pour vous sublimer.\n\nChez {{shopName}}, chaque maquillage est réalisé pour révéler votre beauté, sans la transformer.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#maquillageadomicile #izyglam #beaunaturelle #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_maquillage_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "expert",
+      "text": "Un beau maquillage, ce n’est pas une accumulation de produits.\nC’est un travail des teints, des lumières et des textures.\n\nC’est exactement l’approche que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#maquillageprofessionnel #expertise #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "comfort",
+      "text": "Et si votre maquillage se faisait… chez vous ?\n\nSans stress, sans déplacement, dans un cadre familier.\nJe m’adapte à vous.\n👉 {{shopLink}}\n\n#confort #maquillageadomicile #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nMaquillage naturel, sophistiqué ou événementiel.\nJe me déplace à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #maquillageadomicile #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a une vraie écoute.\nComprendre ce que vous aimez, ce que vous n’aimez pas, ce qui vous ressemble.\n\nMerci pour votre confiance 🤍\n\n#confiance #maquillage #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "advice",
+      "text": "✨ Conseil maquillage\n\nUn maquillage réussi commence toujours par une peau bien préparée.\nHydratation et légèreté font toute la différence.\n👉 {{shopLink}}\n\n#conseilmaquillage #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "time",
+      "text": "Manque de temps pour vous maquiller sereinement ?\n\nLe maquillage à domicile permet de profiter pleinement du moment.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #maquillageadomicile #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "positioning",
+      "text": "Être maquilleuse indépendante, c’est faire le choix du sur-mesure.\nPas de maquillage standard, mais un rendu adapté à chaque visage.\n\nChez {{shopName}}, chaque prestation est unique.\n\n#independante #izyglam #maquillageadomicile"
+    },
+    {
+      "id": "ig_maquillage_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "trust",
+      "text": "Vous craignez un maquillage trop chargé ?\nOn ajuste, on échange, on respecte vos envies.\n\nLe naturel reste toujours une option.\n👉 {{shopLink}}\n\n#confiance #maquillagenaturel #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "routine",
+      "text": "Le maquillage peut faire partie d’une routine plaisir.\nIl n’est pas réservé aux grandes occasions.\n👉 {{shopLink}}\n\n#routinebeaute #maquillageadomicile #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "socialproof",
+      "text": "Ce que mes clientes apprécient le plus ?\nUn maquillage qui tient, sans effet masque.\n\nMerci pour votre confiance 🤍\n\n#avisclients #maquillageadomicile #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est un maquillage réalisé dans le calme, chez soi.\nSans précipitation, sans stress.\n👉 {{shopLink}}\n\n#premium #maquillageadomicile #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "local",
+      "text": "Maquillage à domicile sur {{city}} 💄\nPonctualité, hygiène et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #maquillageadomicile #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "care",
+      "text": "Chaque visage est unique.\nChaque maquillage doit le respecter.\n\nC’est pour cela que je prends toujours le temps d’adapter chaque geste.\n\n#respectduvisage #maquillage #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : trop charger le teint.\n\nUn maquillage lumineux est souvent plus flatteur qu’un maquillage épais.\n👉 {{shopLink}}\n\n#conseilmaquillage #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "subtle",
+      "text": "Parfois, quelques touches bien placées suffisent.\nUn regard plus ouvert.\nUn teint plus frais.\n\n✨\n\n#maquillage #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste un maquillage.\nC’est une mise en valeur fidèle à qui vous êtes.\n👉 {{shopLink}}\n\n#signature #maquillageadomicile #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "season",
+      "text": "Changement de saison, envie de nouveauté…\n\nLe maquillage est aussi une façon douce de se réinventer.\n👉 {{shopLink}}\n\n#nouvelle saison #maquillage #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "story",
+      "text": "J’ai choisi le maquillage à domicile pour proposer un service plus humain et plus attentif.\nMoins de pression, plus de plaisir.\n\nMerci pour votre confiance 🤍\n\n#parcours #maquilleuse #izyglam"
+    },
+    {
+      "id": "ig_maquillage_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["maquillage"],
+      "tone": "cta-soft",
+      "text": "Envie d’un maquillage qui vous ressemble, sans sortir de chez vous ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#maquillageadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_eyelash_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "premium",
+      "text": "✨ Extensions de cils à domicile, pour un regard sublimé.\n\nChez {{shopName}}, chaque pose est réalisée avec précision, douceur et respect de vos cils naturels.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#extensionsdecils #izyglam #regardsublime #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_eyelash_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "expert",
+      "text": "Une belle pose de cils, ce n’est pas une question de quantité.\nC’est une question d’équilibre, de courbure et de légèreté.\n\nC’est l’approche que je privilégie chez {{shopName}}.\n👉 {{shopLink}}\n\n#expertisecils #izyglam #extensionsdecils"
+    },
+    {
+      "id": "ig_eyelash_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "comfort",
+      "text": "Et si votre pose de cils se faisait… chez vous ?\n\nDans le calme, allongée confortablement, sans contrainte.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #extensionsdecilsadomicile #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nPose naturelle, regard intense ou effet léger.\nJe me déplace à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a une vraie minutie.\nChaque cil compte, chaque geste est maîtrisé.\n\nMerci pour votre confiance 🤍\n\n#confiance #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "advice",
+      "text": "✨ Conseil cils\n\nUn entretien régulier permet de conserver un regard harmonieux plus longtemps.\nBesoin de conseils personnalisés ?\n👉 {{shopLink}}\n\n#conseilcils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "time",
+      "text": "Pas besoin de courir en institut.\n\nLes extensions de cils à domicile, c’est du confort et du temps gagné.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "positioning",
+      "text": "Être technicienne ciliaire indépendante, c’est faire le choix du détail et de la qualité.\nPas de pose standardisée.\n\nChez {{shopName}}, chaque regard est unique.\n\n#independante #izyglam #extensionsdecils"
+    },
+    {
+      "id": "ig_eyelash_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "trust",
+      "text": "Vous avez peur d’un résultat trop chargé ?\nOn échange, on ajuste, on respecte vos envies.\n\nLe naturel reste toujours une option.\n👉 {{shopLink}}\n\n#confiance #regardnaturel #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "routine",
+      "text": "Les extensions de cils peuvent faire partie d’une routine beauté.\nLorsqu’elles sont bien posées, elles restent légères et confortables.\n👉 {{shopLink}}\n\n#routinebeaute #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "socialproof",
+      "text": "Ce que mes clientes apprécient le plus ?\nUn regard mis en valeur sans effet artificiel.\n\nMerci pour votre confiance 🤍\n\n#avisclients #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est une pose de cils réalisée dans le calme, chez soi.\nSans précipitation, sans stress.\n👉 {{shopLink}}\n\n#premium #extensionsdecilsadomicile #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "local",
+      "text": "Extensions de cils à domicile sur {{city}} ✨\nPrécision, hygiène et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "care",
+      "text": "Chaque regard est différent.\nChaque pose doit s’adapter à vos cils naturels.\n\nC’est pour cela que je prends toujours le temps.\n\n#respectdescils #izyglam #extensionsdecils"
+    },
+    {
+      "id": "ig_eyelash_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : choisir une pose trop lourde.\n\nDes cils respectés, c’est un regard plus beau et plus durable.\n👉 {{shopLink}}\n\n#conseilcils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "subtle",
+      "text": "Parfois, quelques cils bien placés suffisent.\nUn regard plus ouvert.\nUne intensité naturelle.\n\n✨\n\n#extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas qu’une pose de cils.\nC’est une mise en valeur subtile de votre regard.\n👉 {{shopLink}}\n\n#signature #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "season",
+      "text": "Nouvelle saison, nouvelles envies ✨\n\nUn regard plus intense, sans maquillage quotidien.\n👉 {{shopLink}}\n\n#nouvelle saison #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "story",
+      "text": "J’ai choisi les extensions de cils à domicile pour proposer un service plus calme et plus précis.\nMoins de pression, plus de qualité.\n\nMerci pour votre confiance 🤍\n\n#parcours #extensionsdecils #izyglam"
+    },
+    {
+      "id": "ig_eyelash_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["eyelash"],
+      "tone": "cta-soft",
+      "text": "Envie d’un regard mis en valeur sans effort, chez vous ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#extensionsdecilsadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_bronzage_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "premium",
+      "text": "☀️ Bronzage à domicile, pour un teint lumineux et naturel.\n\nChez {{shopName}}, chaque séance est adaptée à votre carnation pour un résultat harmonieux.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#bronzageadomicile #izyglam #teintlumineux #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_bronzage_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "expert",
+      "text": "Un beau bronzage, ce n’est pas une couleur artificielle.\nC’est un équilibre entre uniformité, naturel et subtilité.\n\nC’est l’approche que je privilégie chez {{shopName}}.\n👉 {{shopLink}}\n\n#expertisebronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "comfort",
+      "text": "Et si votre bronzage se faisait… chez vous ?\n\nSans cabine, sans stress, dans un environnement familier.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #bronzageadomicile #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nBronzage naturel, uniforme et sans démarcation.\nJe me déplace à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #bronzageadomicile #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a une vraie attention.\nRespect de votre peau, écoute et précision.\n\nMerci pour votre confiance 🤍\n\n#confiance #bronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "advice",
+      "text": "✨ Conseil bronzage\n\nUne peau bien préparée permet un rendu plus uniforme et plus durable.\nBesoin de conseils personnalisés ?\n👉 {{shopLink}}\n\n#conseilbronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "time",
+      "text": "Pas besoin de vous déplacer.\n\nLe bronzage à domicile, c’est du confort et un vrai gain de temps.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #bronzageadomicile #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "positioning",
+      "text": "Être professionnelle du bronzage indépendante, c’est choisir le sur-mesure.\nPas de solution standardisée.\n\nChez {{shopName}}, chaque teint est respecté.\n\n#independante #izyglam #bronzageadomicile"
+    },
+    {
+      "id": "ig_bronzage_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "trust",
+      "text": "Vous avez peur d’un résultat trop foncé ?\nOn ajuste, on teste, on respecte votre carnation.\n\nLe naturel reste la priorité.\n👉 {{shopLink}}\n\n#confiance #bronzagenaturel #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "routine",
+      "text": "Le bronzage peut faire partie d’une routine beauté.\nLorsqu’il est bien réalisé, il illumine le teint durablement.\n👉 {{shopLink}}\n\n#routinebeaute #bronzageadomicile #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "socialproof",
+      "text": "Ce que mes clientes apprécient le plus ?\nUn teint uniforme, sans démarcation.\n\nMerci pour votre confiance 🤍\n\n#avisclients #bronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est un bronzage réalisé dans le calme, chez soi.\nSans précipitation, sans stress.\n👉 {{shopLink}}\n\n#premium #bronzageadomicile #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "local",
+      "text": "Bronzage à domicile sur {{city}} ☀️\nPrécision, hygiène et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #bronzageadomicile #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "care",
+      "text": "Chaque peau réagit différemment.\nC’est pour cela que j’adapte toujours le produit et l’intensité.\n\n#respectdelapeau #bronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : vouloir un bronzage trop intense trop vite.\n\nLa progressivité garantit un résultat plus naturel.\n👉 {{shopLink}}\n\n#conseilbronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "subtle",
+      "text": "Parfois, un léger hâle suffit.\nUn teint plus frais.\nUne mine reposée.\n\n✨\n\n#bronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste un bronzage.\nC’est une mise en lumière naturelle de votre peau.\n👉 {{shopLink}}\n\n#signature #bronzageadomicile #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "season",
+      "text": "À l’approche d’un événement ou des beaux jours,\nun bronzage naturel fait toute la différence.\n👉 {{shopLink}}\n\n#evenement #bronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "story",
+      "text": "J’ai choisi le bronzage à domicile pour proposer un service plus respectueux et plus précis.\nMoins de standard, plus d’attention.\n\nMerci pour votre confiance 🤍\n\n#parcours #bronzage #izyglam"
+    },
+    {
+      "id": "ig_bronzage_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["bronzage"],
+      "tone": "cta-soft",
+      "text": "Envie d’un teint lumineux sans exposition au soleil ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#bronzageadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_barber_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "premium",
+      "text": "✂️ Barber à domicile, pour un style net et maîtrisé.\n\nChez {{shopName}}, chaque coupe et chaque taille de barbe sont réalisées avec précision.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#barberadomicile #izyglam #barberlife #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_barber_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "expert",
+      "text": "Un bon barber, ce n’est pas seulement une tondeuse.\nC’est une maîtrise des lignes, des volumes et du style.\n\nC’est exactement l’approche que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#barberprofessionnel #expertise #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "comfort",
+      "text": "Et si votre prochain rendez-vous barber se faisait… chez vous ?\n\nSans attente, sans déplacement, avec le même niveau de précision.\n👉 {{shopLink}}\n\n#confort #barberadomicile #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nCoupe, barbe, contours nets.\nJe me déplace à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #barberadomicile #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a le goût du travail bien fait.\nChaque détail compte, chaque finition aussi.\n\nMerci pour votre confiance 🤍\n\n#confiance #barber #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "advice",
+      "text": "✨ Conseil barber\n\nEntretenir régulièrement sa barbe permet un rendu plus net et plus durable.\nBesoin d’un avis pro ?\n👉 {{shopLink}}\n\n#conseilbarber #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "time",
+      "text": "Pas le temps d’aller chez le barber ?\n\nLe service à domicile, c’est un gain de temps sans compromis sur le style.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #barberadomicile #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "positioning",
+      "text": "Être barber indépendant, c’est choisir la qualité plutôt que la chaîne.\nPas de coupe standardisée.\n\nChez {{shopName}}, chaque client est unique.\n\n#independant #izyglam #barberadomicile"
+    },
+    {
+      "id": "ig_barber_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "trust",
+      "text": "Vous hésitez sur une coupe ou une longueur de barbe ?\nOn échange, on ajuste, on respecte votre style.\n\nRien n’est imposé.\n👉 {{shopLink}}\n\n#confiance #barberstyle #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "routine",
+      "text": "Une coupe et une barbe bien entretenues font partie d’une vraie routine.\nUn style net, au quotidien.\n👉 {{shopLink}}\n\n#routinehomme #barberadomicile #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "socialproof",
+      "text": "Ce que mes clients apprécient le plus ?\nLa précision, la régularité et le résultat.\n\nMerci pour votre fidélité 🤍\n\n#avisclients #barber #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est un barber qui vient à vous.\nSans attente, sans stress, avec un résultat net.\n👉 {{shopLink}}\n\n#premium #barberadomicile #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "local",
+      "text": "Barber à domicile sur {{city}} ✂️\nPonctualité, précision et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #barberadomicile #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "care",
+      "text": "Chaque visage est différent.\nChaque barbe mérite une attention spécifique.\n\nC’est pour cela que j’adapte toujours la coupe et les contours.\n\n#soinbarbe #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : espacer trop les rendez-vous.\n\nUn entretien régulier garantit un style net plus longtemps.\n👉 {{shopLink}}\n\n#conseilbarber #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "subtle",
+      "text": "Parfois, une ligne bien tracée suffit.\nUn style plus propre.\nUne allure plus affirmée.\n\n✨\n\n#barber #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste une coupe.\nC’est un style travaillé, jusque dans les détails.\n👉 {{shopLink}}\n\n#signature #barberadomicile #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "season",
+      "text": "Changement de saison, envie de rafraîchir son style ?\n\nUne coupe nette fait toute la différence.\n👉 {{shopLink}}\n\n#nouveaus tyle #barber #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "story",
+      "text": "J’ai choisi le barber à domicile pour proposer un service plus précis et plus humain.\nMoins de chaîne, plus de savoir-faire.\n\nMerci pour votre confiance 🤍\n\n#parcours #barber #izyglam"
+    },
+    {
+      "id": "ig_barber_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["barber"],
+      "tone": "cta-soft",
+      "text": "Envie d’une coupe ou d’une barbe nette, sans sortir de chez vous ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#barberadomicile #izyglam #stylehomme"
+    },
+    {
+      "id": "ig_fitness_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "premium",
+      "text": "💪 Coaching fitness à domicile, adapté à votre rythme.\n\nChez {{shopName}}, chaque séance est pensée selon vos objectifs, votre niveau et votre quotidien.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#fitnessadomicile #izyglam #coachingpersonnalise #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_fitness_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "expert",
+      "text": "Le fitness efficace, ce n’est pas s’épuiser.\nC’est progresser avec méthode, régularité et accompagnement.\n\nC’est exactement l’approche que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#coachingsportif #expertise #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "comfort",
+      "text": "Et si votre séance de sport se faisait… chez vous ?\n\nSans salle bondée, sans regard extérieur, à votre rythme.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #fitnessadomicile #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nRenforcement, remise en forme, reprise sportive.\nCoaching à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #fitnessadomicile #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a un accompagnement réel.\nMotivation, écoute et progression en douceur.\n\nMerci pour votre confiance 💪\n\n#confiance #fitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "advice",
+      "text": "✨ Conseil fitness\n\nLa régularité est plus importante que l’intensité.\nMieux vaut avancer doucement que s’arrêter.\n👉 {{shopLink}}\n\n#conseilfitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "time",
+      "text": "Manque de temps pour aller à la salle ?\n\nLe coaching fitness à domicile permet de rester constant.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #fitnessadomicile #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "positioning",
+      "text": "Être coach sportif indépendant, c’est proposer un accompagnement personnalisé.\nPas de programme générique.\n\nChez {{shopName}}, chaque séance est adaptée.\n\n#independant #izyglam #fitnessadomicile"
+    },
+    {
+      "id": "ig_fitness_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "trust",
+      "text": "Vous débutez ou reprenez le sport ?\nOn avance étape par étape, sans pression.\n\nVotre progression est la priorité.\n👉 {{shopLink}}\n\n#confiance #fitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "routine",
+      "text": "Le fitness fait partie d’une routine bien-être globale.\nBouger régulièrement améliore l’énergie et le moral.\n👉 {{shopLink}}\n\n#routinebienetre #fitnessadomicile #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "socialproof",
+      "text": "Ce que mes clients apprécient le plus ?\nUn accompagnement motivant et adapté à leur niveau.\n\nMerci pour votre confiance 💪\n\n#avisclients #fitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est un coach qui s’adapte à vous.\nChez vous, à votre rythme.\n👉 {{shopLink}}\n\n#premium #fitnessadomicile #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "local",
+      "text": "Coaching fitness à domicile sur {{city}} 💪\nProfessionnalisme, écoute et motivation.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #fitnessadomicile #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "care",
+      "text": "Chaque corps est différent.\nChaque programme doit s’adapter.\n\nC’est pour cela que je personnalise chaque séance.\n\n#respectducorps #fitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : vouloir aller trop vite.\n\nLa progression durable se construit dans le temps.\n👉 {{shopLink}}\n\n#conseilfitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "subtle",
+      "text": "Parfois, une séance suffit pour se sentir mieux.\nPlus d’énergie.\nPlus de confiance.\n\n✨\n\n#fitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste du sport.\nC’est un accompagnement sur mesure.\n👉 {{shopLink}}\n\n#signature #fitnessadomicile #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "season",
+      "text": "Envie de reprendre une activité physique en douceur ?\n\nC’est souvent le bon moment pour se lancer.\n👉 {{shopLink}}\n\n#reprise #fitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "story",
+      "text": "J’ai choisi le coaching fitness à domicile pour proposer un accompagnement plus humain.\nMoins de performance, plus de régularité.\n\nMerci pour votre confiance 💪\n\n#parcours #fitness #izyglam"
+    },
+    {
+      "id": "ig_fitness_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["fitness"],
+      "tone": "cta-soft",
+      "text": "Envie de bouger à votre rythme, chez vous ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#fitnessadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_yoga_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "premium",
+      "text": "🧘‍♀️ Séance de yoga à domicile, pour ralentir et respirer.\n\nChez {{shopName}}, chaque séance est pensée pour vous reconnecter à votre corps et à votre souffle.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#yogaadomicile #izyglam #relaxation #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_yoga_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "expert",
+      "text": "Le yoga n’est pas une performance.\nC’est une pratique d’écoute, d’équilibre et de régularité.\n\nC’est exactement l’approche que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#yogapratique #bienetre #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "comfort",
+      "text": "Et si votre séance de yoga se faisait… chez vous ?\n\nDans le calme, sans comparaison, à votre rythme.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #yogaadomicile #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "cta",
+      "text": "✨ Créneaux disponibles cette semaine ✨\n\nYoga doux, relaxation, respiration.\nSéances à domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #yogaadomicile #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "human",
+      "text": "Derrière {{shopName}}, il y a une vraie présence.\nÉcoute, bienveillance et respect de votre rythme.\n\nMerci pour votre confiance 🤍\n\n#bienveillance #yoga #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "advice",
+      "text": "✨ Conseil relaxation\n\nQuelques minutes de respiration consciente peuvent déjà apaiser le corps et l’esprit.\nEnvie d’aller plus loin ?\n👉 {{shopLink}}\n\n#respiration #relaxation #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "time",
+      "text": "Manque de temps pour vous ?\n\nUne séance de yoga à domicile permet de créer une vraie pause dans la journée.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #yogaadomicile #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "positioning",
+      "text": "Être prof de yoga indépendant(e), c’est proposer une pratique personnalisée.\nPas de cours standard.\n\nChez {{shopName}}, chaque séance s’adapte à vous.\n\n#independant #izyglam #yogaadomicile"
+    },
+    {
+      "id": "ig_yoga_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "trust",
+      "text": "Vous pensez ne pas être assez souple pour le yoga ?\nLe yoga s’adapte à vous, pas l’inverse.\n\nOn commence là où vous êtes.\n👉 {{shopLink}}\n\n#confiance #yogapourtous #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "routine",
+      "text": "Le yoga peut faire partie d’une routine bien-être simple.\nQuelques mouvements, une respiration consciente.\n👉 {{shopLink}}\n\n#routinebienetre #yoga #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "socialproof",
+      "text": "Ce que mes élèves ressentent le plus souvent après une séance ?\nUn apaisement profond.\nUn corps plus relâché.\n\nMerci pour votre confiance 🤍\n\n#avisclients #yoga #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est une séance de yoga dans le calme, chez soi.\nSans pression, sans comparaison.\n👉 {{shopLink}}\n\n#premium #yogaadomicile #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "local",
+      "text": "Yoga et relaxation à domicile sur {{city}} 🧘‍♀️\nDouceur, écoute et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #yogaadomicile #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "care",
+      "text": "Chaque corps est différent.\nChaque séance doit s’adapter.\n\nC’est pour cela que je prends toujours le temps.\n\n#respectducorps #yoga #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "education",
+      "text": "❌ Erreur fréquente : vouloir aller trop loin trop vite.\n\nLe yoga privilégie la progression douce et consciente.\n👉 {{shopLink}}\n\n#conseilyoga #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "subtle",
+      "text": "Parfois, quelques respirations suffisent.\nUn mental plus calme.\nUn corps plus présent.\n\n✨\n\n#relaxation #yoga #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas juste une séance de yoga.\nC’est un temps pour vous recentrer.\n👉 {{shopLink}}\n\n#signature #yogaadomicile #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "season",
+      "text": "Période stressante, fatigue accumulée…\n\nC’est souvent le bon moment pour ralentir.\n👉 {{shopLink}}\n\n#relaxation #yoga #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "story",
+      "text": "J’ai choisi le yoga à domicile pour proposer une pratique plus humaine et accessible.\nMoins de performance, plus de présence.\n\nMerci pour votre confiance 🤍\n\n#parcours #yoga #izyglam"
+    },
+    {
+      "id": "ig_yoga_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["yoga", "relaxation"],
+      "tone": "cta-soft",
+      "text": "Envie de relâcher la pression, chez vous ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#yogaadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_postpartum_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "premium",
+      "text": "🤍 Accompagnement post-partum à domicile.\n\nChez {{shopName}}, chaque séance est pensée pour vous offrir un espace de douceur, d’écoute et de soutien.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#postpartum #izyglam #douceur #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_postpartum_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "expert",
+      "text": "Le post-partum est une période de grands changements.\nIl n’y a pas de bonne ou de mauvaise façon de le vivre.\n\nMon rôle est simplement de vous accompagner avec bienveillance.\n👉 {{shopLink}}\n\n#postpartum #accompagnement #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "comfort",
+      "text": "Et si vous n’aviez pas à vous déplacer après l’accouchement ?\n\nL’accompagnement post-partum à domicile permet de rester dans votre cocon.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #postpartumadomicile #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "cta",
+      "text": "✨ Disponibilités cette semaine ✨\n\nTemps d’échange, soins doux, accompagnement post-partum.\nÀ domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#postpartum #disponibilites #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "human",
+      "text": "Le post-partum est une période sensible.\nIci, il n’y a aucun jugement, seulement de l’écoute et de la présence.\n\nMerci pour votre confiance 🤍\n\n#bienveillance #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "advice",
+      "text": "✨ Rappel important\n\nVous avez le droit d’être fatiguée.\nVous avez le droit de demander de l’aide.\n\nPrendre soin de vous est essentiel.\n👉 {{shopLink}}\n\n#postpartum #prendresoindesoi #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "time",
+      "text": "Dans cette période intense, chaque minute compte.\n\nUn accompagnement à domicile permet de vous concentrer sur l’essentiel.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "positioning",
+      "text": "Être accompagnante post-partum indépendante, c’est choisir l’humain avant tout.\nPas de protocole rigide.\n\nChez {{shopName}}, chaque accompagnement est unique.\n\n#independante #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "trust",
+      "text": "Vous vous sentez dépassée ?\nC’est normal.\n\nOn prend le temps, ensemble.\n👉 {{shopLink}}\n\n#confiance #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "routine",
+      "text": "Le post-partum mérite autant d’attention que la grossesse.\nCréer des moments de pause aide à traverser cette période.\n👉 {{shopLink}}\n\n#postpartum #bienetre #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "socialproof",
+      "text": "Ce que les mamans me disent souvent ?\n\"Merci d’avoir été là, sans pression.\"\n\nMerci pour votre confiance 🤍\n\n#postpartum #avisclients #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "premium",
+      "text": "Le vrai luxe après une naissance ?\nDu temps, du calme, et une présence bienveillante.\n👉 {{shopLink}}\n\n#premium #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "local",
+      "text": "Accompagnement post-partum à domicile sur {{city}} 🤍\nÉcoute, douceur et respect.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "care",
+      "text": "Chaque post-partum est différent.\nIl n’y a rien à réussir, seulement à traverser.\n\nJe suis là pour vous accompagner.\n\n#respect #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "education",
+      "text": "❌ Idée reçue : le post-partum doit être vécu dans le silence.\n\nParler, demander du soutien, est une force.\n👉 {{shopLink}}\n\n#postpartum #parler #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "subtle",
+      "text": "Parfois, être simplement écoutée change tout.\nUn souffle plus léger.\nUn peu plus de sérénité.\n\n✨\n\n#postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas un service.\nC’est une présence, un soutien, un temps pour vous.\n👉 {{shopLink}}\n\n#signature #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "season",
+      "text": "Les premières semaines après une naissance peuvent être intenses.\n\nVous n’êtes pas obligée de les vivre seule.\n👉 {{shopLink}}\n\n#postpartum #soutien #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "story",
+      "text": "J’ai choisi l’accompagnement post-partum à domicile pour offrir un soutien plus humain.\nPrésence, écoute et respect.\n\nMerci pour votre confiance 🤍\n\n#parcours #postpartum #izyglam"
+    },
+    {
+      "id": "ig_postpartum_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["post-partum"],
+      "tone": "cta-soft",
+      "text": "Besoin d’un espace de douceur après la naissance ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#postpartumadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_nutrition_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "premium",
+      "text": "🥗 Accompagnement nutritionnel à domicile, en toute bienveillance.\n\nChez {{shopName}}, l’objectif est de vous aider à mieux comprendre votre alimentation, sans pression ni jugement.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#nutrition #izyglam #equilibrealimentaire #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_nutrition_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "expert",
+      "text": "Mieux manger ne signifie pas manger moins.\nC’est apprendre à écouter ses besoins et à trouver un équilibre durable.\n\nC’est l’approche que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#nutritionbienetre #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "comfort",
+      "text": "Et si vous pouviez parler nutrition… depuis chez vous ?\n\nUn accompagnement à domicile permet d’échanger dans un cadre rassurant.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #nutritionadomicile #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "cta",
+      "text": "✨ Disponibilités cette semaine ✨\n\nAccompagnement nutritionnel, équilibre alimentaire, conseils personnalisés.\nÀ domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "human",
+      "text": "Parler alimentation peut être sensible.\nIci, il n’y a aucun jugement, seulement de l’écoute et du respect.\n\nMerci pour votre confiance 🤍\n\n#bienveillance #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "advice",
+      "text": "✨ Rappel important\n\nIl n’existe pas de régime universel.\nVotre alimentation doit s’adapter à votre mode de vie.\n👉 {{shopLink}}\n\n#nutrition #equilibre #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "time",
+      "text": "Manque de temps pour vous pencher sur votre alimentation ?\n\nUn accompagnement à domicile permet de prendre ce temps, sereinement.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "positioning",
+      "text": "Être accompagnant(e) en nutrition indépendant(e), c’est placer l’humain au centre.\nPas de solution miracle.\n\nChez {{shopName}}, on avance étape par étape.\n\n#independant #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "trust",
+      "text": "Vous avez déjà essayé beaucoup de méthodes sans succès ?\nOn reprend calmement, sans pression.\n\nVotre rythme est le bon.\n👉 {{shopLink}}\n\n#confiance #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "routine",
+      "text": "L’équilibre alimentaire se construit dans le quotidien.\nPetits ajustements, habitudes durables.\n👉 {{shopLink}}\n\n#routinealimentaire #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "socialproof",
+      "text": "Ce que mes clients apprécient le plus ?\nUn accompagnement simple, sans interdits.\n\nMerci pour votre confiance 🤍\n\n#avisclients #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "premium",
+      "text": "Le vrai luxe aujourd’hui, c’est comprendre ce que l’on mange.\nSans pression, sans culpabilité.\n👉 {{shopLink}}\n\n#premium #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "local",
+      "text": "Accompagnement nutritionnel à domicile sur {{city}} 🥗\nÉcoute, pédagogie et respect.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "care",
+      "text": "Chaque personne a une relation différente à l’alimentation.\nIl n’y a pas de parcours parfait.\n\nOn avance ensemble.\n\n#respect #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "education",
+      "text": "❌ Idée reçue : manger équilibré doit être compliqué.\n\nLa simplicité est souvent la clé.\n👉 {{shopLink}}\n\n#nutrition #ideesrecues #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "subtle",
+      "text": "Parfois, mieux manger commence par mieux s’écouter.\nUne sensation de légèreté.\nUn rapport plus apaisé à l’alimentation.\n\n✨\n\n#nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas un régime.\nC’est un accompagnement pour retrouver un équilibre durable.\n👉 {{shopLink}}\n\n#signature #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "season",
+      "text": "Changement de rythme, fatigue, nouvelles habitudes…\n\nC’est souvent le bon moment pour revoir son équilibre alimentaire.\n👉 {{shopLink}}\n\n#nutrition #equilibre #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "story",
+      "text": "J’ai choisi l’accompagnement nutritionnel à domicile pour proposer un suivi plus humain.\nMoins de règles, plus de compréhension.\n\nMerci pour votre confiance 🤍\n\n#parcours #nutrition #izyglam"
+    },
+    {
+      "id": "ig_nutrition_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["nutrition"],
+      "tone": "cta-soft",
+      "text": "Envie de retrouver une relation plus sereine avec l’alimentation ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#nutritionadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_stylisme_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "premium",
+      "text": "👗 Conseil en stylisme à domicile, pour révéler votre style.\n\nChez {{shopName}}, l’objectif est de mettre en valeur votre personnalité à travers des choix qui vous ressemblent.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#stylisme #izyglam #conseilstyle #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_stylisme_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "expert",
+      "text": "Le stylisme, ce n’est pas suivre les tendances.\nC’est apprendre à choisir ce qui vous met réellement en valeur.\n\nC’est l’approche que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#stylisme #imagepersonnelle #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "comfort",
+      "text": "Et si vous faisiez le point sur votre style… chez vous ?\n\nDans un cadre familier, sans pression.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #stylismeadomicile #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "cta",
+      "text": "✨ Disponibilités cette semaine ✨\n\nAnalyse de style, conseils personnalisés, accompagnement vestimentaire.\nÀ domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#disponibilites #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "human",
+      "text": "Le style, c’est aussi une question de confiance.\nIci, aucun jugement, seulement de l’écoute et des conseils adaptés.\n\nMerci pour votre confiance 🤍\n\n#bienveillance #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "advice",
+      "text": "✨ Conseil style\n\nUn vêtement doit s’adapter à vous, pas l’inverse.\nEnvie de conseils personnalisés ?\n👉 {{shopLink}}\n\n#conseilstyle #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "time",
+      "text": "Marre de perdre du temps devant votre dressing ?\n\nUn accompagnement en stylisme permet d’y voir plus clair.\nJe viens à vous.\n👉 {{shopLink}}\n\n#tempspours oi #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "positioning",
+      "text": "Être styliste indépendant(e), c’est proposer des conseils sur mesure.\nPas de look imposé.\n\nChez {{shopName}}, votre style reste au centre.\n\n#independant #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "trust",
+      "text": "Vous doutez parfois de vos choix vestimentaires ?\nOn avance ensemble, sans pression.\n\nLe style s’apprend.\n👉 {{shopLink}}\n\n#confiance #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "routine",
+      "text": "Avoir un style clair simplifie le quotidien.\nMoins d’hésitations, plus de cohérence.\n👉 {{shopLink}}\n\n#routine #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "socialproof",
+      "text": "Ce que mes clients apprécient le plus ?\nDes conseils simples et applicables au quotidien.\n\nMerci pour votre confiance 🤍\n\n#avisclients #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est se sentir bien dans ses vêtements.\nPas suivre une tendance.\n👉 {{shopLink}}\n\n#premium #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "local",
+      "text": "Conseil en stylisme à domicile sur {{city}} 👗\nÉcoute, élégance et personnalisation.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "care",
+      "text": "Chaque morphologie est différente.\nChaque style mérite d’être respecté.\n\nLes conseils s’adaptent à vous.\n\n#respect #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "education",
+      "text": "❌ Idée reçue : il faut tout changer pour avoir du style.\n\nSouvent, quelques ajustements suffisent.\n👉 {{shopLink}}\n\n#stylisme #ideesrecues #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "subtle",
+      "text": "Parfois, un détail change tout.\nUne coupe.\nUne couleur.\n\n✨\n\n#stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas relooker.\nC’est révéler ce qui est déjà là.\n👉 {{shopLink}}\n\n#signature #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "season",
+      "text": "Changement de saison, envie de renouveau ?\n\nC’est souvent le bon moment pour ajuster son style.\n👉 {{shopLink}}\n\n#stylisme #nouveaus tyle #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "story",
+      "text": "J’ai choisi le stylisme à domicile pour proposer des conseils plus humains.\nSans pression, sans jugement.\n\nMerci pour votre confiance 🤍\n\n#parcours #stylisme #izyglam"
+    },
+    {
+      "id": "ig_stylisme_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["stylisme"],
+      "tone": "cta-soft",
+      "text": "Envie d’y voir plus clair dans votre style ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#stylismeadomicile #izyglam #confiance"
+    },
+    {
+      "id": "ig_acupuncture_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "premium",
+      "text": "🪷 Séance d’acupuncture à domicile, dans un cadre calme et respectueux.\n\nChez {{shopName}}, chaque séance est pensée comme un moment d’écoute et de rééquilibrage.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#acupuncture #izyglam #bienetre #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_acupuncture_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "expert",
+      "text": "L’acupuncture ne se résume pas aux aiguilles.\nC’est une approche globale, basée sur l’écoute du corps et de ses équilibres.\n\nC’est cette vision que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#acupuncture #approcheglobale #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "comfort",
+      "text": "Et si votre séance d’acupuncture se faisait… chez vous ?\n\nDans un environnement familier, propice au relâchement.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #acupunctureadomicile #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "cta",
+      "text": "✨ Disponibilités cette semaine ✨\n\nSéances d’acupuncture à domicile sur {{city}}.\nÉcoute, calme et respect du rythme.\n👉 Réserver : {{shopLink}}\n\n#acupuncture #disponibilites #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "human",
+      "text": "Chaque séance commence par un temps d’échange.\nComprendre, écouter, adapter.\n\nMerci pour votre confiance 🤍\n\n#acupuncture #bienveillance #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "advice",
+      "text": "✨ À savoir\n\nL’acupuncture s’inscrit dans une démarche de bien-être global.\nChaque séance est unique.\n👉 {{shopLink}}\n\n#acupuncture #bienetre #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "time",
+      "text": "Prendre du temps pour soi n’est jamais du temps perdu.\n\nL’acupuncture à domicile permet de s’accorder une vraie pause.\n👉 {{shopLink}}\n\n#tempspours oi #acupuncture #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "positioning",
+      "text": "Être praticien(ne) en acupuncture indépendant(e), c’est proposer un accompagnement personnalisé.\nPas de séance standardisée.\n\nChez {{shopName}}, chaque personne est unique.\n\n#acupuncture #independant #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "trust",
+      "text": "Vous n’avez jamais essayé l’acupuncture ?\nOn prend le temps d’expliquer, sans pression.\n\nLa confiance est essentielle.\n👉 {{shopLink}}\n\n#acupuncture #confiance #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "routine",
+      "text": "L’acupuncture peut s’inscrire dans une routine de bien-être globale.\nUn moment pour ralentir et se recentrer.\n👉 {{shopLink}}\n\n#acupuncture #routinebienetre #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "socialproof",
+      "text": "Ce que mes clients apprécient le plus ?\nUn accompagnement calme, respectueux et à l’écoute.\n\nMerci pour votre confiance 🤍\n\n#acupuncture #avisclients #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est une séance d’acupuncture dans un environnement apaisant.\nChez soi, sans précipitation.\n👉 {{shopLink}}\n\n#acupuncture #premium #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "local",
+      "text": "Séances d’acupuncture à domicile sur {{city}} 🪷\nCalme, écoute et professionnalisme.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #acupuncture #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "care",
+      "text": "Chaque corps réagit différemment.\nC’est pourquoi chaque séance est adaptée.\n\nLe respect est central.\n\n#acupuncture #respect #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "education",
+      "text": "❌ Idée reçue : l’acupuncture est douloureuse.\n\nLes sensations sont généralement douces et progressives.\n👉 {{shopLink}}\n\n#acupuncture #ideesrecues #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "subtle",
+      "text": "Parfois, le simple fait de s’allonger et de respirer change déjà beaucoup.\nUn temps pour soi.\n\n✨\n\n#acupuncture #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas une promesse.\nC’est un accompagnement respectueux et attentif.\n👉 {{shopLink}}\n\n#acupuncture #signature #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "season",
+      "text": "Période de fatigue, de surcharge mentale ?\n\nC’est souvent le bon moment pour s’accorder une pause.\n👉 {{shopLink}}\n\n#acupuncture #bienetre #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "story",
+      "text": "J’ai choisi l’acupuncture à domicile pour proposer un accompagnement plus humain.\nPrésence, écoute et respect.\n\nMerci pour votre confiance 🤍\n\n#acupuncture #parcours #izyglam"
+    },
+    {
+      "id": "ig_acupuncture_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["acupuncture"],
+      "tone": "cta-soft",
+      "text": "Envie de ralentir et de vous recentrer ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#acupunctureadomicile #izyglam #bienetre"
+    },
+    {
+      "id": "ig_devperso_fr_01",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "premium",
+      "text": "✨ Accompagnement en développement personnel à domicile.\n\nChez {{shopName}}, l’objectif est de vous aider à avancer avec plus de clarté et de sérénité.\n📍 {{city}}\n👉 Réserver : {{shopLink}}\n\n#developpementpersonnel #izyglam #elevation #{{cityHashtag}}"
+    },
+    {
+      "id": "ig_devperso_fr_02",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "expert",
+      "text": "Le développement personnel ne consiste pas à devenir quelqu’un d’autre.\nIl s’agit surtout de mieux se comprendre.\n\nC’est l’approche que je propose chez {{shopName}}.\n👉 {{shopLink}}\n\n#connaissancesoide #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_03",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "comfort",
+      "text": "Et si vous preniez ce temps pour vous… chez vous ?\n\nUn accompagnement à domicile permet d’échanger dans un cadre rassurant.\nJe viens à vous.\n👉 {{shopLink}}\n\n#confort #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_04",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "cta",
+      "text": "✨ Disponibilités cette semaine ✨\n\nTemps d’échange, clarification, accompagnement personnel.\nÀ domicile sur {{city}}.\n👉 Réserver : {{shopLink}}\n\n#developpementpersonnel #disponibilites #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_05",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "human",
+      "text": "Parfois, mettre des mots sur ce que l’on ressent change déjà beaucoup.\nIci, l’écoute est centrale.\n\nMerci pour votre confiance 🤍\n\n#ecoute #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_06",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "advice",
+      "text": "✨ Rappel important\n\nAvancer à son rythme est une force.\nIl n’y a pas de course, seulement un chemin.\n👉 {{shopLink}}\n\n#developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_07",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "time",
+      "text": "Dans un quotidien chargé, prendre du recul est essentiel.\n\nUn accompagnement à domicile permet de créer cet espace.\n👉 {{shopLink}}\n\n#tempspours oi #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_08",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "positioning",
+      "text": "Être accompagnant(e) en développement personnel, c’est guider sans diriger.\nPas de méthode imposée.\n\nChez {{shopName}}, le respect est central.\n\n#independant #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_09",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "trust",
+      "text": "Vous traversez une période de questionnement ?\nC’est souvent le début d’un réalignement.\n\nOn avance ensemble.\n👉 {{shopLink}}\n\n#confiance #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_10",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "routine",
+      "text": "Le développement personnel s’inscrit dans le quotidien.\nDes prises de conscience simples, mais durables.\n👉 {{shopLink}}\n\n#routine #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_11",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "socialproof",
+      "text": "Ce que les personnes accompagnées me disent souvent ?\n\"J’y vois plus clair.\"\n\nMerci pour votre confiance 🤍\n\n#avisclients #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_12",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "premium",
+      "text": "Le vrai luxe, c’est d’apprendre à mieux se comprendre.\nSans pression, sans jugement.\n👉 {{shopLink}}\n\n#premium #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_13",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "local",
+      "text": "Accompagnement en développement personnel à domicile sur {{city}} ✨\nÉcoute, clarté et respect.\n👉 Réserver : {{shopLink}}\n\n#{{cityHashtag}} #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_14",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "care",
+      "text": "Chaque parcours est différent.\nIl n’y a rien à réussir, seulement à comprendre.\n\nLe respect guide chaque échange.\n\n#respect #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_15",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "education",
+      "text": "❌ Idée reçue : le développement personnel donne des réponses toutes faites.\n\nIl aide surtout à poser les bonnes questions.\n👉 {{shopLink}}\n\n#developpementpersonnel #ideesrecues #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_16",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "subtle",
+      "text": "Parfois, prendre conscience d’un point suffit à faire évoluer beaucoup de choses.\nUn pas après l’autre.\n\n✨\n\n#developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_17",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "signature",
+      "text": "{{shopName}}, ce n’est pas une méthode miracle.\nC’est un accompagnement sincère et respectueux.\n👉 {{shopLink}}\n\n#signature #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_18",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "season",
+      "text": "Période de transition, de doute ou de changement ?\n\nC’est souvent le bon moment pour faire le point.\n👉 {{shopLink}}\n\n#developpementpersonnel #clarte #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_19",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "story",
+      "text": "J’ai choisi l’accompagnement en développement personnel à domicile pour proposer un cadre plus humain.\nPrésence, écoute et respect.\n\nMerci pour votre confiance 🤍\n\n#parcours #developpementpersonnel #izyglam"
+    },
+    {
+      "id": "ig_devperso_fr_20",
+      "platform": "instagram",
+      "lang": "fr",
+      "shopTypes": ["developpement", "elevation"],
+      "tone": "cta-soft",
+      "text": "Envie d’y voir plus clair et d’avancer sereinement ?\nJe viens à vous, tout simplement.\n👉 {{shopLink}}\n\n#developpementpersonneladomicile #izyglam #bienetre"
+    }
+  ]
+}
