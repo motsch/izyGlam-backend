@@ -23,6 +23,7 @@ import { startB2BDripCron } from "./cron/b2bDripCron";
 import sitemapRouter from './routes/sitemap';
 import { scheduleWeeklyPayouts } from './cron/weeklyPayoutJob';
 import { Request, Response, NextFunction } from "express";
+import { startShopStatsCron } from "./cron/shopStats.cron";
 
 
 const app = express();
@@ -38,7 +39,9 @@ app.get("/", (req: any, res: any) => {
   res.send("Bienvenue sur l'API de mon application.");
 });
 
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }, // <-- IMPORTANT pour tes images
+}));
 
 // limite les attaques par gros JSON / form flood
 const bigJson = express.json({ limit: "20mb" });
@@ -49,6 +52,7 @@ const smallUrl = express.urlencoded({ extended: true, limit: "500kb" });
 
 // ⚠️ routes “probables” d’images/docs (pour ne pas casser l’existant)
 const BIG_BODY_PATHS = [
+  "/uploads",
   "/api/upload",
   "/api/uploads",
   "/api/image",
@@ -284,6 +288,7 @@ mongoose
     await seedCities();
     await startB2BDripCron();
     await scheduleWeeklyPayouts();
+    await startShopStatsCron();
     console.log("Connexion à la base de données réussie");
   })
   .catch((err: any) => {

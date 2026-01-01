@@ -602,6 +602,34 @@ const getShopsByPostalCodes = async (req: Request, res: Response) => {
   }
 };
 
+function getFinishedStats(shop: any) {
+  const finished = shop?.stats?.bookings?.finished;
+  return {
+    last24h: Number(finished?.last24h ?? 0),
+    week: Number(finished?.week ?? 0),
+    month: Number(finished?.month ?? 0),
+    total: Number(finished?.total ?? 0),
+  };
+}
+
+function computePerformanceScore(shop: any) {
+  const s = getFinishedStats(shop);
+
+  // Qualité : note (0..5). Si pas de note -> 0
+  const note = Number(shop?.note ?? 0);
+
+  // Ex: score orienté "momentum" (recent > ancien)
+  // Ajuste les poids comme tu veux
+  const score =
+    s.last24h * 6 +     // boost fort : récent
+    s.week * 3 +        // semaine : très important
+    s.month * 1.2 +     // mois : important mais moins
+    s.total * 0.15 +    // total : faible pour éviter "anciens only"
+    note * 2;           // qualité : bonus
+
+  return score;
+}
+
 export const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) => {
   try {
     const { codes, country } = req.query;
@@ -618,7 +646,6 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
 
     const countryQuery = buildCountryQuery(country);
 
-    // 1) Pré-check pays : s'il est fourni et qu'il n'y a aucun shop -> renvoi vide tout de suite
     if (countryQuery) {
       const countryCount = await ShopModel.countDocuments({
         ...countryQuery,
@@ -631,12 +658,11 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
           discover: [],
           appreciated: [],
           smart: [],
-          top10: []
+          top10: [],
         });
       }
     }
 
-    // 2) Requête DB principale (inclut country si fourni)
     const shopQuery: any = {
       deliveryPostalCodes: { $in: postalCodes },
       active: true,
@@ -646,14 +672,46 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
 
     const shops = await ShopModel.find(shopQuery).lean();
 
-    // 3) Re-filtrage strict par sécurité (si besoin)
-    const shopsByPostalCodes = shops.filter((shop) =>
+    // ✅ Ajout performance + stats safe (si stats n'existe pas -> 0)
+    const shopsWithPerformance = shops.map((shop: any) => {
+      const finished = shop?.stats?.bookings?.finished;
+      const finishedStats = {
+        last24h: Number(finished?.last24h ?? 0),
+        week: Number(finished?.week ?? 0),
+        month: Number(finished?.month ?? 0),
+        total: Number(finished?.total ?? 0),
+      };
+
+      const note = Number(shop?.note ?? 0);
+
+      const performanceScore =
+        finishedStats.last24h * 6 +
+        finishedStats.week * 3 +
+        finishedStats.month * 1.2 +
+        finishedStats.total * 0.15 +
+        note * 2;
+
+      return {
+        ...shop,
+        stats: {
+          ...(shop.stats ?? {}),
+          bookings: {
+            ...(shop.stats?.bookings ?? {}),
+            finished: finishedStats,
+          },
+        },
+        performanceScore,
+      };
+    });
+
+    // Re-filtrage strict par sécurité
+    const shopsByPostalCodes = shopsWithPerformance.filter((shop) =>
       Array.isArray(shop.deliveryPostalCodes) &&
       shop.deliveryPostalCodes.some((d: string) => postalCodes.includes(d))
     );
 
-    // 4) Enrichissement prix moyen
-    const shopIds = shops.map((s) => s._id.toString());
+    // Enrichissement prix moyen
+    const shopIds = shopsWithPerformance.map((s: any) => s._id.toString());
     const servicesAgg = await ServiceModel.aggregate([
       { $match: { shopId: { $in: shopIds } } },
       { $group: { _id: "$shopId", avgPrice: { $avg: "$price" } } },
@@ -662,17 +720,45 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
     const avgPriceByShop: Record<string, number> = {};
     servicesAgg.forEach((s) => { avgPriceByShop[s._id] = s.avgPrice; });
 
-    const enrichedShops = shops.map((shop) => ({
+    const enrichedShops = shopsWithPerformance.map((shop: any) => ({
       ...shop,
       avgPrice: avgPriceByShop[shop._id.toString()] ?? Infinity,
     }));
 
+    // ✅ Catégories : on boost la "top10" par performance au lieu de clics
+    // (tu peux garder clics en fallback si tu veux)
     const categories = {
       all: shopsByPostalCodes,
-      discover: shuffle(enrichedShops).slice(0, 15),
-      appreciated: [...enrichedShops].sort((a, b) => Number(b.note) - Number(a.note)).slice(0, 15),
-      smart: [...enrichedShops].sort((a, b) => a.avgPrice - b.avgPrice).slice(0, 15),
-      top10: [...enrichedShops].sort((a, b) => b.clics - a.clics).slice(0, 15),
+
+      // Découverte : random mais on préfère légèrement les shops qui performent
+      discover: shuffle(enrichedShops)
+        .sort((a, b) => (b.performanceScore ?? 0) - (a.performanceScore ?? 0))
+        .slice(0, 15),
+
+      // Appréciés : note d'abord, puis performance pour départager
+      appreciated: [...enrichedShops]
+        .sort((a, b) => {
+          const na = Number(a.note ?? 0);
+          const nb = Number(b.note ?? 0);
+          if (nb !== na) return nb - na;
+          return (b.performanceScore ?? 0) - (a.performanceScore ?? 0);
+        })
+        .slice(0, 15),
+
+      // Bons plans : prix bas, puis performance (car un bon plan actif convertit mieux)
+      smart: [...enrichedShops]
+        .sort((a, b) => {
+          const pa = Number(a.avgPrice ?? Infinity);
+          const pb = Number(b.avgPrice ?? Infinity);
+          if (pa !== pb) return pa - pb;
+          return (b.performanceScore ?? 0) - (a.performanceScore ?? 0);
+        })
+        .slice(0, 15),
+
+      // Top : performance réelle (week / 24h / month), pas juste clics
+      top10: [...enrichedShops]
+        .sort((a, b) => (b.performanceScore ?? 0) - (a.performanceScore ?? 0))
+        .slice(0, 15),
     };
 
     return res.json(categories);
@@ -687,6 +773,7 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
     return res.status(500).json({ message: "Erreur serveur" });
   }
 };
+
 
 // Petit helper
 function shuffle<T>(array: T[]): T[] {

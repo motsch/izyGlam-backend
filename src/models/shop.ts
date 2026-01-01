@@ -54,6 +54,17 @@ export interface iShop extends mongoose.Document {
   ville: string;
   filter: string;
   district?: string;
+  stats?: {
+    bookings?: {
+      finished?: {
+        last24h: number;
+        week: number;
+        month: number;
+        total: number;
+      };
+    };
+    computedAt?: Date;
+  };
   reviews: Array<{
     user: mongoose.Types.ObjectId;
     rating?: number;
@@ -91,6 +102,9 @@ export interface iShop extends mongoose.Document {
   temps_affichage_total: number;
   nombre_affichages_valides: number;
   temps_affichage_moyen: number;
+  facebook: string;
+  instagram: string;
+  tiktok: string;
 
   // 🔒 Modération / statut
   active?: boolean;
@@ -117,7 +131,22 @@ const shopSchema = new Schema<iShop>(
     description_original: { type: String, required: false },    // trace avant correction
     image: { type: String, required: true, default: "default.png" },
     note: { type: String, required: true },
+    // 📊 Stats (calculées par cron)
+    stats: {
+      bookings: {
+        finished: {
+          last24h: { type: Number, default: 0 },
+          week: { type: Number, default: 0 },
+          month: { type: Number, default: 0 },
+          total: { type: Number, default: 0 },
+        },
+      },
+      computedAt: { type: Date },
+    },
 
+    facebook: { type: String },
+    instagram: { type: String },
+    tiktok: { type: String },
     deliveryPostalCodes: { type: [String], required: false },
     averagePrice: { type: String, required: false },
     minimumDelay: { type: String, required: false, default: "30" },
