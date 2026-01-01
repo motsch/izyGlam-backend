@@ -478,6 +478,42 @@ ${product.description ? `Description du produit: ${product.description}` : ""}`.
 const getAllShops = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shops.list.start", route: req.originalUrl, method: req.method });
   try {
+    const shops = await ShopModel.find({
+      active: true, // 👈 règle n°1 : shop actif uniquement
+      $and: [
+        {
+          $or: [
+            { flags: { $exists: false } }, // legacy
+            { flags: { $size: 0 } },       // non flaggé
+          ],
+        },
+        {
+          $or: [
+            { status: { $exists: false } }, // legacy
+            { status: { $ne: "needs_manual_review" } },
+          ],
+        },
+      ],
+    });
+
+    logger.info({ msg: "shops.list.success", count: shops.length });
+    res.json(shops);
+  } catch (error: any) {
+    logger.error({
+      msg: "shops.list.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
+    res.status(500).json({ message: "Impossible de récupérer les boutiques" });
+  }
+};
+
+// Récupérer toutes les boutiques
+const getAllShopsAdmin = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shops.list.start", route: req.originalUrl, method: req.method });
+  try {
     const shops = await ShopModel.find();
     logger.info({ msg: "shops.list.success", count: shops.length });
     res.json(shops);
@@ -1555,6 +1591,7 @@ module.exports = {
   getShopsAllCount,
   createShop,
   getAllShops,
+  getAllShopsAdmin,
   getShopsNearby,
   getShopsByPostalCodes,
   getShopById,

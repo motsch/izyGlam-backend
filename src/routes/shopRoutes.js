@@ -105,6 +105,9 @@ router.get(
 // Route to retrieve all shops
 router.get("/shop", shopController.getAllShops);
 
+// Route to retrieve all shops
+router.get("/shop-admin", shopController.getAllShopsAdmin);
+
 // Nouvelle route pour récupérer les shops à proximité
 // Exemple d'appel : /shop/nearby?lat=48.8566&lon=2.3522
 router.get("/shop/nearby", shopController.getShopsNearby);

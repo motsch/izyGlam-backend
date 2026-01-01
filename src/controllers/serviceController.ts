@@ -189,7 +189,16 @@ const getServicesByShop = async (req: express.Request, res: express.Response) =>
     });
     const { id } = req.params;
 
-    let services = await ServiceModel.find({ shopId: id });
+    let services = await ServiceModel.find({
+      shopId: id,
+      blocked: { $ne: true },
+      $or: [
+        { flags: { $exists: false } },
+        { flags: { $size: 0 } }
+      ],
+    });
+
+
 
     if (services.length > 0) {
       logger.info({ msg: "service.byShop.success", shopId: id, count: services.length });
@@ -257,6 +266,86 @@ const getServicesByShop = async (req: express.Request, res: express.Response) =>
   }
 };
 
+
+
+// Récupérer tous les services proposés par un shop
+const getServicesByShopAdmin = async (req: express.Request, res: express.Response) => {
+  try {
+    logger.info({
+      msg: "service.byShop.start",
+      route: req.originalUrl,
+      method: req.method,
+      params: req.params,
+    });
+    const { id } = req.params;
+
+    let services = await ServiceModel.find({ shopId: id });
+
+    if (services.length > 0) {
+      logger.info({ msg: "service.byShop.success", shopId: id, count: services.length });
+      return res.json(services);
+    }
+
+    console.log("Aucun service trouvé, on cherche un template…");
+    logger.warn({ msg: "service.byShop.none_found_try_template", shopId: id });
+
+    const shop = await ShopModel.findById(id);
+    if (!shop) {
+      logger.warn({ msg: "service.byShop.shop_not_found", shopId: id });
+      return res.status(404).json({ message: "Boutique introuvable" });
+    }
+
+    let template = await ServiceTemplateModel.findOne({ type: shop.type, active: true });
+
+    if (!template) {
+      console.log("Pas de template du même type, on en prend un actif au hasard");
+      logger.warn({ msg: "service.byShop.template_same_type_not_found_use_any_active", shopType: shop.type });
+      template = await ServiceTemplateModel.findOne({ active: true });
+    }
+
+    if (!template) {
+      logger.error({ msg: "service.byShop.no_active_template", shopId: id });
+      return res.status(500).json({ message: "Aucun template de service actif disponible pour créer un service" });
+    }
+
+    // 👇 On définit une couleur par défaut si absente
+    const color = template.color || "#ff4081"; // Rose IzyGlam si non défini
+
+    const newService = new ServiceModel({
+      name: template.name,
+      description: template.description,
+      image: template.image,
+      type: template.type,
+      price: template.price,
+      duration: template.duration,
+      color: color,
+      shopId: id,
+    });
+
+    await newService.save();
+
+    logger.info({
+      msg: "service.byShop.created_from_template",
+      shopId: id,
+      templateId: template._id?.toString(),
+      serviceId: newService._id?.toString(),
+    });
+    console.log("Service créé automatiquement à partir du template");
+    res.json([newService]);
+
+  } catch (error) {
+    console.error("Erreur dans getServicesByShop :", error);
+    logger.error({
+      msg: "service.byShop.error",
+      route: req.originalUrl,
+      method: req.method,
+      params: req.params,
+      errorMessage: (error as any)?.message,
+      stack: (error as any)?.stack,
+    });
+    res.status(500).json({ message: "Erreur lors de la récupération ou de la création des services." });
+  }
+};
 
 // Créer plusieurs services en une seule requête
 const createMultipleServices = async (req: express.Request, res: express.Response) => {
@@ -680,6 +769,7 @@ module.exports = {
   deleteServiceById,
   exportServicesCsvByShop,
   getServicesByShop,
+  getServicesByShopAdmin,
   createMultipleServices,
   uploadGalleryImages,
   getGalleryImages,

@@ -47,6 +47,9 @@ router.delete(
 // Route to get all services of a shop
 router.get("/shop/:id/services", serviceController.getServicesByShop);
 
+// Route to get all services of a shop
+router.get("/shop-admin/:id/services", serviceController.getServicesByShopAdmin);
+
 // Route to upload images to a service's gallery
 router.post(
   "/service-gallery/:id/gallery/upload",
