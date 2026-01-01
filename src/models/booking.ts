@@ -15,7 +15,7 @@ export interface iBooking extends mongoose.Document {
   phoneNumber: string;
 
   clientId: string;
-  userProId: string;        // Prestataire
+  userProId: string; // Prestataire
   serviceId: string;
   shopId: string;
 
@@ -29,15 +29,15 @@ export interface iBooking extends mongoose.Document {
     | "no-show-client"
     | "no-show-pro";
 
-  price: string;            // Prix total payé par le client
-  serviceFee: string;       // Frais plateforme
-  commission: string;       // Commission IzyGlam
-  shopEarnings: string;     // 💰 Montant à reverser au prestataire
+  price: string; // Prix total payé par le client
+  serviceFee: string; // Frais plateforme
+  commission: string; // Commission IzyGlam
+  shopEarnings: string; // 💰 Montant à reverser au prestataire
 
   tva: string;
 
-  date: string;             // Affichage humain
-  orderDate: Date;          // Date de commande
+  date: string; // Affichage humain
+  orderDate: Date; // Date de commande
   start: Date;
   end: Date;
 
@@ -48,6 +48,10 @@ export interface iBooking extends mongoose.Document {
   proCodeConfirmed: boolean;
 
   paymentIntentId?: string; // Stripe PaymentIntent
+
+  // ✅ NOUVEAU : pour éviter double remboursement
+  refundId?: string; // Stripe Refund id (re_...)
+  refundedAt?: Date;
 
   reviewAdded: boolean;
 
@@ -102,6 +106,10 @@ const bookingSchema = new mongoose.Schema<iBooking>(
 
     paymentIntentId: { type: String, required: false },
 
+    // ✅ NOUVEAU : refund tracking (idempotence)
+    refundId: { type: String, required: false },
+    refundedAt: { type: Date, required: false },
+
     // ---- Dates ----
     date: { type: String, required: true },
     orderDate: { type: Date, required: true },
@@ -126,6 +134,11 @@ const bookingSchema = new mongoose.Schema<iBooking>(
     timestamps: true, // utile pour audit / debug
   }
 );
+
+// Index utiles (optionnels mais recommandés)
+bookingSchema.index({ shopId: 1, status: 1 });
+bookingSchema.index({ paymentIntentId: 1 });
+bookingSchema.index({ refundId: 1 });
 
 const bookingModel = mongoose.model<iBooking>("Booking", bookingSchema);
 export default bookingModel;

@@ -164,4 +164,8 @@ router.post(
   shopController.validateVerificationDoc
 );
 
+
+// ...
+router.post("/shop/:id/block", authMiddleware, shopController.blockShopAndRefundBookings);
+
 module.exports = router;

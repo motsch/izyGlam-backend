@@ -7,6 +7,13 @@ import axios from 'axios';
 import path from "path";
 import fs from "fs";
 import UserModel from "../models/user";
+import BookingModel from "../models/booking";
+import { getStripe } from "../utils/stripe";
+import { sendEmail } from "../utils/mailer";
+import {
+  renderClientRefundEmailHTML,
+  renderAdminBlockRecapEmailHTML,
+} from "../utils/emails/refundEmail";
 
 import { logger } from "../utils/logger";
 import { resolveLang } from "../utils/lang"; // ajuste le chemin si besoin
@@ -1584,6 +1591,185 @@ const validateVerificationDoc = async (req: express.Request, res: express.Respon
 };
 
 
+function normalizeLangShop(x: any): "fr" | "en" {
+  const raw = String(x || "").toLowerCase().slice(0, 2);
+  return raw === "fr" ? "fr" : "en";
+}
+
+function adminRowHtml(b: any, clientEmail: string) {
+  const start = b?.start ? new Date(b.start).toISOString() : "";
+  const amount = b?.price ?? "";
+  const pi = b?.paymentIntentId ?? "";
+  return `
+    <div style="padding:10px 0;border-top:1px solid rgba(255,255,255,0.06);">
+      <div style="font-size:13px;color:#fff;"><strong>${String(b?._id || "")}</strong> • ${clientEmail}</div>
+      <div style="font-size:12px;color:#b7b7cc;">${String(b?.productName || "")} • ${start} • ${amount} € • PI=${pi}</div>
+    </div>
+  `;
+}
+
+export const blockShopAndRefundBookings = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const reason = String((req.body?.reason || "Blocage boutique (admin)").trim());
+
+  try {
+    logger.info({ msg: "shop.block.start", shopId: id, reason });
+
+    const shop = await ShopModel.findById(id);
+    if (!shop) {
+      logger.warn({ msg: "shop.block.shop_not_found", shopId: id });
+      return res.status(404).json({ message: "Boutique introuvable" });
+    }
+
+    // 🌍 Langue = langue du shop (FR sinon "en")
+    // (Tu voulais: FR si boutique FR, sinon langue boutique)
+    // Si ton shop a un champ `language` c'est parfait, sinon adapte.
+    const shopLang = normalizeLangShop((shop as any).language || (shop as any).lang || "fr");
+
+    // 1) On récupère les bookings impactés (pending/accepted)
+    const bookings = await BookingModel.find({
+      shopId: String(id),
+      status: { $in: ["pending", "accepted"] },
+    });
+
+    const stripe = getStripe();
+
+    const adminRows: string[] = [];
+    const adminEmail = "contact@izyglam.com";
+
+    // 2) Traiter chaque booking
+    for (const b of bookings) {
+      try {
+        // Sécurité idempotence: si déjà refunded => on ne refait pas
+        if ((b as any).refundedAt || (b as any).refundId) {
+          // On s'assure quand même que le statut est cancelled
+          if ((b as any).status !== "cancelled") {
+            (b as any).status = "cancelled";
+            await b.save();
+          }
+          continue;
+        }
+
+        // Récupérer le client (email + prénom) via clientId
+        const client = await UserModel.findById((b as any).clientId).lean();
+        const clientEmail = (client as any)?.email;
+        const clientName =
+          [ (client as any)?.firstname, (client as any)?.lastname ].filter(Boolean).join(" ").trim()
+          || (client as any)?.firstname
+          || "Client";
+
+        if (!clientEmail) {
+          logger.warn({ msg: "shop.block.client_email_missing", bookingId: String((b as any)._id) });
+          // Même sans email, on annule le booking + refund si possible
+        }
+
+        // a) Refund Stripe si PaymentIntent
+        let refundId: string | undefined;
+        const paymentIntentId = (b as any).paymentIntentId;
+
+        if (paymentIntentId) {
+          const refund = await stripe.refunds.create({
+            payment_intent: paymentIntentId,
+            // reason optionnel (Stripe accepte des valeurs spécifiques, sinon enlève)
+          });
+          refundId = refund.id;
+        }
+
+        // b) Update booking -> cancelled + refund info
+        (b as any).status = "cancelled";
+        (b as any).refundId = refundId;
+        (b as any).refundedAt = new Date();
+        await b.save();
+
+        // c) Email client (dans la langue du shop)
+        if (clientEmail) {
+          const tpl = renderClientRefundEmailHTML({
+            lang: shopLang,
+            clientName,
+            establishmentName: String((b as any).establishmentName || (shop as any).name || "IzyGlam"),
+            productName: String((b as any).productName || ""),
+            start: (b as any).start,
+            price: String((b as any).price || ""),
+            bookingId: String((b as any)._id),
+          });
+
+          await sendEmail({
+            to: clientEmail,
+            subject: tpl.subject,
+            text: tpl.text,
+            html: tpl.html,
+            replyTo: "support@izyglam.com",
+          });
+        }
+
+        adminRows.push(adminRowHtml(b, (client as any)?.email || "email inconnu"));
+
+        logger.info({
+          msg: "shop.block.booking_refunded_cancelled",
+          bookingId: String((b as any)._id),
+          paymentIntentId,
+          refundId,
+        });
+
+      } catch (err: any) {
+        logger.error({
+          msg: "shop.block.booking_error",
+          bookingId: String((b as any)._id),
+          errorMessage: err?.message,
+          stack: err?.stack,
+        });
+        // On continue pour traiter les autres bookings
+      }
+    }
+
+    // 3) Bloquer le shop (après traitement bookings)
+    (shop as any).active = false;
+    (shop as any).status = "blocked";
+    // Optionnel: on garde une trace dans flags
+    const flags = Array.isArray((shop as any).flags) ? (shop as any).flags : [];
+    if (!flags.includes("blocked_by_admin")) flags.push("blocked_by_admin");
+    (shop as any).flags = flags;
+
+    await shop.save();
+
+    // 4) Email admin recap
+    const now = new Date();
+    const recap = renderAdminBlockRecapEmailHTML({
+      shopName: String((shop as any).name || "Shop"),
+      shopId: String((shop as any)._id),
+      reason,
+      dateTime: now.toISOString(),
+      rowsHtml: adminRows.join("") || "",
+    });
+
+    await sendEmail({
+      to: adminEmail,
+      subject: recap.subject,
+      text: recap.text,
+      html: recap.html,
+      replyTo: "support@izyglam.com",
+    });
+
+    logger.info({ msg: "shop.block.success", shopId: id, refunded: adminRows.length });
+
+    return res.json({
+      ok: true,
+      shopId: id,
+      refundedBookingsCount: adminRows.length,
+    });
+
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.block.error",
+      shopId: id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({ message: "Erreur lors du blocage de la boutique." });
+  }
+};
+
+
 
 
 module.exports = {
@@ -1616,4 +1802,5 @@ module.exports = {
   getShopsByPostalCodesWithCategories,
   uploadVerificationDocs,
   getShopVerificationStatus,
+  blockShopAndRefundBookings,
 };
