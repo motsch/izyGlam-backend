@@ -14,13 +14,21 @@ type DaySchedule = {
 
 type ModerationDesc = {
   safe: boolean;
-  reasons: string[];  // ex: ["adult", "drugs", "hate", "parse_error"]
-  score: number;      // 0..1
-  raw?: any;          // si tu veux stocker la réponse complète de l'IA
+  reasons: string[]; // ex: ["adult", "drugs", "hate", "parse_error"]
+  score: number; // 0..1
+  raw?: any; // si tu veux stocker la réponse complète de l'IA
+};
+
+// ✅ Résumé des prestations (services) flagguées, stocké sur le shop
+type ModerationServicesSummary = {
+  flaggedCount: number;     // nb de services signalés dans ce shop
+  topReasons: string[];     // ex: ["adult", "drugs"]
+  lastFlaggedAt?: Date;     // dernière fois qu'un service a été signalé
 };
 
 type Moderation = {
   desc: ModerationDesc;
+  services?: ModerationServicesSummary; // ✅ NEW
   reviewedAt: Date;
   reviewedBy?: string;
   source?: "ai" | "human";
@@ -29,23 +37,23 @@ type Moderation = {
 type VerificationDocStatus = "missing" | "pending" | "approved" | "rejected";
 
 type VerificationDoc = {
-  file?: string;                 // chemin du fichier ex: /uploads/docs/xxx.pdf
+  file?: string; // chemin du fichier ex: /uploads/docs/xxx.pdf
   status: VerificationDocStatus; // état du doc
-  checkedAt?: Date | null;       // date de validation / refus
+  checkedAt?: Date | null; // date de validation / refus
 };
 
 type Verification = {
-  identity: VerificationDoc;     // CNI / Passeport / Titre de séjour
-  insurance: VerificationDoc;    // Assurance obligatoire
-  kbis?: VerificationDoc;        // Kbis optionnel
+  identity: VerificationDoc; // CNI / Passeport / Titre de séjour
+  insurance: VerificationDoc; // Assurance obligatoire
+  kbis?: VerificationDoc; // Kbis optionnel
   globalStatus: "unverified" | "pending" | "verified" | "rejected";
   method?: "manual" | "stripe_identity" | "mixed"; // pour plus tard, Stripe Identity
 };
 
 export interface iShop extends mongoose.Document {
   name: string;
-  description: string;               // description corrigée (si approuvée)
-  description_original?: string;     // copie avant correction
+  description: string; // description corrigée (si approuvée)
+  description_original?: string; // copie avant correction
   image: string;
   note: string;
   averagePrice?: string;
@@ -109,8 +117,8 @@ export interface iShop extends mongoose.Document {
   // 🔒 Modération / statut
   active?: boolean;
   status?: "pending" | "approved" | "blocked" | "needs_manual_review";
-  flags?: string[];           // raisons synthétiques (mots-clés)
-  moderation?: Moderation;    // détail de modération IA/humain
+  flags?: string[]; // raisons synthétiques (mots-clés)
+  moderation?: Moderation; // détail de modération IA/humain + résumé services
 
   // ✅ Vérification pro & documents
   verification?: Verification;
@@ -127,10 +135,11 @@ const shopSchema = new Schema<iShop>(
     name: { type: String, required: true },
     country: { type: String, required: true },
     description: { type: String, required: true },
-    filter: { type: String, required: true },            // texte final affiché côté app
-    description_original: { type: String, required: false },    // trace avant correction
+    filter: { type: String, required: true }, // texte final affiché côté app
+    description_original: { type: String, required: false }, // trace avant correction
     image: { type: String, required: true, default: "default.png" },
     note: { type: String, required: true },
+
     // 📊 Stats (calculées par cron)
     stats: {
       bookings: {
@@ -274,6 +283,7 @@ const shopSchema = new Schema<iShop>(
       default: "pending",
     },
     flags: { type: [String], default: [] },
+
     moderation: {
       desc: {
         safe: { type: Boolean, default: true },
@@ -281,6 +291,14 @@ const shopSchema = new Schema<iShop>(
         score: { type: Number, default: 0 },
         raw: { type: Schema.Types.Mixed },
       },
+
+      // ✅ NEW : résumé des services signalés pour ce shop
+      services: {
+        flaggedCount: { type: Number, default: 0 },
+        topReasons: { type: [String], default: [] },
+        lastFlaggedAt: { type: Date },
+      },
+
       reviewedAt: { type: Date },
       reviewedBy: { type: String },
       source: { type: String, enum: ["ai", "human"], default: "ai" },
@@ -293,6 +311,9 @@ const shopSchema = new Schema<iShop>(
 shopSchema.index({ status: 1 });
 shopSchema.index({ active: 1 });
 shopSchema.index({ "moderation.desc.safe": 1 });
+
+// ✅ NEW : requêtes admin rapides “shops avec services signalés”
+shopSchema.index({ "moderation.services.flaggedCount": 1 });
 
 const shopModel = mongoose.model<iShop>("Shop", shopSchema);
 export default shopModel;
