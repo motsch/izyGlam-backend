@@ -918,6 +918,73 @@ const addSupportMessage = async (req: express.Request, res: express.Response) =>
   }
 };
 
+/**
+ * Récupérer toutes les conversations liées à un utilisateur (client ou pro)
+ * Params :
+ *  - type : "user" | "pro"
+ *  - id   : string (userId)
+ */
+const getConversationsByUserTypeAndId = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { type, id } = req.params;
+
+    if (!type || !id) {
+      return res.status(400).json({
+        message: "Paramètres requis : type (user|pro) et id",
+      });
+    }
+
+    if (!["user", "pro"].includes(type)) {
+      return res.status(400).json({
+        message: "Type invalide (attendu : user ou pro)",
+      });
+    }
+
+    // Construction dynamique du filtre
+    const filter =
+      type === "user"
+        ? { "bookingRef.clientId": id }
+        : { "bookingRef.userProId": id };
+
+    const conversations = await ConversationModel.find(filter)
+      .sort({ updatedAt: -1 }) // conversations les plus récentes en premier
+      .populate({
+        path: "participants",
+        model: UserModel,
+        select: "firstname lastname email",
+      });
+
+    logger.info({
+      msg: "getConversationsByUserTypeAndId success",
+      route: "GET /api/conversation/user/:type/:id",
+      method: req.method,
+      type,
+      userId: id,
+      count: conversations.length,
+    });
+
+    return res.status(200).json(conversations);
+  } catch (error: any) {
+    logger.error({
+      msg: "getConversationsByUserTypeAndId failed",
+      route: "GET /api/conversation/user/:type/:id",
+      method: req.method,
+      params: req.params,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+
+    return res.status(500).json({
+      message: "Impossible de récupérer les conversations",
+    });
+  }
+};
+
+
 
 export {
   createConversation,
@@ -932,4 +999,5 @@ export {
   getOrCreateSupportConversation,
   getSupportMessages,
   addSupportMessage,
+  getConversationsByUserTypeAndId,
 };

@@ -9,6 +9,7 @@ import { notifyBookingCodeConfirmed, notifyBookingStatusChanged, notifyProNewBoo
 import ConversationModel from "../models/conversation";
 import mongoose from "mongoose";
 import { logger } from "../utils/logger";
+import bookingModel from "../models/booking";
 
 // -------- utils --------
 function sanitize(obj: any) {
@@ -410,46 +411,109 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
 
     // 🔔 fire & forget
     notifyBookingStatusChanged(updatedBooking, langue).catch((e) =>
-      logger.error({ msg: "notifyBookingStatusChanged failed", bookingId: updatedBooking._id?.toString(), errorMessage: e?.message, stack: e?.stack })
+      logger.error({
+        msg: "notifyBookingStatusChanged failed",
+        bookingId: updatedBooking._id?.toString(),
+        errorMessage: e?.message,
+        stack: e?.stack,
+      })
     );
 
+    // Statuts qui doivent clôturer la conversation liée au booking
+    const CLOSING_STATUSES = new Set<
+      "deleted" | "cancelled" | "finished" | "no-show-client" | "no-show-pro"
+    >([
+      "deleted",
+      "cancelled",
+      "finished",
+      "no-show-client",
+      "no-show-pro",
+    ]);
+
     if (status === "accepted") {
-      // Conversation auto si inexistante
-      const conversationExists = await ConversationModel.findOne({
-        participants: {
-          $all: [
-            new mongoose.Types.ObjectId(updatedBooking.clientId),
-            new mongoose.Types.ObjectId(updatedBooking.userProId),
-          ],
-        },
+      // ✅ Conversation 1:1 liée au booking
+      const bookingObjectId = new mongoose.Types.ObjectId(updatedBooking._id);
+
+      const existingConversation = await ConversationModel.findOne({
+        bookingId: bookingObjectId,
       });
 
-      if (conversationExists) {
+      if (existingConversation) {
+        // Si elle existe déjà mais est "closed", on peut la ré-ouvrir
+        if (existingConversation.status !== "open") {
+          existingConversation.status = "open";
+          existingConversation.closedAt = undefined;
+          await existingConversation.save();
+        }
+
         logger.info({
-          msg: "updateBookingStatusById conversation exists",
-          route: "PATCH /api/booking-update-status/:id",
-          method: req.method,
-          url: req.originalUrl,
-          conversationId: conversationExists._id?.toString(),
+          msg: "updateBookingStatusById booking conversation exists",
+          bookingId: updatedBooking._id?.toString(),
+          conversationId: existingConversation._id?.toString(),
+          conversationStatus: existingConversation.status,
         });
       } else {
         const conversation = new ConversationModel({
+          bookingId: bookingObjectId,
           participants: [
             new mongoose.Types.ObjectId(updatedBooking.clientId),
             new mongoose.Types.ObjectId(updatedBooking.userProId),
           ],
-          name: `Conversation entre ${updatedBooking.clientId} et ${updatedBooking.userProId}`,
-          messages: [],
+          name: `${updatedBooking.title} • ${updatedBooking.date}`,
+          status: "open",
+          bookingRef: {
+            title: updatedBooking.title,
+            establishmentName: updatedBooking.establishmentName,
+            productName: updatedBooking.productName,
+            date: updatedBooking.date,
+            start: updatedBooking.start,
+            end: updatedBooking.end,
+            price: updatedBooking.price,
+            status: updatedBooking.status,
+            shopId: updatedBooking.shopId,
+            clientId: updatedBooking.clientId,
+            userProId: updatedBooking.userProId,
+          },
         });
 
-        await conversation.save();
+        // ✅ Anti-doublon concurrent (index unique bookingId)
+        try {
+          await conversation.save();
+        } catch (err: any) {
+          // duplication concurrente → on ignore
+          if (err?.code !== 11000) throw err;
+        }
 
         logger.info({
-          msg: "updateBookingStatusById conversation created",
-          route: "PATCH /api/booking-update-status/:id",
-          method: req.method,
-          url: req.originalUrl,
+          msg: "updateBookingStatusById booking conversation created",
+          bookingId: updatedBooking._id?.toString(),
           conversationId: conversation._id?.toString(),
+        });
+      }
+    }
+
+    if (CLOSING_STATUSES.has(status)) {
+      const bookingObjectId = new mongoose.Types.ObjectId(updatedBooking._id);
+      const conversation = await ConversationModel.findOne({ bookingId: bookingObjectId });
+
+      if (conversation) {
+        if (conversation.status !== "closed") {
+          conversation.status = "closed";
+          conversation.closedAt = new Date();
+          await conversation.save();
+        }
+
+        logger.info({
+          msg: "updateBookingStatusById booking conversation closed",
+          bookingId: updatedBooking._id?.toString(),
+          conversationId: conversation._id?.toString(),
+          newConversationStatus: conversation.status,
+        });
+      } else {
+        logger.info({
+          msg: "updateBookingStatusById no booking conversation to close",
+          bookingId: updatedBooking._id?.toString(),
+          status,
         });
       }
     }
@@ -467,9 +531,11 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
       errorMessage: error?.message,
       stack: error?.stack,
     });
+
     return res.status(500).json({ message: "Impossible de mettre à jour la réservation" });
   }
 };
+
 
 // ====== confirmation code & paiement ======
 const confirmBookingCode = async (req: express.Request, res: express.Response) => {
@@ -846,6 +912,243 @@ export const getAvailableSlots = async (req: express.Request, res: express.Respo
   }
 };
 
+// --- Dates helpers ---
+// Semaine ISO-ish (lundi -> dimanche)
+function startOfWeekMonday(d: Date) {
+  const date = new Date(d);
+  const day = (date.getDay() + 6) % 7; // 0 = lundi
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - day);
+  return date;
+}
+function endOfWeekSunday(d: Date) {
+  const start = startOfWeekMonday(d);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
+function startOfMonth(d: Date) {
+  const date = new Date(d.getFullYear(), d.getMonth(), 1);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+function endOfMonth(d: Date) {
+  const date = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+// Convert string money -> double dans l'aggregation (gère virgule)
+function toDoubleExpr(fieldPath: string) {
+  return {
+    $toDouble: {
+      $replaceAll: {
+        input: { $ifNull: [fieldPath, "0"] },
+        find: ",",
+        replacement: ".",
+      },
+    },
+  };
+}
+
+/**
+ * ✅ Suivi comptable d'un shop
+ * - mode=week|month
+ * - date=YYYY-MM-DD (un jour dans la période)
+ *
+ * Retour :
+ * - période (from/to)
+ * - totaux (CA, commission, serviceFee, shopEarnings, tva)
+ * - nb bookings
+ * - breakdown (par jour si week, par semaine si month)
+ * - split "open" (closed=false) vs "closed" (closed=true)
+ */
+const getShopAccounting = async (req: express.Request, res: express.Response) => {
+  try {
+    const { shopId } = req.params;
+
+    const mode = (req.query.mode as string)?.toLowerCase() || "week";
+    const dateStr = (req.query.date as string) || "";
+
+    // Sécurité : date obligatoire pour un comportement clair
+    const baseDate = dateStr ? new Date(dateStr) : new Date();
+    if (isNaN(baseDate.getTime())) {
+      return res.status(400).json({ message: "Paramètre date invalide. Format attendu: YYYY-MM-DD" });
+    }
+
+    let from: Date;
+    let to: Date;
+
+    if (mode === "month") {
+      from = startOfMonth(baseDate);
+      to = endOfMonth(baseDate);
+    } else {
+      // default week
+      from = startOfWeekMonday(baseDate);
+      to = endOfWeekSunday(baseDate);
+    }
+
+    // Statuts considérés comme "comptables" (tu peux ajuster)
+    // - accepted / finished : généralement payés
+    // - on exclut refused/deleted/cancelled + no-shows selon ton business
+    const allowedStatuses = ["finished"];
+
+    // NOTE: on exclut les bookings déjà remboursés (refundId/refundedAt)
+    const match: any = {
+      shopId,
+      orderDate: { $gte: from, $lte: to },
+      status: { $in: allowedStatuses },
+      $or: [{ refundId: { $exists: false } }, { refundId: null }, { refundId: "" }],
+    };
+
+    // Breakdown:
+    // - week => group by day
+    // - month => group by week number (ISO-ish via $isoWeek)
+    const breakdownGroupId =
+      mode === "month"
+        ? { isoWeek: { $isoWeek: "$orderDate" }, year: { $isoWeekYear: "$orderDate" } }
+        : {
+          day: { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } },
+        };
+
+    const pipeline: any[] = [
+      { $match: match },
+      {
+        $addFields: {
+          _price: toDoubleExpr("$price"),
+          _serviceFee: toDoubleExpr("$serviceFee"),
+          _commission: toDoubleExpr("$commission"),
+          _shopEarnings: toDoubleExpr("$shopEarnings"),
+          _tva: toDoubleExpr("$tva"),
+          _closed: { $ifNull: ["$closed", false] },
+        },
+      },
+      {
+        $facet: {
+          totals: [
+            {
+              $group: {
+                _id: null,
+                bookingsCount: { $sum: 1 },
+                totalPrice: { $sum: "$_price" },
+                totalServiceFee: { $sum: "$_serviceFee" },
+                totalCommission: { $sum: "$_commission" },
+                totalShopEarnings: { $sum: "$_shopEarnings" },
+                totalTva: { $sum: "$_tva" },
+              },
+            },
+          ],
+          totalsOpenClosed: [
+            {
+              $group: {
+                _id: "$_closed",
+                bookingsCount: { $sum: 1 },
+                totalPrice: { $sum: "$_price" },
+                totalServiceFee: { $sum: "$_serviceFee" },
+                totalCommission: { $sum: "$_commission" },
+                totalShopEarnings: { $sum: "$_shopEarnings" },
+                totalTva: { $sum: "$_tva" },
+              },
+            },
+          ],
+          breakdown: [
+            {
+              $group: {
+                _id: breakdownGroupId,
+                bookingsCount: { $sum: 1 },
+                totalPrice: { $sum: "$_price" },
+                totalServiceFee: { $sum: "$_serviceFee" },
+                totalCommission: { $sum: "$_commission" },
+                totalShopEarnings: { $sum: "$_shopEarnings" },
+                totalTva: { $sum: "$_tva" },
+              },
+            },
+            { $sort: { "_id.day": 1, "_id.year": 1, "_id.isoWeek": 1 } },
+          ],
+        },
+      },
+    ];
+
+    const agg = await bookingModel.aggregate(pipeline);
+
+    const totals = agg?.[0]?.totals?.[0] || {
+      bookingsCount: 0,
+      totalPrice: 0,
+      totalServiceFee: 0,
+      totalCommission: 0,
+      totalShopEarnings: 0,
+      totalTva: 0,
+    };
+
+    const splitArray = agg?.[0]?.totalsOpenClosed || [];
+    const split = {
+      open: splitArray.find((x: any) => x._id === false) || null,
+      closed: splitArray.find((x: any) => x._id === true) || null,
+    };
+
+    const breakdownRaw = agg?.[0]?.breakdown || [];
+    const breakdown =
+      mode === "month"
+        ? breakdownRaw.map((b: any) => ({
+          year: b._id.year,
+          isoWeek: b._id.isoWeek,
+          bookingsCount: b.bookingsCount,
+          totalPrice: b.totalPrice,
+          totalServiceFee: b.totalServiceFee,
+          totalCommission: b.totalCommission,
+          totalShopEarnings: b.totalShopEarnings,
+          totalTva: b.totalTva,
+        }))
+        : breakdownRaw.map((b: any) => ({
+          day: b._id.day,
+          bookingsCount: b.bookingsCount,
+          totalPrice: b.totalPrice,
+          totalServiceFee: b.totalServiceFee,
+          totalCommission: b.totalCommission,
+          totalShopEarnings: b.totalShopEarnings,
+          totalTva: b.totalTva,
+        }));
+
+    logger.info({
+      msg: "getShopAccounting success",
+      route: "GET /api/booking-accounting/:shopId",
+      method: req.method,
+      url: req.originalUrl,
+      shopId,
+      query: sanitize(req.query),
+      from,
+      to,
+      totals,
+      userId: (req as any).user?._id,
+    });
+
+    return res.json({
+      shopId,
+      mode,
+      period: { from, to },
+      totals,
+      split, // open vs closed
+      breakdown,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "getShopAccounting failed",
+      route: "GET /api/booking-accounting/:shopId",
+      method: req.method,
+      url: req.originalUrl,
+      params: req.params,
+      query: sanitize(req.query),
+      userId: (req as any).user?._id,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({ message: "Impossible de générer le suivi comptable" });
+  }
+};
+
 module.exports = {
   getAllCACount,
   createBooking,
@@ -860,4 +1163,5 @@ module.exports = {
   updateBookingStatusById,
   confirmBookingCode,
   getDashboardStatsByShop,
+  getShopAccounting,
 };

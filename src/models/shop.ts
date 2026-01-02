@@ -122,6 +122,23 @@ export interface iShop extends mongoose.Document {
 
   // ✅ Vérification pro & documents
   verification?: Verification;
+
+
+  legal?: {
+    companyName?: string;        // Raison sociale (si différente du nom shop)
+    legalForm?: string;          // EI / SASU / EURL / etc.
+    siret?: string;              // 14 chiffres
+    siren?: string;              // 9 chiffres (optionnel si tu as siret)
+    vatNumber?: string;          // TVA intracom (FR..)
+    addressLine1?: string;       // adresse pro
+    addressLine2?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+    email?: string;
+    phone?: string;
+  };
+
 }
 
 const defaultDaySchedule: DaySchedule = {
@@ -303,8 +320,24 @@ const shopSchema = new Schema<iShop>(
       reviewedBy: { type: String },
       source: { type: String, enum: ["ai", "human"], default: "ai" },
     },
+    legal: {
+      companyName: { type: String },
+      legalForm: { type: String },
+      siret: { type: String },
+      siren: { type: String },
+      vatNumber: { type: String },
+      addressLine1: { type: String },
+      addressLine2: { type: String },
+      postalCode: { type: String },
+      city: { type: String },
+      country: { type: String, default: "FR" },
+      email: { type: String },
+      phone: { type: String },
+    },
+
   },
-  { timestamps: true }
+  { timestamps: true },
+
 );
 
 // Index utiles pour les vues d’admin/modération

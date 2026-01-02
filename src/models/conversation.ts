@@ -2,30 +2,48 @@
 
 import mongoose, { Document, Schema, Types } from "mongoose";
 
-// Interface pour un message dans une conversation
 export interface IMessage {
   _id?: Types.ObjectId;
-  sender: Types.ObjectId;  // Référence à l'utilisateur
-  content?: string;        // Contenu textuel du message
-  contentFr?: string;        // Contenu textuel du message
+  sender: Types.ObjectId;
+  content?: string;
+  contentFr?: string;
   messageType: "text" | "photo";
-  mediaUrl?: string;       // URL de l'image si messageType === "photo"
+  mediaUrl?: string;
   createdAt: Date;
-  deleted?: boolean;       // Soft-delete (pour masquer aux utilisateurs classiques)
+  deleted?: boolean;
   deletedAt?: Date;
-  deletedBy?: Types.ObjectId; // Référence à l'admin ayant supprimé le message
+  deletedBy?: Types.ObjectId;
   clientId?: string;
 }
 
-// Interface pour la conversation
+export type ConversationStatus = "open" | "closed";
+
 export interface iConversation extends Document {
-  participants: Types.ObjectId[]; // Liste des participants (User)
-  name?: string;                  // Nom de la conversation (pour groupe)
+  participants: Types.ObjectId[];
+  name?: string;
   messages: IMessage[];
   createdAt: Date;
   updatedAt: Date;
   flagged: boolean;
   user: any;
+  bookingId?: Types.ObjectId;
+  // ✅ NEW
+  status: ConversationStatus;         // open/closed
+  closedAt?: Date;                    // date de clôture
+  bookingRef?: {
+    title?: string;
+    establishmentName?: string;
+    productName?: string;
+    date?: string;
+    start?: Date;
+    end?: Date;
+    price?: string;
+    status?: string;
+    shopId?: string;
+    clientId?: string;
+    userProId?: string;
+  };
+
 }
 
 const messageSchema = new Schema<IMessage>({
@@ -38,7 +56,7 @@ const messageSchema = new Schema<IMessage>({
   deleted: { type: Boolean, default: false },
   deletedAt: { type: Date },
   deletedBy: { type: Schema.Types.ObjectId, ref: "User" },
-  clientId: { type: String, index: true }
+  clientId: { type: String, index: true },
 });
 
 const conversationSchema = new Schema<iConversation>({
@@ -48,7 +66,27 @@ const conversationSchema = new Schema<iConversation>({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   flagged: { type: Boolean, default: false },
-  user: { type: Object, required: false  },
+  user: { type: Object, required: false },
+
+  // ✅ NEW
+  bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: false, index: true },
+  status: { type: String, enum: ["open", "closed"], default: "open", index: true },
+  closedAt: { type: Date, required: false },
+
+  bookingRef: {
+    title: { type: String },
+    establishmentName: { type: String },
+    productName: { type: String },
+    date: { type: String },
+    start: { type: Date },
+    end: { type: Date },
+    price: { type: String },
+    status: { type: String },
+    shopId: { type: String },
+    clientId: { type: String },
+    userProId: { type: String },
+  },
+
 });
 
 // Middleware pour mettre à jour updatedAt à chaque sauvegarde
@@ -56,6 +94,12 @@ conversationSchema.pre("save", function (next) {
   this.updatedAt = new Date();
   next();
 });
+
+// ✅ Recommandé : éviter les doublons de conversation pour un booking
+conversationSchema.index(
+  { bookingId: 1 },
+  { unique: true, partialFilterExpression: { bookingId: { $exists: true } } }
+);
 
 const ConversationModel = mongoose.model<iConversation>("Conversation", conversationSchema);
 export default ConversationModel;

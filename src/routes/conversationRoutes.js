@@ -47,17 +47,13 @@ router.get(
 );
 
 // Créer une conversation à partir d'un email
-router.put(
-  "/conversation-email/:email",
-  authMiddleware,
-  conversationController.createConversationByEmail
-);
+router.put("/conversation-email/:email", authMiddleware,conversationController.createConversationByEmail);
 
 // Récupérer toutes les conversations Support
-router.get(
-  "/support-conversation",
-  authMiddleware,
-  conversationController.getSupportMessages
-);
+router.get("/support-conversation", authMiddleware, conversationController.getSupportMessages);
+
+// Récupére  toures les converstions d'un type d'utilisateur
+router.get("/conversation-by-type/user/:type/:id", conversationController.getConversationsByUserTypeAndId);
+
 
 module.exports = router;

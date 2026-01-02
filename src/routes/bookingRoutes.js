@@ -32,4 +32,8 @@ router.post("/bookings-confirm-code", authMiddleware, bookingController.confirmB
 // Dashboard KPI par salon
 router.get("/booking-dashboard/:shopId", authMiddleware, bookingController.getDashboardStatsByShop);
 
+
+// ✅ Suivi comptable par shop (semaine ou mois)
+router.get("/booking-accounting/:shopId", authMiddleware, bookingController.getShopAccounting);
+
 module.exports = router;
