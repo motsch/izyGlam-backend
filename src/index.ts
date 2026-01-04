@@ -3,7 +3,6 @@ const helmet = require("helmet");
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const path = require('path');
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
@@ -12,6 +11,7 @@ require('dotenv').config();
 import fs from 'fs';
 import CityModel from "./models/city";
 import http from 'http';
+import cors, { CorsOptions, CorsRequest } from "cors";
 import { WebSocketServer, WebSocket } from 'ws';
 import ConversationModel from './models/conversation';
 import { seedDatabase } from './seeds/seeder';
@@ -27,6 +27,43 @@ import twilioRoutes from "./routes/twilio.routes";
 import { stripeWebhook } from "./controllers/stripeWebhook.controller";
 
 const app = express();
+
+const allowedOrigins = [
+  // DEV web
+  "http://localhost",
+  "http://localhost:4200",
+  "http://127.0.0.1:4200",
+
+  // Ionic/Capacitor (selon plateformes / build)
+  "capacitor://localhost",
+  "ionic://localhost",
+
+  // PROD web
+  "https://izyglam.com",
+  "https://www.izyglam.com",
+];
+
+// CORS middleware
+const corsOptions: CorsOptions = {
+  origin: (origin: string | undefined, cb) => {
+    // Pas d'Origin => appels natifs, Postman, server-to-server => OK
+    if (!origin) return cb(null, true);
+
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+
+    return cb(new Error(`CORS blocked for origin: ${origin}`));
+  },
+
+  credentials: true, // mets false si tu n'utilises pas de cookies
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+// ✅ CORS d'abord
+app.use(cors(corsOptions));
+
+// Répondre aux preflight OPTIONS
+app.options("*", cors());
 
 // IMPORTANT: avant express.json() pour cette route
 app.post("/stripe/webhook", require("express").raw({ type: "application/json" }), stripeWebhook);
