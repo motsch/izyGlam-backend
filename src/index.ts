@@ -8,8 +8,6 @@ const path = require('path');
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
 
-
-
 require('dotenv').config();
 import fs from 'fs';
 import CityModel from "./models/city";
@@ -24,9 +22,17 @@ import sitemapRouter from './routes/sitemap';
 import { scheduleWeeklyPayouts } from './cron/weeklyPayoutJob';
 import { Request, Response, NextFunction } from "express";
 import { startShopStatsCron } from "./cron/shopStats.cron";
+import twilioRoutes from "./routes/twilio.routes";
 
+import { stripeWebhook } from "./controllers/stripeWebhook.controller";
 
 const app = express();
+
+// IMPORTANT: avant express.json() pour cette route
+app.post("/stripe/webhook", require("express").raw({ type: "application/json" }), stripeWebhook);
+app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // obligatoire pour Twilio webhooks
+
 app.set("trust proxy", 1);
 
 const port = process.env.PORT || 3000;
@@ -63,6 +69,7 @@ const BIG_BODY_PATHS = [
   "/api/document",
   "/api/documents",
   "/api/docs",
+  "/api/shop-handle"
 ];
 
 app.use(BIG_BODY_PATHS, bigJson, bigUrl);
@@ -199,6 +206,8 @@ app.use('/api', devicesRoutes);
 app.use('/api', countryRoutes);
 app.use("/api", b2bLeadRoutes);
 app.use("/api", fakePost);
+app.use("/twilio", twilioRoutes);
+
 
 // Middleware pour servir les fichiers statiques
 app.use('/uploads/images', express.static(path.join(__dirname, '../uploads/images')));

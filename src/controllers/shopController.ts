@@ -200,12 +200,23 @@ const processShopImage = async (req: any, res: express.Response) => {
 // Créer une nouvelle boutique (shop)
 const createShop = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shop.create.start", route: req.originalUrl, method: req.method, bodyKeys: Object.keys(req.body || {}) });
+
   try {
-    console.log("IN CREATE SHOP");
-    const body = req.body;
+    const body = req.body || {};
+
+    // ✅ handle demandé ou auto depuis name
+    const requestedHandle = body.handle ? normalizeHandle(body.handle) : "";
+    const base = requestedHandle || body.name || "shop";
+
+    const uniqueHandle = await generateUniqueHandle(base);
+
+    body.handle = uniqueHandle;
 
     const newShop = new ShopModel(body);
     await newShop.save();
+
+    // ... le reste inchangé (templates/services)
+
 
     let templates = await ServiceTemplateModel.find({ type: newShop.type, active: true });
     if (templates.length === 0) {
@@ -852,18 +863,27 @@ const getShopById = async (req: express.Request, res: express.Response) => {
 // Mettre à jour une boutique par son ID
 const updateShopById = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shop.update.start", route: req.originalUrl, method: req.method, params: req.params, bodyKeys: Object.keys(req.body || {}) });
+
   try {
     const { id } = req.params;
-    const updatedShop = await ShopModel.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-    if (updatedShop) {
-      logger.info({ msg: "shop.update.success", id });
-      res.json(updatedShop);
-    } else {
-      logger.warn({ msg: "shop.update.not_found", id });
-      res.status(404).json({ message: "Boutique non trouvée" });
+    const payload: any = { ...(req.body || {}) };
+
+    if (payload.handle !== undefined) {
+      const normalized = normalizeHandle(payload.handle);
+
+      if (!normalized) {
+        return res.status(400).json({ message: "Handle invalide." });
+      }
+
+      // si le handle est déjà pris par un autre shop -> suffixe auto
+      payload.handle = await generateUniqueHandle(normalized, id);
     }
+
+    const updatedShop = await ShopModel.findByIdAndUpdate(id, payload, { new: true });
+
+    if (!updatedShop) return res.status(404).json({ message: "Boutique non trouvée" });
+
+    return res.json(updatedShop);
   } catch (error: any) {
     logger.error({
       msg: "shop.update.error",
@@ -872,9 +892,10 @@ const updateShopById = async (req: express.Request, res: express.Response) => {
       route: req.originalUrl,
       method: req.method,
     });
-    res.status(500).json({ message: "Impossible de mettre à jour la boutique" });
+    return res.status(500).json({ message: "Impossible de mettre à jour la boutique" });
   }
 };
+
 
 // Supprimer une boutique par son ID
 const deleteShopById = async (req: express.Request, res: express.Response) => {
@@ -1769,7 +1790,94 @@ export const blockShopAndRefundBookings = async (req: Request, res: Response) =>
   }
 };
 
+function normalizeHandle(input: string): string {
+  const raw = (input || "").trim().replace(/^@+/, ""); // enlève @@@
+  if (!raw) return "";
 
+  // enlève accents
+  const noAccents = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // garde uniquement a-z 0-9 . _
+  const cleaned = noAccents
+    .toLowerCase()
+    .replace(/\s+/g, "")              // supprime espaces
+    .replace(/[^a-z0-9._]/g, "");     // supprime le reste
+
+  // évite "...." ou "__" en début/fin
+  return cleaned.replace(/^[._]+|[._]+$/g, "");
+}
+
+async function generateUniqueHandle(base: string, excludeShopId?: string) {
+  let candidate = normalizeHandle(base);
+  if (!candidate) candidate = "shop";
+
+  // petite limite de sécurité (tu peux ajuster)
+  candidate = candidate.slice(0, 30);
+
+  let i = 0;
+  while (true) {
+    const finalHandle = i === 0 ? candidate : `${candidate}${i + 1}`;
+
+    const query: any = { handle: finalHandle };
+    if (excludeShopId) query._id = { $ne: excludeShopId };
+
+    const exists = await ShopModel.exists(query);
+    if (!exists) return finalHandle;
+
+    i++;
+    if (i > 200) throw new Error("Unable to generate unique handle");
+  }
+}
+
+const getShopByHandle = async (req: express.Request, res: express.Response) => {
+  logger.info({ msg: "shop.getByHandle.start", route: req.originalUrl, method: req.method, params: req.params });
+
+  try {
+    const handle = req.params.handle;
+
+    if (!handle) return res.status(400).json({ message: "Handle invalide" });
+
+    const shop = await ShopModel.findOne({ handle });
+    if (!shop) return res.status(404).json({ message: "Boutique non trouvée" });
+
+    return res.json(shop);
+  } catch (error: any) {
+    logger.error({
+      msg: "shop.getByHandle.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+      route: req.originalUrl,
+      method: req.method,
+    });
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+};
+
+const suggestHandle = async (req: express.Request, res: express.Response) => {
+  try {
+    const { name, handle } = req.body || {};
+    const base = handle || name;
+
+    if (!base) return res.status(400).json({ message: "name ou handle requis" });
+
+    const suggested = await generateUniqueHandle(base);
+    return res.json({ handle: suggested });
+  } catch (e: any) {
+    return res.status(500).json({ message: e?.message || "Erreur serveur" });
+  }
+};
+
+const isHandleAvailable = async (req: express.Request, res: express.Response) => {
+  try {
+    const handle = normalizeHandle(String(req.query.handle || ""));
+    if (!handle) return res.status(400).json({ message: "handle requis" });
+
+    const exists = await ShopModel.exists({ handle });
+    return res.json({ handle, available: !exists });
+  } catch (e: any) {
+    return res.status(500).json({ message: e?.message || "Erreur serveur" });
+  }
+};
 
 
 module.exports = {
@@ -1803,4 +1911,8 @@ module.exports = {
   uploadVerificationDocs,
   getShopVerificationStatus,
   blockShopAndRefundBookings,
+  generateUniqueHandle,
+  getShopByHandle,
+  isHandleAvailable,
+  suggestHandle,
 };

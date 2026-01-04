@@ -104,12 +104,17 @@ export interface iUser extends Document {
   breaks?: {
     duration: string;
   };
+
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   customerId?: string;
   fidelity: Fidelity;
   language: string; // ✅ langue préférée de l'utilisateur
   country: string;
+  twilioPhoneNumber?: string; // ex: +337...
+  assistantProEnabled?: boolean; // active le standard IA
+  assistantShopId?: string;
+
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -279,6 +284,9 @@ const userSchema = new Schema<iUser>({
     refreshToken: { type: String },
     tokenExpiresAt: { type: Date },
   },
+  twilioPhoneNumber: { type: String, required: false, index: true },
+  assistantProEnabled: { type: Boolean, default: false },
+  assistantShopId: { type: String, required: false, index: true },
   country: { type: String },
   language: {
     type: String,

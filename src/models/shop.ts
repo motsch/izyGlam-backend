@@ -52,6 +52,7 @@ type Verification = {
 
 export interface iShop extends mongoose.Document {
   name: string;
+  handle: string;
   description: string; // description corrigée (si approuvée)
   description_original?: string; // copie avant correction
   image: string;
@@ -80,7 +81,6 @@ export interface iShop extends mongoose.Document {
   }>;
   maxDistance: number;
   idUser: string;
-  services: string[];
   country: string;
   deliveryPostalCodes?: string[];
   trad: string;
@@ -122,6 +122,7 @@ export interface iShop extends mongoose.Document {
 
   // ✅ Vérification pro & documents
   verification?: Verification;
+  timeZone?: string;
 
 
   legal?: {
@@ -150,6 +151,7 @@ const defaultDaySchedule: DaySchedule = {
 const shopSchema = new Schema<iShop>(
   {
     name: { type: String, required: true },
+    handle: { type: String, required: true, unique: true, index: true },
     country: { type: String, required: true },
     description: { type: String, required: true },
     filter: { type: String, required: true }, // texte final affiché côté app
@@ -182,6 +184,8 @@ const shopSchema = new Schema<iShop>(
     district: { type: String, required: false },
     trad: { type: String, required: true },
     galleryImages: { type: [String], required: false },
+    timeZone: { type: String, required: false, default: "Europe/Paris" },
+
 
     reviews: [
       {
@@ -193,8 +197,6 @@ const shopSchema = new Schema<iShop>(
 
     maxDistance: { type: Number, required: true },
     idUser: { type: String, required: true },
-    services: [{ type: String, required: true }],
-
     promo: {
       active: { type: Boolean, required: true, default: true },
       type: { type: String, required: true },

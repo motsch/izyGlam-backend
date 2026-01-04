@@ -167,5 +167,11 @@ router.post(
 
 // ...
 router.post("/shop/:id/block", authMiddleware, shopController.blockShopAndRefundBookings);
+// ✅ Handle (username-like)
+router.post("/shop-handle/suggest", shopController.suggestHandle);
+router.get("/shop-handle/available", shopController.isHandleAvailable);
+router.get("/shop-handle/:handle", shopController.getShopByHandle);
+
+
 
 module.exports = router;
