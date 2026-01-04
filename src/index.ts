@@ -2,7 +2,6 @@
 const helmet = require("helmet");
 const express = require("express");
 const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
 const path = require('path');
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
@@ -11,7 +10,7 @@ require('dotenv').config();
 import fs from 'fs';
 import CityModel from "./models/city";
 import http from 'http';
-import cors, { CorsOptions, CorsRequest } from "cors";
+import cors, { CorsOptions } from "cors";
 import { WebSocketServer, WebSocket } from 'ws';
 import ConversationModel from './models/conversation';
 import { seedDatabase } from './seeds/seeder';
@@ -48,9 +47,7 @@ const corsOptions: CorsOptions = {
   origin: (origin: string | undefined, cb) => {
     // Pas d'Origin => appels natifs, Postman, server-to-server => OK
     if (!origin) return cb(null, true);
-
     if (allowedOrigins.includes(origin)) return cb(null, true);
-
     return cb(new Error(`CORS blocked for origin: ${origin}`));
   },
 
@@ -62,8 +59,8 @@ const corsOptions: CorsOptions = {
 // ✅ CORS d'abord
 app.use(cors(corsOptions));
 
-// Répondre aux preflight OPTIONS
-app.options("*", cors());
+// 2) Preflight (UTILISE LA MÊME CONFIG)
+app.options("*", cors(corsOptions));
 
 // IMPORTANT: avant express.json() pour cette route
 app.post("/stripe/webhook", require("express").raw({ type: "application/json" }), stripeWebhook);
@@ -74,8 +71,6 @@ app.set("trust proxy", 1);
 
 const port = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
 app.use('/', sitemapRouter);
 // Point d'entrée de l'API
 app.get("/", (req: any, res: any) => {
