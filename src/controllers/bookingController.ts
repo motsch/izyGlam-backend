@@ -1149,6 +1149,33 @@ const getShopAccounting = async (req: express.Request, res: express.Response) =>
   }
 };
 
+
+/**
+ * Récupère toutes les bookings "pending" d'un prestataire (userProId)
+ * GET /booking-pending-by-userPro/:userId
+ */
+const getPendingBookingsByUserPro = async (req: express.Request, res: express.Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId manquant." });
+    }
+
+    const bookings = await bookingModel
+      .find({
+        userProId: userId,
+        status: "pending",
+      })
+      .sort({ orderDate: -1 }); // les plus récentes en premier
+
+    return res.status(200).json(bookings);
+  } catch (error) {
+    console.error("❌ getPendingBookingsByUserPro error:", error);
+    return res.status(500).json({ message: "Erreur serveur." });
+  }
+};
+
 module.exports = {
   getAllCACount,
   createBooking,
@@ -1163,5 +1190,6 @@ module.exports = {
   updateBookingStatusById,
   confirmBookingCode,
   getDashboardStatsByShop,
+  getPendingBookingsByUserPro,
   getShopAccounting,
 };

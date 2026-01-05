@@ -36,4 +36,8 @@ router.get("/booking-dashboard/:shopId", authMiddleware, bookingController.getDa
 // ✅ Suivi comptable par shop (semaine ou mois)
 router.get("/booking-accounting/:shopId", authMiddleware, bookingController.getShopAccounting);
 
+// ✅ NEW : bookings pending par prestataire
+router.get("/booking-pending-by-userPro/:userId", authMiddleware, bookingController.getPendingBookingsByUserPro
+);
+
 module.exports = router;
