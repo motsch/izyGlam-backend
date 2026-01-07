@@ -75,7 +75,7 @@ function buildAutoReplySms(params: {
   const phone = params.phoneNumber || "le numéro du salon";
   const url =
     params.shopHandle && params.shopHandle.trim().length > 0
-      ? `https://izyglam.com/@${params.shopHandle.trim()}`
+      ? `https://izyglam.com/${params.shopHandle.trim()}`
       : params.shopId
         ? `https://izyglam.com/shop/${params.shopId}`
         : "https://izyglam.com";
