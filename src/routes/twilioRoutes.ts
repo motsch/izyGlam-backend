@@ -3,6 +3,7 @@ import {
   twilioVoiceEntry,
   twilioVoiceServiceGather,
   twilioVoiceSlotGather,
+  twilioSmsInbound,
 } from "../controllers/twilio.controller";
 
 const router = Router();
@@ -20,4 +21,6 @@ router.post("/voice", twilioVoiceEntry);
 router.post("/voice/service", twilioVoiceServiceGather);
 router.post("/voice/slot", twilioVoiceSlotGather);
 
+// 📩 SMS inbound (bidirectionnel)
+router.post("/sms", twilioSmsInbound);
 export default router;

@@ -1,3 +1,4 @@
+// src/services/assistantCheckout.service.ts
 import Stripe from "stripe";
 import moment from "moment-timezone";
 import bookingModel from "../models/booking";
@@ -5,24 +6,11 @@ import ServiceModel from "../models/service";
 import ShopModel from "../models/shop";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  // Garde ta version si tu en as besoin via ENV ; sinon Stripe utilisera la par défaut du compte.
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
 });
 
 function guestClientId(phoneE164: string) {
   return `guest:${phoneE164}`;
-}
-
-function formatHuman(startUtc: Date, tz: string) {
-  // Affichage humain dans le timezone du shop (plus logique pour le pro)
-  return new Intl.DateTimeFormat("fr-FR", {
-    timeZone: tz,
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(startUtc);
 }
 
 function generateCode(len = 6) {
@@ -33,19 +21,34 @@ function generateCode(len = 6) {
 }
 
 // E.164 minimal (Twilio envoie déjà +33..., donc on le garde)
-// Si tu reçois "0612..." on ne devine pas le pays ici : on garde tel quel.
 function normalizePhone(phone: string) {
-  const p = (phone || "").trim();
+  const p = (phone || "").trim().replace(/\s+/g, "");
   return p.startsWith("+") ? p : p;
+}
+
+/**
+ * ⚠️ Slot reçu = "local shop time" (date + start/end en HH:mm)
+ * On convertit en UTC Dates via moment-timezone.
+ */
+function formatHuman(startUtc: Date, tz: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    timeZone: tz,
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(startUtc);
 }
 
 export async function createBookingAndCheckout(params: {
   shopId: string;
   serviceId: string;
-  fromPhone: string;
+  fromPhone: string; // E.164 (idéalement)
   slot: { date: string; start: string; end: string }; // local shop time
+  clientAddress?: string; // ✅ adresse client à domicile (obligatoire côté booking)
 }) {
-  const { shopId, serviceId, fromPhone, slot } = params;
+  const { shopId, serviceId, fromPhone, slot, clientAddress } = params;
 
   const shop: any = await ShopModel.findById(shopId).lean();
   if (!shop) throw new Error("Shop not found");
@@ -53,16 +56,22 @@ export async function createBookingAndCheckout(params: {
   const service: any = await ServiceModel.findById(serviceId).lean();
   if (!service || service.blocked) throw new Error("Service not found");
 
-  const tz: string = shop.timeZone || "Europe/Paris";
+  // ✅ Pas de timeZone dans ton shop => fallback Europe/Paris
+  // (si tu ajoutes un champ plus tard, tu pourras remplacer ici)
+  const tz: string = "Europe/Paris";
 
   // ✅ Convertit le créneau (local shop TZ) -> UTC Date
   const startUtc = moment
     .tz(`${slot.date} ${slot.start}`, "YYYY-MM-DD HH:mm", tz)
+    .seconds(0)
+    .milliseconds(0)
     .utc()
     .toDate();
 
   const endUtc = moment
     .tz(`${slot.date} ${slot.end}`, "YYYY-MM-DD HH:mm", tz)
+    .seconds(0)
+    .milliseconds(0)
     .utc()
     .toDate();
 
@@ -80,13 +89,18 @@ export async function createBookingAndCheckout(params: {
 
   const phone = normalizePhone(fromPhone);
 
+  // ✅ booking.address = adresse client (si fournie), sinon on garde un fallback propre
+  const addressForBooking =
+    (clientAddress && clientAddress.trim().length >= 8 ? clientAddress.trim() : "") ||
+    "Adresse à confirmer";
+
+  // ✅ création booking (anti double-booking géré par ton index unique shopId+start+end)
   const booking = await bookingModel.create({
     title: service.name,
     establishmentName: shop.name || "IzyGlam",
     productName: service.name,
 
-    // ⚠️ si tu as une adresse client à domicile, passe-la plus tard.
-    address: shop.legal?.addressLine1 || "Adresse à confirmer",
+    address: addressForBooking,
     phoneNumber: phone,
 
     clientId: guestClientId(phone),
@@ -102,7 +116,7 @@ export async function createBookingAndCheckout(params: {
     shopEarnings: String(shopEarningsEuro),
     tva: "0",
 
-    // date "humaine" affichée dans le TZ du shop, mais start/end restent UTC
+    // date “humaine” (dans TZ du shop)
     date: formatHuman(startUtc, tz),
     orderDate: new Date(),
     start: startUtc,
@@ -137,6 +151,7 @@ export async function createBookingAndCheckout(params: {
       serviceId: String(service._id),
       proId: String(shop.idUser),
       clientPhone: phone,
+      clientAddress: addressForBooking, // ✅ utile côté webhook si tu veux “réappliquer” l’adresse
     },
     success_url: `${process.env.FRONTEND_URL}/paiement-validation?success=true&bookingId=${booking._id}`,
     cancel_url: `${process.env.FRONTEND_URL}/paiement-validation?success=false&bookingId=${booking._id}`,
