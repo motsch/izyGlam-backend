@@ -1,0 +1,5 @@
+npm run bigbuy:import
+npm run bigbuy:sync-product-info
+npm run bigbuy:sync-prices
+npm run bigbuy:sync-stock
+npm run bigbuy:sync-images

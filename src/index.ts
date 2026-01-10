@@ -24,6 +24,7 @@ import { startShopStatsCron } from "./cron/shopStats.cron";
 
 import { stripeWebhook } from "./controllers/stripeWebhook.controller";
 import twilioRoutes from "./routes/twilioRoutes";
+import { startBigBuyCrons } from "./cron/bigbuyCron";
 
 const app = express();
 
@@ -230,6 +231,9 @@ const notifyRoutes = require("./routes/notify");
 const devicesRoutes = require("./routes/devices");
 const b2bLeadRoutes = require("./routes/b2bLeadRoutes");
 const fakePost = require("./routes/fakePost");
+const bigbuyRoutes = require("./routes/bigbuyRoutes");
+const bigbuyTaxonomyRoutes = require("./routes/bigbuyTaxonomyRoutes");
+const productRoutes = require("./routes/productRoutes");
 
 // Utilisation des routes
 app.use("/api", prospectionRoutes);
@@ -270,6 +274,9 @@ app.use("/api", devicesRoutes);
 app.use("/api", countryRoutes);
 app.use("/api", b2bLeadRoutes);
 app.use("/api", fakePost);
+app.use("/api", bigbuyRoutes);
+app.use("/api", bigbuyTaxonomyRoutes);
+app.use("/api", productRoutes);
 
 /**
  * Static files
@@ -361,6 +368,7 @@ mongoose
     await startB2BDripCron();
     await scheduleWeeklyPayouts();
     await startShopStatsCron();
+    await startBigBuyCrons();
     console.log("Connexion à la base de données réussie");
   })
   .catch((err: any) => {
@@ -372,9 +380,6 @@ mongoose
 server.listen(port, () => {
   console.log(`✅ Serveur HTTP + WebSocket démarré sur https://izyglam.com`);
 });
-
-// 🔥 Démarrer le cron DRIP B2B APRÈS la connexion DB
-startB2BDripCron();
 
 const seedCities = async () => {
   const count = await CityModel.countDocuments();

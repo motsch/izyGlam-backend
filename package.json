@@ -6,7 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon src/index.ts",
-    "generate-swagger": "node -r ts-node/register -r dotenv/config ./src/swaggerConfig.js > swagger.json"
+    "generate-swagger": "node -r ts-node/register -r dotenv/config ./src/swaggerConfig.js > swagger.json",
+    "bigbuy:import": "ts-node src/scripts/importBigBuyCatalog.ts",
+    "bigbuy:sync-stock": "ts-node src/scripts/syncBigBuyStock.ts",
+    "bigbuy:sync-images": "ts-node src/scripts/syncBigBuyImages.ts",
+    "bigbuy:sync-product-info": "ts-node src/scripts/syncBigBuyProductInfo.ts",
+    "bigbuy:sync-prices": "ts-node src/scripts/syncBigBuyPrices.ts",
+    "bigbuy:bootstrap": "ts-node src/scripts/bootstrapBigBuy.ts"
   },
   "author": "Francis Motsch",
   "license": "ISC",
