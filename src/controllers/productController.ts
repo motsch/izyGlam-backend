@@ -2,7 +2,7 @@ import * as express from "express";
 import productModel from "../models/product";
 import orderModel from "../models/order";
 import { logger } from "../utils/logger";
-
+import mongoose from "mongoose";
 function sanitize(obj: any) {
   if (!obj || typeof obj !== "object") return obj;
   const clone = JSON.parse(JSON.stringify(obj));
@@ -23,58 +23,118 @@ function sanitize(obj: any) {
  * Query:
  * - page (default 1)
  * - limit (default 24, max 100)
- * - taxonomies=5419,11496 (optionnel)
+ * - taxonomies=5419,11496 (optionnel)  --> (en réalité: categoryIds)
  * - complete=true (optionnel)
- * - status=ACTIVE|DRAFT|ARCHIVED (default ACTIVE)
  */
 const getAllProducts = async (req: express.Request, res: express.Response) => {
   const t0 = Date.now();
-  try {
-    const status = (req.query.status as string) || "ACTIVE";
+  const reqId =
+    (req.headers["x-request-id"] as string) ||
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
+  const logBase = {
+    reqId,
+    route: "GET /api/product",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"],
+  };
+
+  logger.info({
+    ...logBase,
+    msg: "➡️ getAllProducts start",
+    query: sanitize(req.query),
+  });
+
+  try {
+    // -----------------------------
+    // 1) Parse query
+    // -----------------------------
     const page = Math.max(Number(req.query.page || 1), 1);
     const limit = Math.min(Math.max(Number(req.query.limit || 24), 1), 100);
     const skip = (page - 1) * limit;
 
     const complete = req.query.complete === "true";
+
+    // ⚠️ on garde le nom "taxonomies" côté API pour ne pas casser le front
+    // mais on l’utilise comme categoryIds
     const taxonomiesRaw = (req.query.taxonomies as string) || "";
-    const taxonomies = taxonomiesRaw
-      ? taxonomiesRaw.split(",").map((x) => Number(x.trim())).filter((n) => Number.isFinite(n))
+    const categoryIds = taxonomiesRaw
+      ? taxonomiesRaw
+        .split(",")
+        .map((x) => Number(x.trim()))
+        .filter((n) => Number.isFinite(n))
       : [];
 
-    const filter: any = { "visibility.status": status };
+    logger.info({
+      ...logBase,
+      msg: "🧩 getAllProducts parsed query",
+      page,
+      limit,
+      skip,
+      complete,
+      taxonomiesRaw,
+      categoryIds,
+    });
 
-    // ✅ filtre catégorie (taxonomyId)
-    if (taxonomies.length) {
-      filter.taxonomyId = { $in: taxonomies };
+    // -----------------------------
+    // 2) Build filter
+    // -----------------------------
+    const filter: any = {};
+
+    // ✅ FILTRE PAR CATEGORYID
+    if (categoryIds.length) {
+      filter.categoryId = { $in: categoryIds };
     }
 
-    // ✅ filtre "produits complets"
+    // ✅ FILTRE "produits complets"
     if (complete) {
       filter.descriptionHtml = { $exists: true, $ne: "" };
       filter.coverImage = { $exists: true, $ne: "" };
       filter["pricing.retailPrice"] = { $exists: true, $gt: 0 };
     }
 
-    // ✅ requêtes : items + total
-    const [items, total] = await Promise.all([
-      productModel
-        .find(filter)
-        .sort({ updatedAt: -1 }) // tu peux changer le tri
-        .skip(skip)
-        .limit(limit),
-      productModel.countDocuments(filter),
-    ]);
+    logger.info({
+      ...logBase,
+      msg: "🔎 getAllProducts mongo filter ready",
+      filter: sanitize(filter),
+    });
 
+    // -----------------------------
+    // 3) Mongo queries + timings
+    // -----------------------------
+    const tDb0 = Date.now();
+
+    const itemsPromise = productModel
+      .find(filter)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalPromise = productModel.countDocuments(filter);
+
+    const [items, total] = await Promise.all([itemsPromise, totalPromise]);
+
+    const dbDurationMs = Date.now() - tDb0;
     const totalPages = Math.ceil(total / limit);
 
     logger.info({
-      msg: "getAllProducts success",
-      route: "GET /api/product",
-      filter: sanitize(filter),
-      page,
-      limit,
+      ...logBase,
+      msg: "✅ getAllProducts mongo result",
+      returned: items?.length ?? 0,
       total,
+      totalPages,
+      dbDurationMs,
+      sampleIds: (items || []).slice(0, 5).map((p: any) => p?._id),
+      sampleCategoryIds: (items || []).slice(0, 5).map((p: any) => p?.categoryId),
+    });
+
+    // -----------------------------
+    // 4) Response
+    // -----------------------------
+    logger.info({
+      ...logBase,
+      msg: "🏁 getAllProducts success",
       durationMs: Date.now() - t0,
     });
 
@@ -87,15 +147,19 @@ const getAllProducts = async (req: express.Request, res: express.Response) => {
     });
   } catch (error: any) {
     logger.error({
-      msg: "getAllProducts failed",
-      route: "GET /api/product",
+      ...logBase,
+      msg: "❌ getAllProducts failed",
+      durationMs: Date.now() - t0,
       errorName: error?.name,
       errorMessage: error?.message,
       stack: error?.stack,
     });
+
     res.status(500).json({ message: "Impossible de récupérer les produits" });
   }
 };
+
+
 
 
 const getProductById = async (req: express.Request, res: express.Response) => {
@@ -164,27 +228,110 @@ const updateProductById = async (req: express.Request, res: express.Response) =>
  * GET /api/product/best-sellers/week?limit=8
  * Calcule les top ventes sur 7 jours (PAID/SUPPLIER_ORDERED/SHIPPED)
  */
-const getBestSellersWeek = async (req: express.Request, res: express.Response) => {
+export const getBestSellersWeek = async (req: express.Request, res: express.Response) => {
   try {
-    const limit = Math.min(Number(req.query.limit || 8), 50);
+    const limit = Math.min(Math.max(Number(req.query.limit || 8), 1), 50);
+    const complete = req.query.complete === "true";
+
+    // même logique que getAllProducts : "taxonomies" = categoryIds
+    const taxonomiesRaw = (req.query.taxonomies as string) || "";
+    const categoryIds = taxonomiesRaw
+      ? taxonomiesRaw
+          .split(",")
+          .map((x) => Number(x.trim()))
+          .filter((n) => Number.isFinite(n))
+      : [];
+
     const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
+    // -----------------------------
+    // 1) Récup best sellers via orders
+    // -----------------------------
     const agg = await orderModel.aggregate([
-      { $match: { createdAt: { $gte: from }, status: { $in: ["PAID", "SUPPLIER_ORDERED", "SHIPPED"] } } },
+      {
+        $match: {
+          createdAt: { $gte: from },
+          status: { $in: ["PAID", "SUPPLIER_ORDERED", "SHIPPED"] },
+        },
+      },
       { $unwind: "$items" },
       { $group: { _id: "$items.productId", qty: { $sum: "$items.qty" } } },
       { $sort: { qty: -1 } },
       { $limit: limit },
     ]);
 
-    const ids = agg.map((x) => x._id);
-    const products = await productModel.find({ _id: { $in: ids }, "visibility.status": "ACTIVE" });
+    // cast en ObjectId si possible (sinon on ignore)
+    const bestSellerIds: mongoose.Types.ObjectId[] = agg
+      .map((x) => x?._id)
+      .map((id) => {
+        if (!id) return null;
+        // id peut déjà être un ObjectId
+        if (id instanceof mongoose.Types.ObjectId) return id;
+        // ou string
+        const s = String(id);
+        if (!mongoose.Types.ObjectId.isValid(s)) return null;
+        return new mongoose.Types.ObjectId(s);
+      })
+      .filter(Boolean) as mongoose.Types.ObjectId[];
 
-    // garde l’ordre “best sellers”
-    const map = new Map(products.map((p) => [p._id.toString(), p]));
-    const ordered = agg.map((a) => map.get(a._id.toString())).filter(Boolean);
+    // -----------------------------
+    // 2) Build filtre produits (comme getAllProducts)
+    // -----------------------------
+    const productFilter: any = {};
 
-    res.json(ordered);
+    // ⚠️ si tu as vraiment un champ visibility.status en base, garde-le
+    // sinon COMMENTE cette ligne.
+    // productFilter["visibility.status"] = "ACTIVE";
+
+    // sinon, à minima : pas de filtre de status ici (comme getAllProducts)
+    // + filtre catégorie (categoryId)
+    if (categoryIds.length) {
+      productFilter.categoryId = { $in: categoryIds };
+    }
+
+    if (complete) {
+      productFilter.descriptionHtml = { $exists: true, $ne: "" };
+      productFilter.coverImage = { $exists: true, $ne: "" };
+      productFilter["pricing.retailPrice"] = { $exists: true, $gt: 0 };
+    }
+
+    // -----------------------------
+    // 3) Si on a des best sellers => on les fetch + on garde l'ordre
+    // -----------------------------
+    let bestSellers: any[] = [];
+    if (bestSellerIds.length) {
+      const found = await productModel
+        .find({ ...productFilter, _id: { $in: bestSellerIds } })
+        .lean();
+
+      const map = new Map(found.map((p: any) => [p._id.toString(), p]));
+      bestSellers = bestSellerIds
+        .map((id) => map.get(id.toString()))
+        .filter(Boolean);
+    }
+
+    // -----------------------------
+    // 4) Fallback random si pas assez (ou zéro)
+    // -----------------------------
+    const missing = limit - bestSellers.length;
+
+    if (missing > 0) {
+      const excludeIds = bestSellers.map((p: any) => p._id);
+
+      const randomFill = await productModel.aggregate([
+        { $match: { ...productFilter, _id: { $nin: excludeIds } } },
+        { $sample: { size: missing } },
+      ]);
+
+      // best sellers d'abord, puis random
+      const result = [...bestSellers, ...randomFill];
+      return res.json(result);
+    }
+
+    // -----------------------------
+    // 5) Résultat complet
+    // -----------------------------
+    return res.json(bestSellers);
   } catch (error: any) {
     logger.error({
       msg: "getBestSellersWeek failed",

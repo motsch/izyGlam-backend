@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-export type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
-
 export interface iProduct extends mongoose.Document {
     title: string;
     description?: string;
@@ -20,11 +18,11 @@ export interface iProduct extends mongoose.Document {
     condition?: string;
     logisticClass?: string;
     pricing: {
-        wholesalePrice?: number; // BigBuy
-        retailPrice?: number;    // BigBuy
-        salePrice?: number;      // ton prix affiché (si tu veux)
-        currency: string;        // "EUR"
-        taxRate?: number;        // ex: 21
+        wholesalePrice?: number;
+        retailPrice?: number;
+        salePrice?: number;
+        currency: string;
+        taxRate?: number;
     };
     supplier: {
         provider: "bigbuy";
@@ -39,16 +37,15 @@ export interface iProduct extends mongoose.Document {
         dateUpdProperties?: Date;
         dateUpdCategories?: Date;
     };
-    coverImage: string;
+    coverImage?: string;
     imagesMeta: any;
     stock: {
-        supplierQty?: number; // cache
+        supplierQty?: number;
         supplierUpdatedAt?: Date;
-    };
-    visibility: {
-        status: ProductStatus;
-        isFeatured: boolean;
-        featuredRank?: number;
+        byHandlingDays?: Array<{
+            handlingDays: number;
+            quantity: number;
+        }>;
     };
     updatedAt: Date;
     createdAt: Date;
@@ -58,21 +55,27 @@ const productSchema = new mongoose.Schema<iProduct>(
     {
         url: { type: String },
         isoCode: { type: String, default: "fr" },
-        descriptionHtml: { type: String },
         title: { type: String, required: true, trim: true },
         description: { type: String },
+        descriptionHtml: { type: String },
+
         manufacturerId: { type: Number },
         categoryId: { type: Number },
         taxonomyId: { type: Number },
+
         images: { type: [String], default: [] },
+        coverImage: { type: String },
+
         tags: { type: [String], default: [] },
+
         weight: { type: Number },
         height: { type: Number },
         width: { type: Number },
         depth: { type: Number },
+
         condition: { type: String },
         logisticClass: { type: String },
-        coverImage: { type: String },
+
         imagesMeta: {
             type: [
                 {
@@ -88,13 +91,13 @@ const productSchema = new mongoose.Schema<iProduct>(
                     brand: { type: Boolean },
                     gpsrLabel: { type: Boolean },
                     gpsrWarning: { type: Boolean },
-                    // champs optionnels vus dans l'exemple
                     energyEfficiency: { type: Number },
                     icon: { type: Number },
                 },
             ],
             default: [],
         },
+
         pricing: {
             wholesalePrice: { type: Number },
             retailPrice: { type: Number },
@@ -102,8 +105,14 @@ const productSchema = new mongoose.Schema<iProduct>(
             currency: { type: String, default: "EUR" },
             taxRate: { type: Number },
         },
+
         supplier: {
-            provider: { type: String, enum: ["bigbuy"], required: true, default: "bigbuy" },
+            provider: {
+                type: String,
+                enum: ["bigbuy"],
+                required: true,
+                default: "bigbuy",
+            },
             bigbuyId: { type: Number, required: true },
             sku: { type: String },
             ean13: { type: String },
@@ -115,10 +124,10 @@ const productSchema = new mongoose.Schema<iProduct>(
             dateUpdProperties: { type: Date },
             dateUpdCategories: { type: Date },
         },
+
         stock: {
             supplierQty: { type: Number, default: 0 },
             supplierUpdatedAt: { type: Date },
-            // ✅ NEW (optionnel) : utile pour afficher “expédié sous X jours”
             byHandlingDays: {
                 type: [
                     {
@@ -129,22 +138,29 @@ const productSchema = new mongoose.Schema<iProduct>(
                 default: [],
             },
         },
-        visibility: {
-            status: { type: String, enum: ["DRAFT", "ACTIVE", "ARCHIVED"], default: "DRAFT" },
-            isFeatured: { type: Boolean, default: false },
-            featuredRank: { type: Number },
-        },
     },
     { timestamps: true }
 );
 
-// ✅ Index essentiels
-productSchema.index({ "supplier.provider": 1, "supplier.bigbuyId": 1 }, { unique: true });
+//
+// ✅ INDEX NETTOYÉS ET UTILES
+//
+
+// Unicité fournisseur + produit BigBuy
+productSchema.index(
+    { "supplier.provider": 1, "supplier.bigbuyId": 1 },
+    { unique: true }
+);
+
+// Recherches rapides fournisseur
 productSchema.index({ "supplier.sku": 1 });
 productSchema.index({ "supplier.ean13": 1 });
-productSchema.index({ "visibility.isFeatured": 1, "visibility.featuredRank": 1 });
-productSchema.index({ taxonomyId: 1, "visibility.status": 1, updatedAt: -1 });
-productSchema.index({ "visibility.status": 1, updatedAt: -1 });
+
+// Listing produits (catégorie / tri récent)
+productSchema.index({ taxonomyId: 1, updatedAt: -1 });
+
+// Tri global par date (home, nouveautés, etc.)
+productSchema.index({ updatedAt: -1 });
 
 const productModel = mongoose.model<iProduct>("Product", productSchema);
 export default productModel;
