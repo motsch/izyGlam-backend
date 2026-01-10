@@ -355,26 +355,37 @@ wss.on("connection", (ws) => {
 });
 
 /**
- * DB connect
+ * DB connect (Atlas = default mongoose connection)
  */
 mongoose
-  .connect("mongodb+srv://fmotsch:Fr%40ncis2018%21@cluster0.dzdgnj3.mongodb.net/devfreelance", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+  .connect(process.env.MONGODB_URI as string, {
+    maxPoolSize: 10,
   })
   .then(async () => {
+    // ✅ Atlas OK => seeds & jobs critiques
     await seedDatabase();
     await seedCities();
+
     await startB2BDripCron();
     await scheduleWeeklyPayouts();
     await startShopStatsCron();
-    await startBigBuyCrons();
+
+    // ✅ BigBuy (non critique) : si catalog down, l'API continue
+    try {
+      const { waitForCatalogConnection } = await import("./db/mongo");
+      await waitForCatalogConnection();
+      await startBigBuyCrons();
+    } catch (e: any) {
+      console.warn("⚠️ Catalog Mongo non dispo, BigBuy crons désactivés:", e?.message);
+    }
+
     console.log("Connexion à la base de données réussie");
   })
   .catch((err: any) => {
     console.error("Erreur de connexion à la base de données :", err.message);
     process.exit(1);
   });
+
 
 // Démarrer le serveur HTTP (et donc WS aussi)
 server.listen(port, () => {
