@@ -19,6 +19,96 @@ function sanitize(obj: any) {
 }
 
 /**
+ * GET /api/admin/products
+ * Query:
+ * - page (default 1)
+ * - limit (default 50, max 100)
+ * - q (optionnel) => recherche simple sur title/sku/ean13 (si tu veux)
+ * - sort=updatedAt|createdAt|price (optionnel)
+ * - dir=asc|desc (optionnel)
+ */
+export const getAllProductsAdmin = async (req: express.Request, res: express.Response) => {
+  const t0 = Date.now();
+  const reqId =
+    (req.headers["x-request-id"] as string) ||
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  const logBase = {
+    reqId,
+    route: "GET /api/admin/products",
+    ip: req.ip,
+    userId: (req as any).user?._id,
+  };
+
+  logger.info({ ...logBase, msg: "➡️ getAllProductsAdmin start", query: sanitize(req.query) });
+
+  try {
+    const page = Math.max(Number(req.query.page || 1), 1);
+    const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 100);
+    const skip = (page - 1) * limit;
+
+    // Optionnel: petit search (pratique pour ton panel admin)
+    const q = String(req.query.q || "").trim();
+
+    const filter: any = {};
+    if (q) {
+      // ⚠️ simple, rapide, sans index text obligatoire
+      // (tu peux ajouter des index si tu veux améliorer plus tard)
+      filter.$or = [
+        { title: { $regex: q, $options: "i" } },
+        { "supplier.sku": { $regex: q, $options: "i" } },
+        { "supplier.ean13": { $regex: q, $options: "i" } },
+      ];
+    }
+
+    // Tri (optionnel)
+    const sortKey = String(req.query.sort || "updatedAt");
+    const dir = String(req.query.dir || "desc") === "asc" ? 1 : -1;
+
+    let sort: any = { updatedAt: -1 };
+    if (sortKey === "createdAt") sort = { createdAt: dir };
+    if (sortKey === "updatedAt") sort = { updatedAt: dir };
+    if (sortKey === "price") sort = { "pricing.retailPrice": dir, updatedAt: -1 };
+
+    const tDb0 = Date.now();
+
+    const [items, total] = await Promise.all([
+      productModel.find(filter).sort(sort).skip(skip).limit(limit).lean(),
+      productModel.countDocuments(filter),
+    ]);
+
+    const dbDurationMs = Date.now() - tDb0;
+    const totalPages = Math.ceil(total / limit);
+
+    logger.info({
+      ...logBase,
+      msg: "✅ getAllProductsAdmin success",
+      returned: items.length,
+      total,
+      page,
+      limit,
+      totalPages,
+      dbDurationMs,
+      durationMs: Date.now() - t0,
+    });
+
+    return res.json({ items, page, limit, total, totalPages });
+  } catch (error: any) {
+    logger.error({
+      ...logBase,
+      msg: "❌ getAllProductsAdmin failed",
+      durationMs: Date.now() - t0,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({ message: "Impossible de récupérer les produits (admin)" });
+  }
+};
+
+
+
+/**
  * GET /api/product
  * Query:
  * - page (default 1)
@@ -158,9 +248,6 @@ const getAllProducts = async (req: express.Request, res: express.Response) => {
     res.status(500).json({ message: "Impossible de récupérer les produits" });
   }
 };
-
-
-
 
 const getProductById = async (req: express.Request, res: express.Response) => {
   try {
@@ -344,9 +431,68 @@ export const getBestSellersWeek = async (req: express.Request, res: express.Resp
   }
 };
 
+
+/**
+ * DELETE /api/product/:id (admin)
+ * Supprime un produit du catalogue
+ */
+export const deleteProductById = async (req: express.Request, res: express.Response) => {
+  const t0 = Date.now();
+  const reqId =
+    (req.headers["x-request-id"] as string) ||
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  const logBase = {
+    reqId,
+    route: "DELETE /api/product/:id",
+    ip: req.ip,
+    userId: (req as any).user?._id,
+    productId: req.params?.id,
+  };
+
+  logger.info({ ...logBase, msg: "➡️ deleteProductById start" });
+
+  try {
+    const { id } = req.params;
+
+    const deleted = await productModel.findByIdAndDelete(id);
+
+    if (!deleted) {
+      logger.warn({ ...logBase, msg: "⚠️ deleteProductById not found" });
+      return res.status(404).json({ message: "Produit non trouvé" });
+    }
+
+    logger.info({
+      ...logBase,
+      msg: "✅ deleteProductById success",
+      durationMs: Date.now() - t0,
+    });
+
+    return res.json({ ok: true });
+  } catch (error: any) {
+    logger.error({
+      ...logBase,
+      msg: "❌ deleteProductById failed",
+      durationMs: Date.now() - t0,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+
+    return res.status(500).json({ message: "Impossible de supprimer le produit" });
+  }
+};
+
+
+
+
+
+
 module.exports = {
   getAllProducts,
   getProductById,
   updateProductById,
   getBestSellersWeek,
+  getAllProductsAdmin,
+  deleteProductById,
 };

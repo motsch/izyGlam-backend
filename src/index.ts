@@ -234,6 +234,11 @@ const fakePost = require("./routes/fakePost");
 const bigbuyRoutes = require("./routes/bigbuyRoutes");
 const bigbuyTaxonomyRoutes = require("./routes/bigbuyTaxonomyRoutes");
 const productRoutes = require("./routes/productRoutes");
+const adminBigbuyRoutes = require("./routes/adminBigbuyRoutes");
+const adminProductRoutes = require("./routes/adminProductRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const izyshopCheckoutRoutes = require("./routes/izyshopCheckoutRoutes")
+
 
 // Utilisation des routes
 app.use("/api", prospectionRoutes);
@@ -277,6 +282,10 @@ app.use("/api", fakePost);
 app.use("/api", bigbuyRoutes);
 app.use("/api", bigbuyTaxonomyRoutes);
 app.use("/api", productRoutes);
+app.use("/api", adminBigbuyRoutes);
+app.use("/api", adminProductRoutes);
+app.use("/api", orderRoutes);
+app.use("/api", izyshopCheckoutRoutes);
 
 /**
  * Static files

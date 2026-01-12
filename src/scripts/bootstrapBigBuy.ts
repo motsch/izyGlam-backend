@@ -233,7 +233,7 @@ async function runPages(opts: RunPagesOptions) {
  */
 
 async function bootstrap() {
-  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  const mongoUri = process.env.MONGODB_URI;
   if (!mongoUri) throw new Error("MONGO_URI (ou MONGODB_URI) manquant dans .env");
 
   const parentTaxonomy = process.env.BIGBUY_PARENT_TAXONOMY ? Number(process.env.BIGBUY_PARENT_TAXONOMY) : undefined;
