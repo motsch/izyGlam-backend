@@ -10,6 +10,7 @@ import ConversationModel from "../models/conversation";
 import mongoose from "mongoose";
 import { logger } from "../utils/logger";
 import bookingModel from "../models/booking";
+import { attributeTargetToFeed } from "../services/feedAttribution.service";
 
 // -------- utils --------
 function sanitize(obj: any) {
@@ -517,6 +518,46 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
         });
       }
     }
+
+    // ✅ Attribution feed -> conversion booking (quand c’est vraiment “réalisé”)
+    if (status === "finished") {
+      try {
+        // buyer = client
+        const userId = String(updatedBooking.clientId);
+        const proId = String(updatedBooking.userProId);
+
+        // montant: si tu veux CA réel, prends price
+        const amount = (() => {
+          const n = Number(String(updatedBooking.price ?? "").replace(",", "."));
+          return Number.isFinite(n) ? n : undefined;
+        })();
+
+        await attributeTargetToFeed({
+          userId,
+          proId,
+          targetType: "BOOKING",
+          targetId: String(updatedBooking._id),
+          amount,
+          currency: "eur",
+        });
+
+        logger.info({
+          msg: "feed.attribution.booking.done",
+          bookingId: String(updatedBooking._id),
+          userId,
+          proId,
+          amount,
+        });
+      } catch (e: any) {
+        logger.error({
+          msg: "feed.attribution.booking.failed",
+          bookingId: String(updatedBooking._id),
+          errorMessage: e?.message,
+          stack: e?.stack,
+        });
+      }
+    }
+
 
     return res.json({ message: "Statut mis à jour", booking: updatedBooking });
   } catch (error: any) {

@@ -238,7 +238,9 @@ const adminBigbuyRoutes = require("./routes/adminBigbuyRoutes");
 const adminProductRoutes = require("./routes/adminProductRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const izyshopCheckoutRoutes = require("./routes/izyshopCheckoutRoutes")
-
+const feedRoutes = require("./routes/feed");
+const proFeedRoutes = require("./routes/proFeed");
+const feedAnalytics = require("./routes/feedAnalytics");
 
 // Utilisation des routes
 app.use("/api", prospectionRoutes);
@@ -286,6 +288,9 @@ app.use("/api", adminBigbuyRoutes);
 app.use("/api", adminProductRoutes);
 app.use("/api", orderRoutes);
 app.use("/api", izyshopCheckoutRoutes);
+app.use("/api", feedRoutes);
+app.use("/api", proFeedRoutes);
+app.use("/api", feedAnalytics);
 
 /**
  * Static files

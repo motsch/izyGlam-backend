@@ -188,43 +188,39 @@ export const createPaymentIntentForOrder = async (req: express.Request, res: exp
     const user = (req as any).user;
     if (!user?._id) return res.status(401).json({ ok: false, message: "Unauthorized" });
 
-    // 1) Re-check serveur (très important)
-    // On réutilise la logique du checkOrder, mais en interne
+    // 1) Re-check serveur
     const fakeReq: any = { body: { items: req.body?.items, shippingAddress: req.body?.shippingAddress } };
     const checkRes: any = {
       jsonPayload: null as any,
       statusCode: 200,
-      status(code: number) {
-        this.statusCode = code;
-        return this;
-      },
-      json(payload: any) {
-        this.jsonPayload = payload;
-        return this;
-      },
+      status(code: number) { this.statusCode = code; return this; },
+      json(payload: any) { this.jsonPayload = payload; return this; },
     };
 
     // @ts-ignore
     await checkOrder(fakeReq as express.Request, checkRes as express.Response);
 
-    if (checkRes.statusCode !== 200) {
-      return res.status(checkRes.statusCode).json(checkRes.jsonPayload);
-    }
+    if (checkRes.statusCode !== 200) return res.status(checkRes.statusCode).json(checkRes.jsonPayload);
 
     const checked = checkRes.jsonPayload;
     if (!checked?.ok) {
-      return res.status(409).json({
-        ok: false,
-        message: "Commande invalide",
-        ...checked,
-      });
+      return res.status(409).json({ ok: false, message: "Commande invalide", ...checked });
     }
 
     const currency = String(checked.currency || "EUR").toLowerCase();
-    const total = Number(checked?.pricing?.total) || 0;
+    const subtotal = Number(checked?.pricing?.subtotal || 0);
+    const shippingFee = Number(checked?.pricing?.shippingFee || 0);
+    const total = Number(checked?.pricing?.total || 0);
+
     if (total <= 0) return res.status(400).json({ ok: false, message: "Total invalide" });
 
-    // 2) Créer Order en DB (PENDING_PAYMENT)
+    // 2) shippingAddress obligatoire côté schema -> on l’exige ici
+    const shippingAddress = req.body?.shippingAddress;
+    if (!shippingAddress?.firstName || !shippingAddress?.lastName || !shippingAddress?.address1) {
+      return res.status(400).json({ ok: false, message: "shippingAddress incomplet" });
+    }
+
+    // 3) Créer Order en DB
     const channel = getChannelFromUser(user);
 
     const order = await orderModel.create({
@@ -236,11 +232,32 @@ export const createPaymentIntentForOrder = async (req: express.Request, res: exp
         qty: l.qty,
         unitPrice: l.unitPrice,
         taxRate: l.taxRate,
+        title: l.title,
       })),
+      shippingAddress,
+      totals: {
+        currency: currency.toUpperCase(),
+        subtotal,
+        shippingFee,
+        total,
+        amountCents: toCents(total),
+      },
+      bigbuy: {
+        internalReference: "", // on met temporairement, puis on remplace juste après
+        language: "fr",
+        paymentMethod: "wallet",
+        chosenShipping: req.body?.chosenShipping || undefined,
+      },
       status: "PENDING_PAYMENT",
+      history: [{ status: "PENDING_PAYMENT", note: "Order created / awaiting Stripe payment" }],
     });
 
-    // 3) Créer PaymentIntent Stripe avec metadata.orderId
+    // internalReference requis -> on le met = orderId
+    await orderModel.findByIdAndUpdate(order._id, {
+      $set: { "bigbuy.internalReference": String(order._id) },
+    });
+
+    // 4) PaymentIntent Stripe
     const customerEmail = String(req.body?.customerEmail || user.email || "").trim();
 
     const pi = await stripe.paymentIntents.create({
@@ -276,6 +293,7 @@ export const createPaymentIntentForOrder = async (req: express.Request, res: exp
     return res.status(500).json({ ok: false, message: "Impossible de créer le paiement" });
   }
 };
+
 
 /**
  * GET /api/orders/my
