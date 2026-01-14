@@ -40,6 +40,7 @@ const allowedOrigins = [
 
   // PROD web
   "https://izyglam.com",
+  "https://shop.izyglam.com",
   "https://www.izyglam.com",
 ];
 
