@@ -240,6 +240,7 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
             responsePreview: Array.isArray(allLowestCosts) ? allLowestCosts.slice(0, 10) : allLowestCosts,
         });
 
+        /*
         // 5) Filtrage
         const wantedRefs = new Set<string>();
         for (const it of okItems) {
@@ -260,9 +261,9 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
             filteredCount: filtered.length,
             filteredPreview: filtered.slice(0, 20),
         });
-
+    */
         log("SUCCESS");
-        return res.json({ options: filtered });
+        return res.json({ options: allLowestCosts });
     } catch (e: any) {
         log("ERROR", {
             message: e?.message,
