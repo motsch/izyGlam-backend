@@ -66,13 +66,10 @@ function buildBigBuyPayload(items: any[], shippingAddress: any, chosenShipping?:
 /**
  * POST /izyshop/checkout/shipping-options
  * Body: { items: [{productId, qty}], shippingAddress: {...} }
+ * Public: pas besoin d'être connecté (checkout invité OK)
  */
 export const getShippingOptions = async (req: express.Request, res: express.Response) => {
-    const userId = (req as any).user?._id;
-
     try {
-        if (!userId) return res.status(401).json({ message: "Unauthorized" });
-
         const items: CartItemInput[] = Array.isArray(req.body?.items) ? req.body.items : [];
         const shippingAddress = req.body?.shippingAddress;
 
@@ -91,10 +88,10 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
         const normalizedItems = items.map((it) => {
             const p = map.get(String(it.productId));
             if (!p) throw new Error(`Unknown product: ${it.productId}`);
+
             const qty = safeQty(it.qty);
             if (qty <= 0) throw new Error(`Invalid qty for product: ${it.productId}`);
 
-            // selon ton modèle produit: supplierBigbuyId / bigbuyId
             const supplierBigbuyId = Number(p.supplierBigbuyId || p.bigbuyId);
             if (!supplierBigbuyId) throw new Error(`Missing supplierBigbuyId for product: ${it.productId}`);
 
@@ -109,9 +106,11 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
 
         const shippingResp = await bigbuyApi.getShippingOptions(bbPayload);
 
+        // ✅ Aligne avec ton frontend: { options: [...] }
         return res.json({
-            shippingOptions: shippingResp,
+            options: shippingResp,
         });
+
     } catch (e: any) {
         logger.error({
             msg: "checkout.shipping-options.failed",
@@ -122,6 +121,7 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
         return res.status(500).json({ message: e?.message || "Shipping options failed" });
     }
 };
+
 
 /**
  * POST /izyshop/checkout/intent

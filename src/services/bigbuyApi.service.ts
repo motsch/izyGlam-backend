@@ -55,6 +55,17 @@ class BigBuyApiService {
     const { data } = await this.client.post("/rest/order/create.json", payload);
     return data;
   }
+
+  /**
+   * GET /rest/shipping/lowest-shipping-costs-by-country/{countryIsoCode}.json
+   * Renvoie les frais de livraison minimum par produit pour un pays
+   */
+  async getLowestShippingCostsByCountry(countryIsoCode: string) {
+    const { data } = await this.client.get(
+      `/rest/shipping/lowest-shipping-costs-by-country/${countryIsoCode}.json`
+    );
+    return data;
+  }
 }
 
 export const bigbuyApi = new BigBuyApiService();
