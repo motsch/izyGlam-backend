@@ -161,6 +161,14 @@ const authLimiter = rateLimit({
   message: { error: "Too many auth attempts" },
 });
 
+// ✅ Toujours laisser passer les preflight CORS
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 // ✅ uniquement /api
 app.use("/api", apiLimiter, apiSpeedLimiter);
 

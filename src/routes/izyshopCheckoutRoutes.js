@@ -4,7 +4,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const izyshopCheckout = require("../controllers/izyshopCheckout.controller");
 
 // POST /izyshop/checkout/shipping-options
-router.post("/izyshop/checkout/shipping-options", authMiddleware, izyshopCheckout.getShippingOptions);
+router.post("/izyshop/checkout/shipping-options", izyshopCheckout.getShippingOptions);
 
 // POST /izyshop/checkout/intent
 router.post("/izyshop/checkout/intent", authMiddleware, izyshopCheckout.createCheckoutIntent);
