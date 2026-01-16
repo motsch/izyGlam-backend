@@ -234,36 +234,31 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
 
         const allLowestCosts: any[] = await bigbuyApi.getLowestShippingCostsByCountry(countryIsoCode);
 
-        log("BIGBUY_CALL_DONE", {
-            responseType: Array.isArray(allLowestCosts) ? "array" : typeof allLowestCosts,
-            responseCount: Array.isArray(allLowestCosts) ? allLowestCosts.length : null,
-            responsePreview: Array.isArray(allLowestCosts) ? allLowestCosts.slice(0, 10) : allLowestCosts,
-        });
-
-        /*
-        // 5) Filtrage
-        const wantedRefs = new Set<string>();
-        for (const it of okItems) {
-            wantedRefs.add(`S${it.supplierBigbuyId}`);
-            wantedRefs.add(String(it.supplierBigbuyId));
-        }
-
-        log("FILTER_PREPARED", {
-            wantedRefsCount: wantedRefs.size,
-            wantedRefsPreview: Array.from(wantedRefs).slice(0, 50),
-        });
-
         const filtered = Array.isArray(allLowestCosts)
-            ? allLowestCosts.filter((x: any) => wantedRefs.has(String(x?.reference || "")))
+            ? allLowestCosts
+                .filter((x: any) => {
+                    const c = Number(x?.cost);
+                    return Number.isFinite(c) && c > 0;
+                })
+                .sort((a: any, b: any) => Number(a.cost) - Number(b.cost))
+                .reduce((acc: any[], cur: any) => {
+                    if (acc.length >= 4) return acc;
+                    const carrierId = String(cur?.carrierId || "");
+                    if (!carrierId) return acc;
+                    if (acc.some(x => String(x?.carrierId) === carrierId)) return acc; // déjà ce transporteur
+                    acc.push(cur);
+                    return acc;
+                }, [])
             : [];
+
 
         log("FILTER_DONE", {
             filteredCount: filtered.length,
-            filteredPreview: filtered.slice(0, 20),
+            filteredPreview: filtered,
         });
-    */
+
         log("SUCCESS");
-        return res.json({ options: allLowestCosts });
+        return res.json({ options: filtered });
     } catch (e: any) {
         log("ERROR", {
             message: e?.message,
