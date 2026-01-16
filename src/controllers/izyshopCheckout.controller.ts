@@ -90,42 +90,42 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
     };
 
     try {
-            log("START", {
-                method: req.method,
-                path: req.originalUrl,
-                origin: req.headers?.origin,
-                referer: req.headers?.referer,
-                userAgent: req.headers?.["user-agent"],
-            });
-    
-            const items: any[] = Array.isArray(req.body?.items) ? req.body.items : [];
-            const shippingAddress: any = req.body?.shippingAddress;
-    
-            log("BODY_RECEIVED", {
-                itemsCount: items.length,
-                itemsPreview: items.slice(0, 5),
-                shippingAddressPreview: shippingAddress
-                    ? {
-                        country: shippingAddress.country,
-                        zipCode: shippingAddress.zipCode,
-                        city: shippingAddress.city,
-                    }
-                    : null,
-            });
-    
-            if (!items.length) {
-                log("VALIDATION_FAIL", { reason: "Cart empty" });
-                return res.status(400).json({ message: "Cart empty" });
-            }
-            if (!shippingAddress) {
-                log("VALIDATION_FAIL", { reason: "Missing shippingAddress" });
-                return res.status(400).json({ message: "Missing shippingAddress" });
-            }
-            if (!shippingAddress?.country) {
-                log("VALIDATION_FAIL", { reason: "Missing shippingAddress.country" });
-                return res.status(400).json({ message: "Missing shippingAddress.country" });
-            }
-    
+        log("START", {
+            method: req.method,
+            path: req.originalUrl,
+            origin: req.headers?.origin,
+            referer: req.headers?.referer,
+            userAgent: req.headers?.["user-agent"],
+        });
+
+        const items: any[] = Array.isArray(req.body?.items) ? req.body.items : [];
+        const shippingAddress: any = req.body?.shippingAddress;
+
+        log("BODY_RECEIVED", {
+            // itemsCount: items.length,
+            // itemsPreview: items.slice(0, 5),
+            shippingAddressPreview: shippingAddress
+                ? {
+                    country: shippingAddress.country,
+                    zipCode: shippingAddress.zipCode,
+                    city: shippingAddress.city,
+                }
+                : null,
+        });
+        /*
+                if (!items.length) {
+                    log("VALIDATION_FAIL", { reason: "Cart empty" });
+                    return res.status(400).json({ message: "Cart empty" });
+                }
+                if (!shippingAddress) {
+                    log("VALIDATION_FAIL", { reason: "Missing shippingAddress" });
+                    return res.status(400).json({ message: "Missing shippingAddress" });
+                }
+                if (!shippingAddress?.country) {
+                    log("VALIDATION_FAIL", { reason: "Missing shippingAddress.country" });
+                    return res.status(400).json({ message: "Missing shippingAddress.country" });
+                }
+        */
         /*
             // 1) ids envoyés par le front
             const ids = items.map((i: any) => String(i.productId || "").trim()).filter(Boolean);
