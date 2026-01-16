@@ -24,12 +24,20 @@ function safeQty(qty: any): number {
 }
 
 function normalizeCountryToBigBuy(country: string): string {
-    // BigBuy attend souvent ISO2 (ex: "FR")
-    // si tu stockes "France", on force "FR" pour l’instant
-    const c = String(country || "").trim().toUpperCase();
+    if (!country) return "fr";
+
+    const c = String(country).trim().toUpperCase();
+
+    // Cas fréquents (labels, traductions, erreurs utilisateur)
     if (c === "FRANCE" || c === "FR") return "fr";
-    if (c.length === 2) return c;
-    return "FR";
+
+    // Si déjà ISO2 (ex: "DE", "ES", "IT")
+    if (/^[A-Z]{2}$/.test(c)) {
+        return c.toLowerCase();
+    }
+
+    // Fallback sécurité
+    return "fr";
 }
 
 function buildBigBuyPayload(items: any[], shippingAddress: any, chosenShipping?: any) {
@@ -82,155 +90,157 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
     };
 
     try {
-        log("START", {
-            method: req.method,
-            path: req.originalUrl,
-            origin: req.headers?.origin,
-            referer: req.headers?.referer,
-            userAgent: req.headers?.["user-agent"],
-        });
-
-        const items: any[] = Array.isArray(req.body?.items) ? req.body.items : [];
-        const shippingAddress: any = req.body?.shippingAddress;
-
-        log("BODY_RECEIVED", {
-            itemsCount: items.length,
-            itemsPreview: items.slice(0, 5),
-            shippingAddressPreview: shippingAddress
-                ? {
-                    country: shippingAddress.country,
-                    zipCode: shippingAddress.zipCode,
-                    city: shippingAddress.city,
+            log("START", {
+                method: req.method,
+                path: req.originalUrl,
+                origin: req.headers?.origin,
+                referer: req.headers?.referer,
+                userAgent: req.headers?.["user-agent"],
+            });
+    
+            const items: any[] = Array.isArray(req.body?.items) ? req.body.items : [];
+            const shippingAddress: any = req.body?.shippingAddress;
+    
+            log("BODY_RECEIVED", {
+                itemsCount: items.length,
+                itemsPreview: items.slice(0, 5),
+                shippingAddressPreview: shippingAddress
+                    ? {
+                        country: shippingAddress.country,
+                        zipCode: shippingAddress.zipCode,
+                        city: shippingAddress.city,
+                    }
+                    : null,
+            });
+    
+            if (!items.length) {
+                log("VALIDATION_FAIL", { reason: "Cart empty" });
+                return res.status(400).json({ message: "Cart empty" });
+            }
+            if (!shippingAddress) {
+                log("VALIDATION_FAIL", { reason: "Missing shippingAddress" });
+                return res.status(400).json({ message: "Missing shippingAddress" });
+            }
+            if (!shippingAddress?.country) {
+                log("VALIDATION_FAIL", { reason: "Missing shippingAddress.country" });
+                return res.status(400).json({ message: "Missing shippingAddress.country" });
+            }
+    
+        /*
+            // 1) ids envoyés par le front
+            const ids = items.map((i: any) => String(i.productId || "").trim()).filter(Boolean);
+            log("IDS_EXTRACTED", { ids, idsCount: ids.length });
+    
+            // On ne garde que les ObjectId valides
+            const mongoIds = ids.filter((id: string) => mongoose.Types.ObjectId.isValid(id));
+            const invalidIds = ids.filter((id: string) => !mongoose.Types.ObjectId.isValid(id));
+    
+            log("IDS_VALIDATED", {
+                mongoIdsCount: mongoIds.length,
+                mongoIds,
+                invalidIdsCount: invalidIds.length,
+                invalidIds,
+            });
+    
+            // 2) Charge produits DB (anti-triche)
+            log("DB_QUERY_START", { mongoIdsCount: mongoIds.length });
+    
+            const products: any[] = await ProductModel.find({ _id: { $in: mongoIds } })
+                .select({
+                    _id: 1,
+                    title: 1,
+                    "supplier.bigbuyId": 1,
+                    "supplier.sku": 1,
+                    "supplier.ean13": 1,
+                })
+                .lean();
+    
+            log("DB_QUERY_DONE", {
+                productsFoundCount: products.length,
+                productsPreview: products.slice(0, 5).map((p: any) => ({
+                    _id: String(p._id),
+                    title: p.title,
+                    supplierBigbuyId: p?.supplier?.bigbuyId,
+                    sku: p?.supplier?.sku,
+                    ean13: p?.supplier?.ean13,
+                })),
+            });
+    
+            const byMongoId = new Map<string, any>();
+            for (const p of products) byMongoId.set(String(p._id), p);
+    
+            // Debug : quels ids demandés ne sont PAS trouvés en DB
+            const foundIds = new Set(products.map((p: any) => String(p._id)));
+            const missingInDb = mongoIds.filter((id: string) => !foundIds.has(id));
+    
+            log("DB_MATCHING", {
+                requestedMongoIdsCount: mongoIds.length,
+                foundMongoIdsCount: foundIds.size,
+                missingInDbCount: missingInDb.length,
+                missingInDb,
+            });
+    
+            // 3) Normalisation items
+            const normalizedItems = items.map((it: any, idx: number) => {
+                const productId = String(it.productId || "").trim();
+                const qty = safeQty(it.qty);
+    
+                log("ITEM_PROCESSING", { idx, productId, rawQty: it.qty, safeQty: qty });
+    
+                if (!mongoose.Types.ObjectId.isValid(productId)) {
+                    return { __missing: true, productId, reason: "Invalid Mongo ObjectId" };
                 }
-                : null,
-        });
-
-        if (!items.length) {
-            log("VALIDATION_FAIL", { reason: "Cart empty" });
-            return res.status(400).json({ message: "Cart empty" });
-        }
-        if (!shippingAddress) {
-            log("VALIDATION_FAIL", { reason: "Missing shippingAddress" });
-            return res.status(400).json({ message: "Missing shippingAddress" });
-        }
-        if (!shippingAddress?.country) {
-            log("VALIDATION_FAIL", { reason: "Missing shippingAddress.country" });
-            return res.status(400).json({ message: "Missing shippingAddress.country" });
-        }
-
-        // 1) ids envoyés par le front
-        const ids = items.map((i: any) => String(i.productId || "").trim()).filter(Boolean);
-        log("IDS_EXTRACTED", { ids, idsCount: ids.length });
-
-        // On ne garde que les ObjectId valides
-        const mongoIds = ids.filter((id: string) => mongoose.Types.ObjectId.isValid(id));
-        const invalidIds = ids.filter((id: string) => !mongoose.Types.ObjectId.isValid(id));
-
-        log("IDS_VALIDATED", {
-            mongoIdsCount: mongoIds.length,
-            mongoIds,
-            invalidIdsCount: invalidIds.length,
-            invalidIds,
-        });
-
-        // 2) Charge produits DB (anti-triche)
-        log("DB_QUERY_START", { mongoIdsCount: mongoIds.length });
-
-        const products: any[] = await ProductModel.find({ _id: { $in: mongoIds } })
-            .select({
-                _id: 1,
-                title: 1,
-                "supplier.bigbuyId": 1,
-                "supplier.sku": 1,
-                "supplier.ean13": 1,
-            })
-            .lean();
-
-        log("DB_QUERY_DONE", {
-            productsFoundCount: products.length,
-            productsPreview: products.slice(0, 5).map((p: any) => ({
-                _id: String(p._id),
-                title: p.title,
-                supplierBigbuyId: p?.supplier?.bigbuyId,
-                sku: p?.supplier?.sku,
-                ean13: p?.supplier?.ean13,
-            })),
-        });
-
-        const byMongoId = new Map<string, any>();
-        for (const p of products) byMongoId.set(String(p._id), p);
-
-        // Debug : quels ids demandés ne sont PAS trouvés en DB
-        const foundIds = new Set(products.map((p: any) => String(p._id)));
-        const missingInDb = mongoIds.filter((id: string) => !foundIds.has(id));
-
-        log("DB_MATCHING", {
-            requestedMongoIdsCount: mongoIds.length,
-            foundMongoIdsCount: foundIds.size,
-            missingInDbCount: missingInDb.length,
-            missingInDb,
-        });
-
-        // 3) Normalisation items
-        const normalizedItems = items.map((it: any, idx: number) => {
-            const productId = String(it.productId || "").trim();
-            const qty = safeQty(it.qty);
-
-            log("ITEM_PROCESSING", { idx, productId, rawQty: it.qty, safeQty: qty });
-
-            if (!mongoose.Types.ObjectId.isValid(productId)) {
-                return { __missing: true, productId, reason: "Invalid Mongo ObjectId" };
-            }
-
-            const p = byMongoId.get(productId);
-            if (!p) {
-                return { __missing: true, productId, reason: "Not found in DB" };
-            }
-
-            if (qty <= 0) {
-                return { __missing: true, productId, reason: "Invalid qty" };
-            }
-
-            const supplierBigbuyId = Number(p?.supplier?.bigbuyId);
-            if (!supplierBigbuyId) {
-                return { __missing: true, productId, reason: "Missing supplier.bigbuyId" };
-            }
-
-            return {
-                __missing: false,
-                productId,
-                qty,
-                supplierBigbuyId,
-            };
-        });
-
-        log("NORMALIZED_ITEMS_DONE", {
-            normalizedItemsCount: normalizedItems.length,
-            normalizedItems,
-        });
-
-        const missing = normalizedItems.filter((x: any) => x.__missing);
-        if (missing.length) {
-            log("NORMALIZATION_FAIL", {
-                missingCount: missing.length,
-                missing,
+    
+                const p = byMongoId.get(productId);
+                if (!p) {
+                    return { __missing: true, productId, reason: "Not found in DB" };
+                }
+    
+                if (qty <= 0) {
+                    return { __missing: true, productId, reason: "Invalid qty" };
+                }
+    
+                const supplierBigbuyId = Number(p?.supplier?.bigbuyId);
+                if (!supplierBigbuyId) {
+                    return { __missing: true, productId, reason: "Missing supplier.bigbuyId" };
+                }
+    
+                return {
+                    __missing: false,
+                    productId,
+                    qty,
+                    supplierBigbuyId,
+                };
             });
-            return res.status(400).json({
-                message: "Some products are invalid or missing in DB",
-                details: missing,
+    
+            log("NORMALIZED_ITEMS_DONE", {
+                normalizedItemsCount: normalizedItems.length,
+                normalizedItems,
             });
-        }
-
-        const okItems = normalizedItems as any[];
+    
+            const missing = normalizedItems.filter((x: any) => x.__missing);
+            if (missing.length) {
+                log("NORMALIZATION_FAIL", {
+                    missingCount: missing.length,
+                    missing,
+                });
+                return res.status(400).json({
+                    message: "Some products are invalid or missing in DB",
+                    details: missing,
+                });
+            }
+    
+            const okItems = normalizedItems as any[];*/
 
         // 4) Appel BigBuy
-        const countryIsoCode = normalizeCountryToBigBuy(shippingAddress.country);
+        const countryIsoCode = normalizeCountryToBigBuy(shippingAddress?.country); // normalizeCountryToBigBuy(shippingAddress.country);
+        /*
         log("BIGBUY_CALL_START", {
             countryInput: shippingAddress.country,
             countryIsoCode,
             okItemsCount: okItems.length,
             okItems,
-        });
+        });*/
 
         const allLowestCosts: any[] = await bigbuyApi.getLowestShippingCostsByCountry(countryIsoCode);
 
@@ -251,7 +261,6 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
                 }, [])
             : [];
 
-
         log("FILTER_DONE", {
             filteredCount: filtered.length,
             filteredPreview: filtered,
@@ -266,7 +275,6 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
             bigbuyStatus: e?.response?.status,
             bigbuyRaw: e?.response?.data,
         });
-
         const status = Number(e?.response?.status) || 500;
         return res.status(status).json({
             message: e?.response?.data?.message || e?.message || "Shipping options failed",
@@ -275,10 +283,6 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
         });
     }
 };
-
-
-
-
 
 
 /**
