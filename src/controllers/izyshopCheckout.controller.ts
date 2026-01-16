@@ -27,7 +27,7 @@ function normalizeCountryToBigBuy(country: string): string {
     // BigBuy attend souvent ISO2 (ex: "FR")
     // si tu stockes "France", on force "FR" pour l’instant
     const c = String(country || "").trim().toUpperCase();
-    if (c === "FRANCE") return "FR";
+    if (c === "FRANCE" || c === "FR") return "fr";
     if (c.length === 2) return c;
     return "FR";
 }
