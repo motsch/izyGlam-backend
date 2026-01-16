@@ -69,21 +69,73 @@ function buildBigBuyPayload(items: any[], shippingAddress: any, chosenShipping?:
  * Public: pas besoin d'être connecté (checkout invité OK)
  */
 export const getShippingOptions = async (req: express.Request, res: express.Response) => {
+    // ✅ petit requestId pour suivre facilement
+    const requestId = `ship_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+    const log = (step: string, data?: any) => {
+        // évite de log des trucs trop sensibles / énormes
+        logger.info({
+            requestId,
+            step,
+            ...(data !== undefined ? { data } : {}),
+        });
+    };
+
     try {
+        log("START", {
+            method: req.method,
+            path: req.originalUrl,
+            origin: req.headers?.origin,
+            referer: req.headers?.referer,
+            userAgent: req.headers?.["user-agent"],
+        });
+
         const items: any[] = Array.isArray(req.body?.items) ? req.body.items : [];
         const shippingAddress: any = req.body?.shippingAddress;
 
-        if (!items.length) return res.status(400).json({ message: "Cart empty" });
-        if (!shippingAddress) return res.status(400).json({ message: "Missing shippingAddress" });
-        if (!shippingAddress?.country) return res.status(400).json({ message: "Missing shippingAddress.country" });
+        log("BODY_RECEIVED", {
+            itemsCount: items.length,
+            itemsPreview: items.slice(0, 5),
+            shippingAddressPreview: shippingAddress
+                ? {
+                    country: shippingAddress.country,
+                    zipCode: shippingAddress.zipCode,
+                    city: shippingAddress.city,
+                }
+                : null,
+        });
+
+        if (!items.length) {
+            log("VALIDATION_FAIL", { reason: "Cart empty" });
+            return res.status(400).json({ message: "Cart empty" });
+        }
+        if (!shippingAddress) {
+            log("VALIDATION_FAIL", { reason: "Missing shippingAddress" });
+            return res.status(400).json({ message: "Missing shippingAddress" });
+        }
+        if (!shippingAddress?.country) {
+            log("VALIDATION_FAIL", { reason: "Missing shippingAddress.country" });
+            return res.status(400).json({ message: "Missing shippingAddress.country" });
+        }
 
         // 1) ids envoyés par le front
         const ids = items.map((i: any) => String(i.productId || "").trim()).filter(Boolean);
+        log("IDS_EXTRACTED", { ids, idsCount: ids.length });
 
-        // On ne garde que les ObjectId valides (sinon, impossible de find par _id)
+        // On ne garde que les ObjectId valides
         const mongoIds = ids.filter((id: string) => mongoose.Types.ObjectId.isValid(id));
+        const invalidIds = ids.filter((id: string) => !mongoose.Types.ObjectId.isValid(id));
+
+        log("IDS_VALIDATED", {
+            mongoIdsCount: mongoIds.length,
+            mongoIds,
+            invalidIdsCount: invalidIds.length,
+            invalidIds,
+        });
 
         // 2) Charge produits DB (anti-triche)
+        log("DB_QUERY_START", { mongoIdsCount: mongoIds.length });
+
         const products: any[] = await ProductModel.find({ _id: { $in: mongoIds } })
             .select({
                 _id: 1,
@@ -94,13 +146,37 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
             })
             .lean();
 
+        log("DB_QUERY_DONE", {
+            productsFoundCount: products.length,
+            productsPreview: products.slice(0, 5).map((p: any) => ({
+                _id: String(p._id),
+                title: p.title,
+                supplierBigbuyId: p?.supplier?.bigbuyId,
+                sku: p?.supplier?.sku,
+                ean13: p?.supplier?.ean13,
+            })),
+        });
+
         const byMongoId = new Map<string, any>();
         for (const p of products) byMongoId.set(String(p._id), p);
 
-        // 3) Normalisation items + validation qty + extraction supplier.bigbuyId
-        const normalizedItems = items.map((it: any) => {
+        // Debug : quels ids demandés ne sont PAS trouvés en DB
+        const foundIds = new Set(products.map((p: any) => String(p._id)));
+        const missingInDb = mongoIds.filter((id: string) => !foundIds.has(id));
+
+        log("DB_MATCHING", {
+            requestedMongoIdsCount: mongoIds.length,
+            foundMongoIdsCount: foundIds.size,
+            missingInDbCount: missingInDb.length,
+            missingInDb,
+        });
+
+        // 3) Normalisation items
+        const normalizedItems = items.map((it: any, idx: number) => {
             const productId = String(it.productId || "").trim();
             const qty = safeQty(it.qty);
+
+            log("ITEM_PROCESSING", { idx, productId, rawQty: it.qty, safeQty: qty });
 
             if (!mongoose.Types.ObjectId.isValid(productId)) {
                 return { __missing: true, productId, reason: "Invalid Mongo ObjectId" };
@@ -115,7 +191,6 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
                 return { __missing: true, productId, reason: "Invalid qty" };
             }
 
-            // ✅ RESPECT TON MODEL : supplier.bigbuyId
             const supplierBigbuyId = Number(p?.supplier?.bigbuyId);
             if (!supplierBigbuyId) {
                 return { __missing: true, productId, reason: "Missing supplier.bigbuyId" };
@@ -126,13 +201,20 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
                 productId,
                 qty,
                 supplierBigbuyId,
-                // si un jour tu stockes une "reference", tu pourras la mettre ici
-                // reference: p?.supplier?.reference
             };
+        });
+
+        log("NORMALIZED_ITEMS_DONE", {
+            normalizedItemsCount: normalizedItems.length,
+            normalizedItems,
         });
 
         const missing = normalizedItems.filter((x: any) => x.__missing);
         if (missing.length) {
+            log("NORMALIZATION_FAIL", {
+                missingCount: missing.length,
+                missing,
+            });
             return res.status(400).json({
                 message: "Some products are invalid or missing in DB",
                 details: missing,
@@ -141,41 +223,59 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
 
         const okItems = normalizedItems as any[];
 
-        // 4) Appel BigBuy "lowest shipping costs by country"
-        const countryIsoCode = normalizeCountryToBigBuy(shippingAddress.country); // ex: "FR"
+        // 4) Appel BigBuy
+        const countryIsoCode = normalizeCountryToBigBuy(shippingAddress.country);
+        log("BIGBUY_CALL_START", {
+            countryInput: shippingAddress.country,
+            countryIsoCode,
+            okItemsCount: okItems.length,
+            okItems,
+        });
 
-        // bigbuyApi.getLowestShippingCostsByCountry doit faire le GET:
-        // /rest/shipping/lowest-shipping-costs-by-country/{countryIsoCode}.json
         const allLowestCosts: any[] = await bigbuyApi.getLowestShippingCostsByCountry(countryIsoCode);
 
-        // 5) Filtrer le retour BigBuy pour ne garder que tes produits
-        // ⚠️ BigBuy renvoie "reference": "S12435678"
-        // Sans mapping "reference" stocké en DB, on tente un matching simple:
-        // - "S" + bigbuyId
-        // - ou bigbuyId direct (au cas où)
+        log("BIGBUY_CALL_DONE", {
+            responseType: Array.isArray(allLowestCosts) ? "array" : typeof allLowestCosts,
+            responseCount: Array.isArray(allLowestCosts) ? allLowestCosts.length : null,
+            responsePreview: Array.isArray(allLowestCosts) ? allLowestCosts.slice(0, 10) : allLowestCosts,
+        });
+
+        // 5) Filtrage
         const wantedRefs = new Set<string>();
         for (const it of okItems) {
             wantedRefs.add(`S${it.supplierBigbuyId}`);
             wantedRefs.add(String(it.supplierBigbuyId));
         }
 
+        log("FILTER_PREPARED", {
+            wantedRefsCount: wantedRefs.size,
+            wantedRefsPreview: Array.from(wantedRefs).slice(0, 50),
+        });
+
         const filtered = Array.isArray(allLowestCosts)
             ? allLowestCosts.filter((x: any) => wantedRefs.has(String(x?.reference || "")))
             : [];
 
+        log("FILTER_DONE", {
+            filteredCount: filtered.length,
+            filteredPreview: filtered.slice(0, 20),
+        });
+
+        log("SUCCESS");
         return res.json({ options: filtered });
     } catch (e: any) {
-        logger.error({
-            msg: "checkout.shipping-options.failed",
-            errorMessage: e?.message,
+        log("ERROR", {
+            message: e?.message,
             stack: e?.stack,
-            raw: e?.response?.data,
+            bigbuyStatus: e?.response?.status,
+            bigbuyRaw: e?.response?.data,
         });
 
         const status = Number(e?.response?.status) || 500;
         return res.status(status).json({
             message: e?.response?.data?.message || e?.message || "Shipping options failed",
             raw: e?.response?.data,
+            requestId, // ✅ très utile côté front pour te le donner
         });
     }
 };
