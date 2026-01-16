@@ -70,47 +70,100 @@ function buildBigBuyPayload(items: any[], shippingAddress: any, chosenShipping?:
  */
 export const getShippingOptions = async (req: express.Request, res: express.Response) => {
     try {
-        const items: CartItemInput[] = Array.isArray(req.body?.items) ? req.body.items : [];
-        const shippingAddress = req.body?.shippingAddress;
+        const items: any[] = Array.isArray(req.body?.items) ? req.body.items : [];
+        const shippingAddress: any = req.body?.shippingAddress;
 
         if (!items.length) return res.status(400).json({ message: "Cart empty" });
         if (!shippingAddress) return res.status(400).json({ message: "Missing shippingAddress" });
+        if (!shippingAddress?.country) return res.status(400).json({ message: "Missing shippingAddress.country" });
 
-        // Load products from DB (anti-triche) + inject supplierBigbuyId
-        const ids = items.map(i => i.productId).filter(Boolean);
-        const products = await ProductModel.find({ _id: { $in: ids } })
-            .select({ _id: 1, title: 1, pricing: 1, supplierBigbuyId: 1, bigbuyId: 1 })
+        // 1) ids envoyés par le front
+        const ids = items.map((i: any) => String(i.productId || "").trim()).filter(Boolean);
+
+        // On ne garde que les ObjectId valides (sinon, impossible de find par _id)
+        const mongoIds = ids.filter((id: string) => mongoose.Types.ObjectId.isValid(id));
+
+        // 2) Charge produits DB (anti-triche)
+        const products: any[] = await ProductModel.find({ _id: { $in: mongoIds } })
+            .select({
+                _id: 1,
+                title: 1,
+                "supplier.bigbuyId": 1,
+                "supplier.sku": 1,
+                "supplier.ean13": 1,
+            })
             .lean();
 
-        const map = new Map<string, any>();
-        for (const p of products) map.set(String(p._id), p);
+        const byMongoId = new Map<string, any>();
+        for (const p of products) byMongoId.set(String(p._id), p);
 
-        const normalizedItems = items.map((it) => {
-            const p = map.get(String(it.productId));
-            if (!p) throw new Error(`Unknown product: ${it.productId}`);
-
+        // 3) Normalisation items + validation qty + extraction supplier.bigbuyId
+        const normalizedItems = items.map((it: any) => {
+            const productId = String(it.productId || "").trim();
             const qty = safeQty(it.qty);
-            if (qty <= 0) throw new Error(`Invalid qty for product: ${it.productId}`);
 
-            const supplierBigbuyId = Number(p.supplierBigbuyId || p.bigbuyId);
-            if (!supplierBigbuyId) throw new Error(`Missing supplierBigbuyId for product: ${it.productId}`);
+            if (!mongoose.Types.ObjectId.isValid(productId)) {
+                return { __missing: true, productId, reason: "Invalid Mongo ObjectId" };
+            }
+
+            const p = byMongoId.get(productId);
+            if (!p) {
+                return { __missing: true, productId, reason: "Not found in DB" };
+            }
+
+            if (qty <= 0) {
+                return { __missing: true, productId, reason: "Invalid qty" };
+            }
+
+            // ✅ RESPECT TON MODEL : supplier.bigbuyId
+            const supplierBigbuyId = Number(p?.supplier?.bigbuyId);
+            if (!supplierBigbuyId) {
+                return { __missing: true, productId, reason: "Missing supplier.bigbuyId" };
+            }
 
             return {
-                productId: String(it.productId),
+                __missing: false,
+                productId,
                 qty,
                 supplierBigbuyId,
+                // si un jour tu stockes une "reference", tu pourras la mettre ici
+                // reference: p?.supplier?.reference
             };
         });
 
-        const bbPayload = buildBigBuyPayload(normalizedItems, shippingAddress);
+        const missing = normalizedItems.filter((x: any) => x.__missing);
+        if (missing.length) {
+            return res.status(400).json({
+                message: "Some products are invalid or missing in DB",
+                details: missing,
+            });
+        }
 
-        const shippingResp = await bigbuyApi.getShippingOptions(bbPayload);
+        const okItems = normalizedItems as any[];
 
-        // ✅ Aligne avec ton frontend: { options: [...] }
-        return res.json({
-            options: shippingResp,
-        });
+        // 4) Appel BigBuy "lowest shipping costs by country"
+        const countryIsoCode = normalizeCountryToBigBuy(shippingAddress.country); // ex: "FR"
 
+        // bigbuyApi.getLowestShippingCostsByCountry doit faire le GET:
+        // /rest/shipping/lowest-shipping-costs-by-country/{countryIsoCode}.json
+        const allLowestCosts: any[] = await bigbuyApi.getLowestShippingCostsByCountry(countryIsoCode);
+
+        // 5) Filtrer le retour BigBuy pour ne garder que tes produits
+        // ⚠️ BigBuy renvoie "reference": "S12435678"
+        // Sans mapping "reference" stocké en DB, on tente un matching simple:
+        // - "S" + bigbuyId
+        // - ou bigbuyId direct (au cas où)
+        const wantedRefs = new Set<string>();
+        for (const it of okItems) {
+            wantedRefs.add(`S${it.supplierBigbuyId}`);
+            wantedRefs.add(String(it.supplierBigbuyId));
+        }
+
+        const filtered = Array.isArray(allLowestCosts)
+            ? allLowestCosts.filter((x: any) => wantedRefs.has(String(x?.reference || "")))
+            : [];
+
+        return res.json({ options: filtered });
     } catch (e: any) {
         logger.error({
             msg: "checkout.shipping-options.failed",
@@ -118,9 +171,18 @@ export const getShippingOptions = async (req: express.Request, res: express.Resp
             stack: e?.stack,
             raw: e?.response?.data,
         });
-        return res.status(500).json({ message: e?.message || "Shipping options failed" });
+
+        const status = Number(e?.response?.status) || 500;
+        return res.status(status).json({
+            message: e?.response?.data?.message || e?.message || "Shipping options failed",
+            raw: e?.response?.data,
+        });
     }
 };
+
+
+
+
 
 
 /**
