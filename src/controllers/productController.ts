@@ -324,9 +324,9 @@ export const getBestSellersWeek = async (req: express.Request, res: express.Resp
     const taxonomiesRaw = (req.query.taxonomies as string) || "";
     const categoryIds = taxonomiesRaw
       ? taxonomiesRaw
-          .split(",")
-          .map((x) => Number(x.trim()))
-          .filter((n) => Number.isFinite(n))
+        .split(",")
+        .map((x) => Number(x.trim()))
+        .filter((n) => Number.isFinite(n))
       : [];
 
     const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -485,6 +485,117 @@ export const deleteProductById = async (req: express.Request, res: express.Respo
 
 
 
+/**
+ * GET /api/product/search
+ * Query:
+ * - q (string) => texte recherché (naturel)
+ * - page (default 1)
+ * - limit (default 24, max 100)
+ * - taxonomies=5419,11496 (optionnel) -> categoryId IN (...)
+ * - complete=true (optionnel)
+ */
+export const searchProducts = async (req: express.Request, res: express.Response) => {
+  const t0 = Date.now();
+  const reqId =
+    (req.headers["x-request-id"] as string) ||
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  const logBase = {
+    reqId,
+    route: "GET /api/product/search",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"],
+  };
+
+  logger.info({ ...logBase, msg: "➡️ searchProducts start", query: sanitize(req.query) });
+
+  try {
+    // -----------------------------
+    // 1) Parse query
+    // -----------------------------
+    const page = Math.max(Number(req.query.page || 1), 1);
+    const limit = Math.min(Math.max(Number(req.query.limit || 24), 1), 100);
+    const skip = (page - 1) * limit;
+
+    const complete = req.query.complete === "true";
+
+    const q = String(req.query.q || "").trim();
+
+    const taxonomiesRaw = (req.query.taxonomies as string) || "";
+    const categoryIds = taxonomiesRaw
+      ? taxonomiesRaw
+        .split(",")
+        .map((x) => Number(x.trim()))
+        .filter((n) => Number.isFinite(n))
+      : [];
+
+    // -----------------------------
+    // 2) Build filter
+    // -----------------------------
+    const filter: any = {};
+
+    if (categoryIds.length) {
+      filter.categoryId = { $in: categoryIds };
+    }
+
+    if (complete) {
+      filter.descriptionHtml = { $exists: true, $ne: "" };
+      filter.coverImage = { $exists: true, $ne: "" };
+      filter["pricing.retailPrice"] = { $exists: true, $gt: 0 };
+    }
+
+    // ✅ recherche naturelle via index text
+    if (q) {
+      filter.$text = { $search: q };
+    } else {
+      // si pas de q => on renvoie vide (logique search endpoint)
+      return res.json({ items: [], page, limit, total: 0, totalPages: 0 });
+    }
+
+    // -----------------------------
+    // 3) Query Mongo
+    // -----------------------------
+    const tDb0 = Date.now();
+
+    const [items, total] = await Promise.all([
+      productModel
+        .find(filter, { score: { $meta: "textScore" } })
+        .sort({ score: { $meta: "textScore" }, updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      productModel.countDocuments(filter),
+    ]);
+
+    const dbDurationMs = Date.now() - tDb0;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    logger.info({
+      ...logBase,
+      msg: "✅ searchProducts success",
+      q,
+      returned: items.length,
+      total,
+      page,
+      limit,
+      totalPages,
+      dbDurationMs,
+      durationMs: Date.now() - t0,
+    });
+
+    return res.json({ items, page, limit, total, totalPages });
+  } catch (error: any) {
+    logger.error({
+      ...logBase,
+      msg: "❌ searchProducts failed",
+      durationMs: Date.now() - t0,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({ message: "Impossible de rechercher les produits" });
+  }
+};
 
 
 

@@ -185,6 +185,27 @@ productSchema.index({ updatedAt: -1 });
  */
 productSchema.index({ coverImage: 1 });
 productSchema.index({ "pricing.retailPrice": 1 });
+productSchema.index(
+  {
+    title: 'text',
+    description: 'text',
+    descriptionHtml: 'text',
+    'supplier.sku': 'text',
+    'supplier.ean13': 'text',
+    tags: 'text',
+  },
+  {
+    weights: {
+      title: 10,
+      'supplier.sku': 8,
+      'supplier.ean13': 8,
+      tags: 4,
+      description: 2,
+      descriptionHtml: 1,
+    },
+    name: 'ProductTextSearch',
+  }
+);
 
 /**
  * ✅ IMPORTANT: attacher le model à la bonne connexion (mongo docker)

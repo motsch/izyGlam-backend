@@ -6,6 +6,9 @@ const authMiddleware = require("../middlewares/authMiddleware");
 
 // Public
 router.get("/product", productController.getAllProducts);
+
+router.get("/product/search", productController.searchProducts);
+
 router.get("/product/best-sellers/week", productController.getBestSellersWeek);
 router.get("/product/:id", productController.getProductById);
 
