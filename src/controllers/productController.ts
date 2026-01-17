@@ -27,7 +27,7 @@ function sanitize(obj: any) {
  * - sort=updatedAt|createdAt|price (optionnel)
  * - dir=asc|desc (optionnel)
  */
-export const getAllProductsAdmin = async (req: express.Request, res: express.Response) => {
+const getAllProductsAdmin = async (req: express.Request, res: express.Response) => {
   const t0 = Date.now();
   const reqId =
     (req.headers["x-request-id"] as string) ||
@@ -315,7 +315,7 @@ const updateProductById = async (req: express.Request, res: express.Response) =>
  * GET /api/product/best-sellers/week?limit=8
  * Calcule les top ventes sur 7 jours (PAID/SUPPLIER_ORDERED/SHIPPED)
  */
-export const getBestSellersWeek = async (req: express.Request, res: express.Response) => {
+const getBestSellersWeek = async (req: express.Request, res: express.Response) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 8), 1), 50);
     const complete = req.query.complete === "true";
@@ -436,7 +436,7 @@ export const getBestSellersWeek = async (req: express.Request, res: express.Resp
  * DELETE /api/product/:id (admin)
  * Supprime un produit du catalogue
  */
-export const deleteProductById = async (req: express.Request, res: express.Response) => {
+const deleteProductById = async (req: express.Request, res: express.Response) => {
   const t0 = Date.now();
   const reqId =
     (req.headers["x-request-id"] as string) ||
@@ -494,7 +494,7 @@ export const deleteProductById = async (req: express.Request, res: express.Respo
  * - taxonomies=5419,11496 (optionnel) -> categoryId IN (...)
  * - complete=true (optionnel)
  */
-export const searchProducts = async (req: express.Request, res: express.Response) => {
+const searchProducts = async (req: express.Request, res: express.Response) => {
   const t0 = Date.now();
   const reqId =
     (req.headers["x-request-id"] as string) ||
@@ -606,4 +606,5 @@ module.exports = {
   getBestSellersWeek,
   getAllProductsAdmin,
   deleteProductById,
+  searchProducts,
 };
