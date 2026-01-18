@@ -62,13 +62,13 @@ export function startForUser(userId: string, opts: StartOptions = {}): void {
       const now = new Date();
       const body = `Ping ${count} • ${now.toLocaleTimeString()}`;
 
-      await messaging.sendEachForMulticast({
+      /*await messaging.sendEachForMulticast({
         tokens,
         notification: { title: 'Test push IzyGlam', body },
         data: { action: 'test', count: String(count) },
         android: { priority: 'high' },
         apns: { payload: { aps: { sound: 'default' } } },
-      });
+      });*/
 
       // Log serveur (utile en dev)
       // eslint-disable-next-line no-console
