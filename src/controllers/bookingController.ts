@@ -661,32 +661,6 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
       return res.json({ confirmed: false });
     }
 
-    // ✅ OK : on passe en finished
-    booking.proCodeConfirmed = true;
-    booking.status = "finished";
-
-    const updatedBooking = await BookingModel.findById(bookingId);
-    if (updatedBooking) {
-      // (optionnel) si tu veux tracer la date de clôture
-      updatedBooking.closed = true;
-      updatedBooking.closedAt = new Date();
-      await updatedBooking.save();
-    }
-
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-    console.log("BOOKING FINISHED !");
-
     logger.info({
       msg: "confirmBookingCode booking set to finished",
       route: "POST /api/bookings-confirm-code",
@@ -771,6 +745,30 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
     //     stack: e?.stack,
     //   });
     // }
+
+    // ✅ OK : on passe en finished
+    booking.proCodeConfirmed = true;
+    booking.status = "finished";
+    const updatedBooking = await BookingModel.findById(bookingId);
+    if (updatedBooking) {
+      // (optionnel) si tu veux tracer la date de clôture
+      updatedBooking.closed = true;
+      updatedBooking.closedAt = new Date();
+      await updatedBooking.save();
+    }
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
     return res.json({ confirmed: true, booking: updatedBooking });
     // return res.json({ confirmed: true, booking });
   } catch (error: any) {
