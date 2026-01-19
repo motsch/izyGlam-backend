@@ -666,11 +666,24 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
     booking.status = "finished";
 
     // (optionnel) si tu veux tracer la date de clôture
-    // booking.closed = true; booking.closedAt = new Date();
+    booking.closed = true;
+    booking.closedAt = new Date();
 
     await booking.save();
 
-    console.log("BOOKING FINISHED !")
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
+    console.log("BOOKING FINISHED !");
 
     logger.info({
       msg: "confirmBookingCode booking set to finished",
