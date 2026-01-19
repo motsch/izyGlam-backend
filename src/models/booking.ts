@@ -44,6 +44,7 @@ export interface iBooking extends mongoose.Document {
   color: string;
   image: string;
 
+  // ---- Validation prestation ----
   generatedCode: string;
   proCodeConfirmed: boolean;
 

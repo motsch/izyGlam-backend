@@ -61,12 +61,24 @@ const getAllCACount = async (req: express.Request, res: express.Response) => {
   }
 };
 
+function generateValidationCode(): string {
+  // Génère un nombre entre 100000 et 999999
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 // ====== CRUD Booking ======
 const createBooking = async (req: express.Request, res: express.Response) => {
   try {
     const { lang = "fr", ...data } = req.body;
 
-    const newBooking = new BookingModel(data);
+    // 🔐 Génération serveur du code de validation
+    const validationCode = generateValidationCode();
+
+    const newBooking = new BookingModel({
+      ...data,
+      generatedCode: validationCode,
+      proCodeConfirmed: false,
+    });
     await newBooking.save();
 
     logger.info({
@@ -607,6 +619,7 @@ const confirmBookingCode = async (req: express.Request, res: express.Response) =
 
     if (booking.generatedCode === code) {
       booking.proCodeConfirmed = true;
+      booking.status = "finished";
       await booking.save();
 
       const pro = await UserModel.findById(booking.userProId);
