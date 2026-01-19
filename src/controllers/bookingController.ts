@@ -598,155 +598,97 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
 
     logger.info({
       msg: "confirmBookingCode START",
-      // route,
-      method: req.method,
-      url: req.originalUrl,
       bookingId,
-      hasCode: !!code,
-      userId: (req as any).user?._id?.toString(),
+      code,
     });
 
-    // ---- validations input
     if (!bookingId || !code) {
       logger.warn({
-        msg: "confirmBookingCode BAD REQUEST - missing bookingId or code",
-        // route,
-        body: sanitize(req.body),
+        msg: "confirmBookingCode MISSING_PARAMS",
+        bookingId,
+        code,
       });
-      return res.status(400).json({ message: "bookingId et code sont obligatoires" });
+
+      return res.status(400).json({
+        message: "bookingId et code sont requis",
+      });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(String(bookingId))) {
+    const booking = await bookingModel.findById(bookingId);
+
+    if (!booking) {
       logger.warn({
-        msg: "confirmBookingCode BAD REQUEST - invalid bookingId",
-        // route,
+        msg: "confirmBookingCode BOOKING_NOT_FOUND",
         bookingId,
       });
-      return res.status(400).json({ message: "bookingId invalide" });
-    }
 
-    // ---- normalize code
-    const normalizedCode = String(code).replace(/\D/g, "").slice(0, 6);
-
-    logger.info({
-      msg: "confirmBookingCode CODE normalized",
-      // route,
-      bookingId,
-      normalizedCode,
-      normalizedCodeLength: normalizedCode.length,
-    });
-
-    if (normalizedCode.length !== 6) {
-      logger.warn({
-        msg: "confirmBookingCode BAD REQUEST - code must be 6 digits",
-        // route,
-        bookingId,
-        normalizedCode,
+      return res.status(404).json({
+        message: "Réservation introuvable",
       });
-      return res.status(400).json({ message: "Le code doit contenir 6 chiffres" });
     }
 
-    /**
-     * ✅ Update atomique (anti concurrence) :
-     * - booking doit être accepted
-     * - code doit matcher
-     * - pas déjà finished
-     */
     logger.info({
-      msg: "confirmBookingCode UPDATE attempt",
-      // route,
-      bookingId,
-    });
-
-    const updatedBooking = await BookingModel.findOneAndUpdate(
-      {
-        _id: bookingId,
-        status: "accepted",                  // ✅ règle métier
-        generatedCode: normalizedCode,       // ✅ règle métier
-        proCodeConfirmed: false,             // évite double validation
-      },
-      {
-        $set: {
-          status: "finished",
-          proCodeConfirmed: true,
-          closed: true,
-          closedAt: new Date(),
-        },
-      },
-      { new: true }
-    );
-
-    // Si pas d'update, on veut expliquer pourquoi (log + réponse claire)
-    if (!updatedBooking) {
-      const booking = await BookingModel.findById(bookingId).lean();
-
-      if (!booking) {
-        logger.warn({
-          msg: "confirmBookingCode NOT FOUND",
-          // route,
-          bookingId,
-          durationMs: Date.now() - t0,
-        });
-        return res.status(404).json({ message: "Booking non trouvé" });
-      }
-
-      const expected = String(booking.generatedCode ?? "").replace(/\D/g, "").slice(0, 6);
-      const status = booking.status;
-
-      logger.warn({
-        msg: "confirmBookingCode REFUSED - conditions not met",
-        // route,
-        bookingId: String(booking._id),
-        currentStatus: status,
+      msg: "confirmBookingCode BOOKING_BEFORE",
+      booking: {
+        _id: booking._id,
+        status: booking.status,
+        generatedCode: booking.generatedCode,
         proCodeConfirmed: booking.proCodeConfirmed,
-        codeMatch: expected === normalizedCode,
-        hasGeneratedCode: !!booking.generatedCode,
-        durationMs: Date.now() - t0,
+        closed: booking.closed,
+        closedAt: booking.closedAt,
+      },
+    });
+
+    if (booking.closed) {
+      logger.warn({
+        msg: "confirmBookingCode ALREADY_CLOSED",
+        bookingId,
       });
 
-      // ✅ réponses explicites
-      if (booking.status !== "accepted") {
-        return res.status(409).json({
-          message: `Booking non éligible : status actuel = ${status} (attendu: accepted)`,
-        });
-      }
-
-      if (expected !== normalizedCode) {
-        return res.status(400).json({ message: "Code invalide" });
-      }
-
-      if (booking.proCodeConfirmed === true) {
-        return res.json({ confirmed: true, alreadyConfirmed: true });
-      }
-
-      // fallback
-      return res.status(409).json({ message: "Impossible de valider ce booking" });
+      return res.status(400).json({
+        message: "Cette réservation est déjà clôturée",
+      });
     }
 
-    // 🔔 Notification (fire & forget)
-    notifyBookingCodeConfirmed(updatedBooking).catch((e: any) =>
-      logger.error({
-        msg: "notifyBookingCodeConfirmed failed",
-        // route,
-        bookingId: updatedBooking._id?.toString(),
-        errorMessage: e?.message,
-        stack: e?.stack,
-      })
-    );
+    if (booking.generatedCode !== code) {
+      logger.warn({
+        msg: "confirmBookingCode INVALID_CODE",
+        bookingId,
+        providedCode: code,
+      });
+
+      return res.status(400).json({
+        message: "Code de validation incorrect",
+      });
+    }
+
+    // ✅ Validation OK → clôture de la prestation
+    booking.status = "finished";
+    booking.proCodeConfirmed = true;
+    booking.closed = true;
+    booking.closedAt = new Date();
+
+    await booking.save();
 
     logger.info({
-      msg: "confirmBookingCode SUCCESS - booking finished",
-      // route,
-      bookingId: updatedBooking._id?.toString(),
-      newStatus: updatedBooking.status,
+      msg: "confirmBookingCode SUCCESS",
+      booking: {
+        _id: booking._id,
+        status: booking.status,
+        proCodeConfirmed: booking.proCodeConfirmed,
+        closed: booking.closed,
+        closedAt: booking.closedAt,
+      },
       durationMs: Date.now() - t0,
     });
 
-    return res.json({ confirmed: true, booking: updatedBooking });
+    return res.status(200).json({
+      message: "Prestation validée avec succès",
+      booking,
+    });
   } catch (error: any) {
     logger.error({
       msg: "confirmBookingCode FAILED",
-      // route,
       method: req.method,
       url: req.originalUrl,
       body: sanitize(req.body),
@@ -755,7 +697,10 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
       stack: error?.stack,
       durationMs: Date.now() - t0,
     });
-    return res.status(500).json({ message: "Erreur interne du serveur" });
+
+    return res.status(500).json({
+      message: "Erreur interne du serveur",
+    });
   }
 };
 
