@@ -665,12 +665,14 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
     booking.proCodeConfirmed = true;
     booking.status = "finished";
 
-    // (optionnel) si tu veux tracer la date de clôture
-    booking.closed = true;
-    booking.closedAt = new Date();
-    await booking.save();
-    const updatedBooking = await BookingModel.findById(booking._id);
-    
+    const updatedBooking = await BookingModel.findById(bookingId);
+    if (updatedBooking) {
+      // (optionnel) si tu veux tracer la date de clôture
+      updatedBooking.closed = true;
+      updatedBooking.closedAt = new Date();
+      await updatedBooking.save();
+    }
+
     console.log("BOOKING FINISHED !");
     console.log("BOOKING FINISHED !");
     console.log("BOOKING FINISHED !");
