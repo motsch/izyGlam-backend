@@ -61,24 +61,12 @@ const getAllCACount = async (req: express.Request, res: express.Response) => {
   }
 };
 
-function generateValidationCode(): string {
-  // Génère un nombre entre 100000 et 999999
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 // ====== CRUD Booking ======
 const createBooking = async (req: express.Request, res: express.Response) => {
   try {
     const { lang = "fr", ...data } = req.body;
 
-    // 🔐 Génération serveur du code de validation
-    const validationCode = generateValidationCode();
-
-    const newBooking = new BookingModel({
-      ...data,
-      generatedCode: validationCode,
-      proCodeConfirmed: false,
-    });
+    const newBooking = new BookingModel(data);
     await newBooking.save();
 
     logger.info({
@@ -590,120 +578,109 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
 };
 
 
-export const confirmBookingCode = async (req: express.Request, res: express.Response) => {
-  const t0 = Date.now();
-
+// ====== confirmation code & paiement ======
+const confirmBookingCode = async (req: express.Request, res: express.Response) => {
   try {
     const { bookingId, code } = req.body;
-
-    logger.info({
-      msg: "confirmBookingCode START",
-      bookingId,
-      code,
-    });
-
     if (!bookingId || !code) {
       logger.warn({
-        msg: "confirmBookingCode MISSING_PARAMS",
-        bookingId,
-        code,
+        msg: "confirmBookingCode bad request",
+        route: "POST /api/bookings-confirm-code",
+        method: req.method,
+        url: req.originalUrl,
+        body: sanitize(req.body),
       });
-
-      return res.status(400).json({
-        message: "bookingId et code sont requis",
-      });
+      return res.status(400).json({ message: "bookingId et code sont obligatoires" });
     }
 
-    const booking = await bookingModel.findById(bookingId);
-
+    const booking = await BookingModel.findById(bookingId);
     if (!booking) {
       logger.warn({
-        msg: "confirmBookingCode BOOKING_NOT_FOUND",
+        msg: "confirmBookingCode not found",
+        route: "POST /api/bookings-confirm-code",
+        method: req.method,
+        url: req.originalUrl,
         bookingId,
       });
-
-      return res.status(404).json({
-        message: "Réservation introuvable",
-      });
+      return res.status(404).json({ message: "Booking non trouvé" });
     }
 
-    logger.info({
-      msg: "confirmBookingCode BOOKING_BEFORE",
-      booking: {
-        _id: booking._id,
-        status: booking.status,
-        generatedCode: booking.generatedCode,
-        proCodeConfirmed: booking.proCodeConfirmed,
-        closed: booking.closed,
-        closedAt: booking.closedAt,
-      },
-    });
+    if (booking.generatedCode === code) {
+      booking.proCodeConfirmed = true;
+      await booking.save();
 
-    if (booking.closed) {
-      logger.warn({
-        msg: "confirmBookingCode ALREADY_CLOSED",
+      const pro = await UserModel.findById(booking.userProId);
+      if (!pro || !pro.bank || !pro.bank.iban || !pro.bank.bic) {
+        logger.warn({
+          msg: "confirmBookingCode missing bank info",
+          route: "POST /api/bookings-confirm-code",
+          method: req.method,
+          url: req.originalUrl,
+          proId: pro?._id?.toString(),
+        });
+        return res.status(400).json({ message: "Coordonnées bancaires manquantes" });
+      }
+      const amount = parseFloat(booking.shopEarnings || "0");
+      if (amount <= 0) {
+        logger.warn({
+          msg: "confirmBookingCode invalid amount",
+          route: "POST /api/bookings-confirm-code",
+          method: req.method,
+          url: req.originalUrl,
+          amount,
+        });
+        return res.status(400).json({ message: "Montant invalide pour le paiement" });
+      }
+
+      // Paiement
+      await sendSepaTransferToPro({
+        iban: pro.bank.iban,
+        bic: pro.bank.bic,
+        amount,
+        label: `Prestation du ${booking.date} pour ${booking.productName}`,
+        recipient: `${pro.firstname} ${pro.lastname}`,
+      });
+
+      // Notification client
+      notifyBookingCodeConfirmed(booking).catch((e) =>
+        logger.error({ msg: "notifyBookingCodeConfirmed failed", bookingId, errorMessage: e?.message, stack: e?.stack })
+      );
+
+      logger.info({
+        msg: "confirmBookingCode success",
+        route: "POST /api/bookings-confirm-code",
+        method: req.method,
+        url: req.originalUrl,
+        bookingId,
+        proId: pro._id?.toString(),
+        amount,
+      });
+
+      return res.json({ confirmed: true });
+    } else {
+      logger.info({
+        msg: "confirmBookingCode mismatch",
+        route: "POST /api/bookings-confirm-code",
+        method: req.method,
+        url: req.originalUrl,
         bookingId,
       });
-
-      return res.status(400).json({
-        message: "Cette réservation est déjà clôturée",
-      });
+      return res.json({ confirmed: false });
     }
-
-    if (booking.generatedCode !== code) {
-      logger.warn({
-        msg: "confirmBookingCode INVALID_CODE",
-        bookingId,
-        providedCode: code,
-      });
-
-      return res.status(400).json({
-        message: "Code de validation incorrect",
-      });
-    }
-
-    // ✅ Validation OK → clôture de la prestation
-    booking.status = "finished";
-    booking.proCodeConfirmed = true;
-    booking.closed = true;
-    booking.closedAt = new Date();
-
-    await booking.save();
-
-    logger.info({
-      msg: "confirmBookingCode SUCCESS",
-      booking: {
-        _id: booking._id,
-        status: booking.status,
-        proCodeConfirmed: booking.proCodeConfirmed,
-        closed: booking.closed,
-        closedAt: booking.closedAt,
-      },
-      durationMs: Date.now() - t0,
-    });
-
-    return res.status(200).json({
-      message: "Prestation validée avec succès",
-      booking,
-    });
   } catch (error: any) {
     logger.error({
-      msg: "confirmBookingCode FAILED",
+      msg: "confirmBookingCode failed",
+      route: "POST /api/bookings-confirm-code",
       method: req.method,
       url: req.originalUrl,
       body: sanitize(req.body),
       errorName: error?.name,
       errorMessage: error?.message,
       stack: error?.stack,
-      durationMs: Date.now() - t0,
     });
-
-    return res.status(500).json({
-      message: "Erreur interne du serveur",
-    });
+    return res.status(500).json({ message: "Erreur interne du serveur" });
   }
 };
-
 
 // ====== Dashboard KPI par salon ======
 const getDashboardStatsByShop = async (req: express.Request, res: express.Response) => {
