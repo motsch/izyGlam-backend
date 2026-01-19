@@ -607,54 +607,17 @@ const confirmBookingCode = async (req: express.Request, res: express.Response) =
 
     if (booking.generatedCode === code) {
       booking.proCodeConfirmed = true;
+      booking.closed = true;
+      booking.closedAt = new Date();
+      booking.status = "finished";
+      updateFunctionBookingById(booking._id, booking);
       await booking.save();
 
-      const pro = await UserModel.findById(booking.userProId);
-      if (!pro || !pro.bank || !pro.bank.iban || !pro.bank.bic) {
-        logger.warn({
-          msg: "confirmBookingCode missing bank info",
-          route: "POST /api/bookings-confirm-code",
-          method: req.method,
-          url: req.originalUrl,
-          proId: pro?._id?.toString(),
-        });
-        return res.status(400).json({ message: "Coordonnées bancaires manquantes" });
-      }
-      const amount = parseFloat(booking.shopEarnings || "0");
-      if (amount <= 0) {
-        logger.warn({
-          msg: "confirmBookingCode invalid amount",
-          route: "POST /api/bookings-confirm-code",
-          method: req.method,
-          url: req.originalUrl,
-          amount,
-        });
-        return res.status(400).json({ message: "Montant invalide pour le paiement" });
-      }
-
-      // Paiement
-      await sendSepaTransferToPro({
-        iban: pro.bank.iban,
-        bic: pro.bank.bic,
-        amount,
-        label: `Prestation du ${booking.date} pour ${booking.productName}`,
-        recipient: `${pro.firstname} ${pro.lastname}`,
-      });
 
       // Notification client
       notifyBookingCodeConfirmed(booking).catch((e) =>
         logger.error({ msg: "notifyBookingCodeConfirmed failed", bookingId, errorMessage: e?.message, stack: e?.stack })
       );
-
-      logger.info({
-        msg: "confirmBookingCode success",
-        route: "POST /api/bookings-confirm-code",
-        method: req.method,
-        url: req.originalUrl,
-        bookingId,
-        proId: pro._id?.toString(),
-        amount,
-      });
 
       return res.json({ confirmed: true });
     } else {
@@ -679,6 +642,43 @@ const confirmBookingCode = async (req: express.Request, res: express.Response) =
       stack: error?.stack,
     });
     return res.status(500).json({ message: "Erreur interne du serveur" });
+  }
+};
+
+const updateFunctionBookingById = async (bookingId: string, updates: any) => {
+  try {
+    const updatedBooking = await BookingModel.findByIdAndUpdate(
+      bookingId,
+      updates,
+      { new: true }
+    );
+
+    if (!updatedBooking) {
+      logger.warn({
+        msg: "updateBookingById not found",
+        bookingId,
+      });
+      return null;
+    }
+
+    logger.info({
+      msg: "updateBookingById success",
+      bookingId,
+      body: sanitize(updates),
+    });
+
+    return updatedBooking;
+  } catch (error: any) {
+    logger.error({
+      msg: "updateBookingById failed",
+      bookingId,
+      body: sanitize(updates),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+
+    throw new Error("Impossible de mettre à jour la réservation");
   }
 };
 
