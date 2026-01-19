@@ -670,6 +670,8 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
 
     await booking.save();
 
+    console.log("BOOKING FINISHED !")
+
     logger.info({
       msg: "confirmBookingCode booking set to finished",
       route: "POST /api/bookings-confirm-code",
