@@ -589,40 +589,28 @@ const updateBookingStatusById = async (req: express.Request, res: express.Respon
   }
 };
 
-// ====== confirmation code & paiement ======
-// ====== confirmation code & paiement (FULL LOGS) ======
-const confirmBookingCode = async (req: express.Request, res: express.Response) => {
+
+export const confirmBookingCode = async (req: express.Request, res: express.Response) => {
   const t0 = Date.now();
-  const route = "POST /api/bookings-confirm-code";
 
   try {
-    logger.info({
-      msg: "confirmBookingCode START",
-      route,
-      method: req.method,
-      url: req.originalUrl,
-      bodyKeys: Object.keys(req.body || {}),
-      userId: (req as any).user?._id?.toString(),
-    });
-
     const { bookingId, code } = req.body;
 
     logger.info({
-      msg: "confirmBookingCode STEP 1 - input received",
-      route,
+      msg: "confirmBookingCode START",
+      // route,
+      method: req.method,
+      url: req.originalUrl,
       bookingId,
-      codeReceived: typeof code === "string" ? code : String(code),
-      codeLength: String(code ?? "").length,
-      isBookingIdValidObjectId: mongoose.Types.ObjectId.isValid(String(bookingId)),
+      hasCode: !!code,
+      userId: (req as any).user?._id?.toString(),
     });
 
-    // ---- Validations ----
+    // ---- validations input
     if (!bookingId || !code) {
       logger.warn({
         msg: "confirmBookingCode BAD REQUEST - missing bookingId or code",
-        route,
-        method: req.method,
-        url: req.originalUrl,
+        // route,
         body: sanitize(req.body),
       });
       return res.status(400).json({ message: "bookingId et code sont obligatoires" });
@@ -631,256 +619,134 @@ const confirmBookingCode = async (req: express.Request, res: express.Response) =
     if (!mongoose.Types.ObjectId.isValid(String(bookingId))) {
       logger.warn({
         msg: "confirmBookingCode BAD REQUEST - invalid bookingId",
-        route,
+        // route,
         bookingId,
       });
       return res.status(400).json({ message: "bookingId invalide" });
     }
 
-    // Normalisation du code (évite espaces, tirets, etc.)
+    // ---- normalize code
     const normalizedCode = String(code).replace(/\D/g, "").slice(0, 6);
 
     logger.info({
-      msg: "confirmBookingCode STEP 2 - code normalized",
-      route,
+      msg: "confirmBookingCode CODE normalized",
+      // route,
       bookingId,
       normalizedCode,
       normalizedCodeLength: normalizedCode.length,
     });
 
-    // ---- Load booking ----
-    logger.info({
-      msg: "confirmBookingCode STEP 3 - fetching booking",
-      route,
-      bookingId,
-    });
-
-    const booking = await BookingModel.findById(bookingId);
-
-    logger.info({
-      msg: "confirmBookingCode STEP 4 - booking fetched",
-      route,
-      bookingId,
-      bookingFound: !!booking,
-    });
-
-    if (!booking) {
+    if (normalizedCode.length !== 6) {
       logger.warn({
-        msg: "confirmBookingCode NOT FOUND - booking",
-        route,
-        method: req.method,
-        url: req.originalUrl,
+        msg: "confirmBookingCode BAD REQUEST - code must be 6 digits",
+        // route,
         bookingId,
+        normalizedCode,
       });
-      return res.status(404).json({ message: "Booking non trouvé" });
+      return res.status(400).json({ message: "Le code doit contenir 6 chiffres" });
     }
 
+    /**
+     * ✅ Update atomique (anti concurrence) :
+     * - booking doit être accepted
+     * - code doit matcher
+     * - pas déjà finished
+     */
     logger.info({
-      msg: "confirmBookingCode STEP 5 - booking current state",
-      route,
-      bookingId: booking._id?.toString(),
-      currentStatus: booking.status,
-      proCodeConfirmed: booking.proCodeConfirmed,
-      hasGeneratedCode: !!booking.generatedCode,
-      generatedCodeLength: String(booking.generatedCode ?? "").length,
-      userProId: String(booking.userProId),
-      shopEarnings: booking.shopEarnings,
+      msg: "confirmBookingCode UPDATE attempt",
+      // route,
+      bookingId,
     });
 
-    // Idempotence : déjà confirmé / déjà finished
-    if (booking.proCodeConfirmed === true || booking.status === "finished") {
-      logger.info({
-        msg: "confirmBookingCode EARLY RETURN - already confirmed/finished",
-        route,
-        bookingId: booking._id?.toString(),
-        currentStatus: booking.status,
+    const updatedBooking = await BookingModel.findOneAndUpdate(
+      {
+        _id: bookingId,
+        status: "accepted",                  // ✅ règle métier
+        generatedCode: normalizedCode,       // ✅ règle métier
+        proCodeConfirmed: false,             // évite double validation
+      },
+      {
+        $set: {
+          status: "finished",
+          proCodeConfirmed: true,
+          closed: true,
+          closedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    // Si pas d'update, on veut expliquer pourquoi (log + réponse claire)
+    if (!updatedBooking) {
+      const booking = await BookingModel.findById(bookingId).lean();
+
+      if (!booking) {
+        logger.warn({
+          msg: "confirmBookingCode NOT FOUND",
+          // route,
+          bookingId,
+          durationMs: Date.now() - t0,
+        });
+        return res.status(404).json({ message: "Booking non trouvé" });
+      }
+
+      const expected = String(booking.generatedCode ?? "").replace(/\D/g, "").slice(0, 6);
+      const status = booking.status;
+
+      logger.warn({
+        msg: "confirmBookingCode REFUSED - conditions not met",
+        // route,
+        bookingId: String(booking._id),
+        currentStatus: status,
         proCodeConfirmed: booking.proCodeConfirmed,
+        codeMatch: expected === normalizedCode,
+        hasGeneratedCode: !!booking.generatedCode,
+        durationMs: Date.now() - t0,
       });
-      return res.json({ confirmed: true, alreadyConfirmed: true });
+
+      // ✅ réponses explicites
+      if (booking.status !== "accepted") {
+        return res.status(409).json({
+          message: `Booking non éligible : status actuel = ${status} (attendu: accepted)`,
+        });
+      }
+
+      if (expected !== normalizedCode) {
+        return res.status(400).json({ message: "Code invalide" });
+      }
+
+      if (booking.proCodeConfirmed === true) {
+        return res.json({ confirmed: true, alreadyConfirmed: true });
+      }
+
+      // fallback
+      return res.status(409).json({ message: "Impossible de valider ce booking" });
     }
 
-    // ---- Compare code ----
-    const expectedCode = String(booking.generatedCode ?? "").replace(/\D/g, "").slice(0, 6);
-
-    logger.info({
-      msg: "confirmBookingCode STEP 6 - comparing codes",
-      route,
-      bookingId: booking._id?.toString(),
-      expectedCode,
-      normalizedCode,
-      match: expectedCode === normalizedCode,
-    });
-
-    if (expectedCode !== normalizedCode) {
-      logger.info({
-        msg: "confirmBookingCode MISMATCH - code invalid",
-        route,
-        bookingId: booking._id?.toString(),
-      });
-      return res.json({ confirmed: false });
-    }
-
-    // ---- Update booking to finished ----
-    logger.info({
-      msg: "confirmBookingCode STEP 7 - updating booking fields (in memory)",
-      route,
-      bookingId: booking._id?.toString(),
-      beforeStatus: booking.status,
-      beforeProCodeConfirmed: booking.proCodeConfirmed,
-    });
-
-    booking.proCodeConfirmed = true;
-    booking.status = "finished";
-
-    logger.info({
-      msg: "confirmBookingCode STEP 8 - saving booking",
-      route,
-      bookingId: booking._id?.toString(),
-      afterStatus: booking.status,
-      afterProCodeConfirmed: booking.proCodeConfirmed,
-    });
-
-    await booking.save();
-
-    logger.info({
-      msg: "confirmBookingCode STEP 9 - booking saved (mongoose)",
-      route,
-      bookingId: booking._id?.toString(),
-      savedStatus: booking.status,
-      savedProCodeConfirmed: booking.proCodeConfirmed,
-    });
-
-    // ✅ Vérification DB (preuve irréfutable)
-    const bookingFromDb = await BookingModel.findById(booking._id).lean();
-
-    logger.info({
-      msg: "confirmBookingCode STEP 10 - booking reloaded from DB",
-      route,
-      bookingId: booking._id?.toString(),
-      dbStatus: bookingFromDb?.status,
-      dbProCodeConfirmed: bookingFromDb?.proCodeConfirmed,
-      // dbUpdatedAt: bookingFromDb?.updatedAt,
-      dbFound: !!bookingFromDb,
-    });
-
-    // ---- Load pro ----
-    logger.info({
-      msg: "confirmBookingCode STEP 11 - fetching pro",
-      route,
-      bookingId: booking._id?.toString(),
-      userProId: String(booking.userProId),
-    });
-
-    const pro = await UserModel.findById(booking.userProId);
-
-    logger.info({
-      msg: "confirmBookingCode STEP 12 - pro fetched",
-      route,
-      bookingId: booking._id?.toString(),
-      proFound: !!pro,
-      proId: pro?._id?.toString(),
-      hasBank: !!pro?.bank,
-      hasIban: !!pro?.bank?.iban,
-      hasBic: !!pro?.bank?.bic,
-    });
-
-    if (!pro || !pro.bank || !pro.bank.iban || !pro.bank.bic) {
-      logger.warn({
-        msg: "confirmBookingCode STOP - missing bank info",
-        route,
-        method: req.method,
-        url: req.originalUrl,
-        bookingId: booking._id?.toString(),
-        proId: pro?._id?.toString(),
-      });
-      return res.status(400).json({ message: "Coordonnées bancaires manquantes" });
-    }
-
-    // ---- Amount ----
-    const amount = parseFloat(booking.shopEarnings || "0");
-
-    logger.info({
-      msg: "confirmBookingCode STEP 13 - amount computed",
-      route,
-      bookingId: booking._id?.toString(),
-      rawShopEarnings: booking.shopEarnings,
-      parsedAmount: amount,
-      valid: amount > 0,
-    });
-
-    if (amount <= 0) {
-      logger.warn({
-        msg: "confirmBookingCode STOP - invalid amount",
-        route,
-        method: req.method,
-        url: req.originalUrl,
-        bookingId: booking._id?.toString(),
-        amount,
-      });
-      return res.status(400).json({ message: "Montant invalide pour le paiement" });
-    }
-
-    // ---- Payment ----
-    logger.info({
-      msg: "confirmBookingCode STEP 14 - sepa transfer start",
-      route,
-      bookingId: booking._id?.toString(),
-      proId: pro._id?.toString(),
-      amount,
-      label: `Prestation du ${booking.date} pour ${booking.productName}`,
-      recipient: `${pro.firstname} ${pro.lastname}`,
-    });
-
-    await sendSepaTransferToPro({
-      iban: pro.bank.iban,
-      bic: pro.bank.bic,
-      amount,
-      label: `Prestation du ${booking.date} pour ${booking.productName}`,
-      recipient: `${pro.firstname} ${pro.lastname}`,
-    });
-
-    logger.info({
-      msg: "confirmBookingCode STEP 15 - sepa transfer DONE",
-      route,
-      bookingId: booking._id?.toString(),
-      proId: pro._id?.toString(),
-      amount,
-    });
-
-    // ---- Notification ----
-    logger.info({
-      msg: "confirmBookingCode STEP 16 - notify client (fire & forget)",
-      route,
-      bookingId: booking._id?.toString(),
-    });
-
-    notifyBookingCodeConfirmed(booking).catch((e: any) =>
+    // 🔔 Notification (fire & forget)
+    notifyBookingCodeConfirmed(updatedBooking).catch((e: any) =>
       logger.error({
         msg: "notifyBookingCodeConfirmed failed",
-        route,
-        bookingId: booking._id?.toString(),
+        // route,
+        bookingId: updatedBooking._id?.toString(),
         errorMessage: e?.message,
         stack: e?.stack,
       })
     );
 
     logger.info({
-      msg: "confirmBookingCode SUCCESS",
-      route,
-      method: req.method,
-      url: req.originalUrl,
-      bookingId: booking._id?.toString(),
-      finalDbStatus: bookingFromDb?.status,
-      proId: pro._id?.toString(),
-      amount,
+      msg: "confirmBookingCode SUCCESS - booking finished",
+      // route,
+      bookingId: updatedBooking._id?.toString(),
+      newStatus: updatedBooking.status,
       durationMs: Date.now() - t0,
     });
 
-    return res.json({ confirmed: true });
+    return res.json({ confirmed: true, booking: updatedBooking });
   } catch (error: any) {
     logger.error({
       msg: "confirmBookingCode FAILED",
-      route: "POST /api/bookings-confirm-code",
+      // route,
       method: req.method,
       url: req.originalUrl,
       body: sanitize(req.body),
