@@ -668,9 +668,9 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
     // (optionnel) si tu veux tracer la date de clôture
     booking.closed = true;
     booking.closedAt = new Date();
-
     await booking.save();
-
+    const updatedBooking = await BookingModel.findById(booking._id);
+    
     console.log("BOOKING FINISHED !");
     console.log("BOOKING FINISHED !");
     console.log("BOOKING FINISHED !");
@@ -769,8 +769,8 @@ export const confirmBookingCode = async (req: express.Request, res: express.Resp
     //     stack: e?.stack,
     //   });
     // }
-
-    return res.json({ confirmed: true, booking });
+    return res.json({ confirmed: true, booking: updatedBooking });
+    // return res.json({ confirmed: true, booking });
   } catch (error: any) {
     logger.error({
       msg: "confirmBookingCode failed",
