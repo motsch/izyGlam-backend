@@ -202,8 +202,7 @@ export const getBookingCategoriesByShopId = async (req: Request, res: Response) 
     }
     const categories = await serviceCategoryModel
       .find({
-        shopId: id,      // ✅ BON CHAMP
-        active: true,
+        shopId: id
       })
       .sort({ order: 1, name: 1 });
     return res.status(200).json(categories);
