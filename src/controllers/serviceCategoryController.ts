@@ -196,24 +196,19 @@ export const reorderBookingCategories = async (req: Request, res: Response) => {
 export const getBookingCategoriesByShopId = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
     console.log("shopId reçu :", id);
-
     if (!id) {
       return res.status(400).json({ message: "shopId manquant." });
     }
-
     const categories = await serviceCategoryModel
       .find({
         shopId: id,      // ✅ BON CHAMP
         active: true,
       })
       .sort({ order: 1, name: 1 });
-
     return res.status(200).json(categories);
   } catch (error: any) {
     console.error("getBookingCategoriesByShopId error:", error);
-
     return res.status(500).json({
       message: "Erreur lors de la récupération des catégories",
       error: error.message,
