@@ -193,7 +193,7 @@ export const reorderBookingCategories = async (req: Request, res: Response) => {
  * GET /bookingCategory/shop/:shopId
  * Récupère toutes les catégories d’un salon
  */
-exports.getBookingCategoriesByShopId = async (req: Request, res: Response) => {
+export const getBookingCategoriesByShopId = async (req: Request, res: Response) => {
   try {
     const { shopId } = req.params;
 
