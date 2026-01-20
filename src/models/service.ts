@@ -25,6 +25,7 @@ export interface iService extends mongoose.Document {
   duration: number;                  // minutes
   shopId: string;                    // id de la boutique
   color: string;
+  categoryId: string;
 
   // 🔒 Modération
   flags?: string[];                  // raisons synthétiques
@@ -43,6 +44,7 @@ const serviceSchema = new Schema<iService>(
     type: { type: String, required: true },
     price: { type: Number, required: true },
     duration: { type: Number, required: true },
+    categoryId: { type: String, required: false },
 
     shopId: { type: String, required: true },
 

@@ -220,8 +220,7 @@ export const getBookingCategoriesByShopId = async (req: Request, res: Response) 
     console.log("🔎 Filtre utilisé:", { shopId: id });
 
     const categories = await serviceCategoryModel
-      .find({ shopId: id })
-      .sort({ order: 1, name: 1 });
+      .find({ shopId: id });
 
     console.log("✅ Requête Mongo terminée");
     console.log("📦 Nombre de catégories trouvées:", categories.length);
