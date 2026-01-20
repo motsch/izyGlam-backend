@@ -12,10 +12,10 @@ function getUserProId(req: any): string {
  */
 export const createBookingCategory = async (req: Request, res: Response) => {
   try {
-    const userProId = getUserProId(req);
-    if (!userProId) return res.status(401).json({ message: "Non authentifié." });
+    const { name, description, shopId, color, order, active, userProId } = req.body;
 
-    const { name, description, shopId, color, order, active } = req.body;
+    // ✅ maintenant on le prend depuis le front
+    if (!userProId) return res.status(401).json({ message: "Non authentifié (userProId manquant)." });
 
     if (!name || !shopId) {
       return res.status(400).json({ message: "name et shopId sont obligatoires." });
@@ -25,7 +25,7 @@ export const createBookingCategory = async (req: Request, res: Response) => {
       name: String(name).trim(),
       description,
       shopId: String(shopId),
-      userProId,
+      userProId: String(userProId), // ✅
       color,
       order: typeof order === "number" ? order : 0,
       active: typeof active === "boolean" ? active : true,
@@ -33,13 +33,13 @@ export const createBookingCategory = async (req: Request, res: Response) => {
 
     return res.status(201).json(category);
   } catch (error: any) {
-    // Index unique (shopId + name)
     if (error?.code === 11000) {
       return res.status(409).json({ message: "Une catégorie avec ce nom existe déjà pour ce salon." });
     }
     return res.status(500).json({ message: "Erreur serveur", error: error?.message });
   }
 };
+
 
 /**
  * GET /booking-categories?shopId=xxx&active=true
