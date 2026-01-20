@@ -196,7 +196,7 @@ export const reorderBookingCategories = async (req: Request, res: Response) => {
 export const getBookingCategoriesByShopId = async (req: Request, res: Response) => {
   try {
     const { id: shopId } = req.params;
-
+    console.log("FRANCIS !!!!!!!!!!!!!!!!!!! " + shopId)
     if (!shopId) {
       return res.status(400).json({ message: "shopId manquant." });
     }
