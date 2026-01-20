@@ -193,25 +193,57 @@ export const reorderBookingCategories = async (req: Request, res: Response) => {
  * GET /bookingCategory-by-shopId/:id
  * Récupère toutes les catégories actives d’un salon
  */
+/**
+ * GET /bookingCategory-by-shopId/:id
+ * DEBUG MODE – logs complets
+ */
 export const getBookingCategoriesByShopId = async (req: Request, res: Response) => {
+  console.log("========================================");
+  console.log("➡️  ENTER getBookingCategoriesByShopId");
+  console.log("🕒 Time:", new Date().toISOString());
+
   try {
+    console.log("📥 req.params:", req.params);
+    console.log("📥 req.query:", req.query);
+    console.log("📥 req.body:", req.body);
+
     const { id } = req.params;
-    console.log("shopId reçu :", id);
-    if (!id) {
-      return res.status(400).json({ message: "shopId manquant." });
+
+    console.log("🆔 shopId reçu:", id, "| type:", typeof id);
+
+    if (!id || typeof id !== "string") {
+      console.warn("⚠️ shopId manquant ou invalide");
+      return res.status(400).json({ message: "shopId invalide." });
     }
+
+    console.log("🔍 Lancement de la requête MongoDB...");
+    console.log("🔎 Filtre utilisé:", { shopId: id });
+
     const categories = await serviceCategoryModel
-      .find({
-        shopId: id
-      })
+      .find({ shopId: id })
       .sort({ order: 1, name: 1 });
+
+    console.log("✅ Requête Mongo terminée");
+    console.log("📦 Nombre de catégories trouvées:", categories.length);
+    console.log("📦 Contenu brut:", JSON.stringify(categories, null, 2));
+
+    console.log("📤 Envoi de la réponse HTTP 200");
     return res.status(200).json(categories);
+
   } catch (error: any) {
-    console.error("getBookingCategoriesByShopId error:", error);
+    console.error("❌ ERREUR dans getBookingCategoriesByShopId");
+    console.error("❌ Message:", error.message);
+    console.error("❌ Stack:", error.stack);
+    console.error("❌ Error complet:", error);
+
     return res.status(500).json({
       message: "Erreur lors de la récupération des catégories",
       error: error.message,
     });
+  } finally {
+    console.log("⬅️  EXIT getBookingCategoriesByShopId");
+    console.log("========================================\n");
   }
 };
+
 

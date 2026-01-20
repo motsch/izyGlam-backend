@@ -10,8 +10,6 @@ export interface iServiceCategory extends mongoose.Document {
   // UI / organisation
   color?: string;
   order?: number;      // pour tri manuel
-
-  active: boolean;
 }
 
 const serviceCategorySchema = new mongoose.Schema<iServiceCategory>(
@@ -25,9 +23,6 @@ const serviceCategorySchema = new mongoose.Schema<iServiceCategory>(
     // ---- UI ----
     color: { type: String },
     order: { type: Number, default: 0 },
-
-    // ---- Statut ----
-    active: { type: Boolean, default: true },
   },
   {
     timestamps: true,
