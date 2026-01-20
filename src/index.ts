@@ -250,6 +250,7 @@ const izyshopCheckoutRoutes = require("./routes/izyshopCheckoutRoutes")
 const feedRoutes = require("./routes/feed");
 const proFeedRoutes = require("./routes/proFeed");
 const feedAnalytics = require("./routes/feedAnalytics");
+const serviceCategoryRoutes = require("./routes/serviceCategoryRoutes");
 
 // Utilisation des routes
 app.use("/api", prospectionRoutes);
@@ -300,6 +301,7 @@ app.use("/api", izyshopCheckoutRoutes);
 app.use("/api", feedRoutes);
 app.use("/api", proFeedRoutes);
 app.use("/api", feedAnalytics);
+app.use("/api", serviceCategoryRoutes);
 
 /**
  * Static files

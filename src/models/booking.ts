@@ -43,6 +43,9 @@ export interface iBooking extends mongoose.Document {
 
   color: string;
   image: string;
+  
+  // ✅ NOUVEAU
+  categoryId?: string;
 
   // ---- Validation prestation ----
   generatedCode: string;
@@ -75,6 +78,8 @@ const bookingSchema = new mongoose.Schema<iBooking>(
     address: { type: String, required: true },
     phoneNumber: { type: String, required: true },
 
+    // ✅ NOUVEAU
+    categoryId: { type: String, required: false },
     // ---- Relations ----
     clientId: { type: String, required: true },
     userProId: { type: String, required: true },
