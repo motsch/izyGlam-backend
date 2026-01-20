@@ -190,24 +190,28 @@ export const reorderBookingCategories = async (req: Request, res: Response) => {
 };
 
 /**
- * GET /bookingCategory/shop/:shopId
- * Récupère toutes les catégories d’un salon
+ * GET /bookingCategory-by-shopId/:id
+ * Récupère toutes les catégories actives d’un salon
  */
 export const getBookingCategoriesByShopId = async (req: Request, res: Response) => {
   try {
-    const { shopId } = req.params;
+    const { id: shopId } = req.params;
 
     if (!shopId) {
       return res.status(400).json({ message: "shopId manquant." });
     }
 
-    const categories = await serviceCategoryModel.find({
-      shopId,
-      active: true, // optionnel mais logique côté métier
-    }).sort({ order: 1, name: 1 });
+    const categories = await serviceCategoryModel
+      .find({
+        shop: shopId,   // ✅ LIAISON CORRECTE
+        active: true,
+      })
+      .sort({ order: 1, name: 1 });
 
     return res.status(200).json(categories);
   } catch (error: any) {
+    console.error("getBookingCategoriesByShopId error:", error);
+
     return res.status(500).json({
       message: "Erreur lors de la récupération des catégories",
       error: error.message,
