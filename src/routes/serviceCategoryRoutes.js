@@ -16,7 +16,7 @@ router.get("/bookingCategory", bookingCategoryController.getBookingCategories);
 router.get("/bookingCategory/:id", bookingCategoryController.getBookingCategoryById);
 router.put("/bookingCategory/:id", bookingCategoryController.updateBookingCategory);
 router.delete("/bookingCategory/:id", bookingCategoryController.deleteBookingCategory);
-router.delete("/bookingCategory-by-shopId/:id", bookingCategoryController.getBookingCategoriesByShopId);
+router.get("/bookingCategory-by-shopId/:id", bookingCategoryController.getBookingCategoriesByShopId);
 
 /**
  * Reorder (UI)
