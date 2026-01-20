@@ -195,15 +195,17 @@ export const reorderBookingCategories = async (req: Request, res: Response) => {
  */
 export const getBookingCategoriesByShopId = async (req: Request, res: Response) => {
   try {
-    const { id: shopId } = req.params;
-    console.log("FRANCIS !!!!!!!!!!!!!!!!!!! " + shopId)
-    if (!shopId) {
+    const { id } = req.params;
+
+    console.log("shopId reçu :", id);
+
+    if (!id) {
       return res.status(400).json({ message: "shopId manquant." });
     }
 
     const categories = await serviceCategoryModel
       .find({
-        shop: shopId,   // ✅ LIAISON CORRECTE
+        shopId: id,      // ✅ BON CHAMP
         active: true,
       })
       .sort({ order: 1, name: 1 });
@@ -218,3 +220,4 @@ export const getBookingCategoriesByShopId = async (req: Request, res: Response) 
     });
   }
 };
+
