@@ -66,8 +66,20 @@ async function resolveProTwilioFrom(booking: any): Promise<string> {
   return normalizeE164(pro?.twilioPhoneNumber || "");
 }
 
+/**
+ * ServiceMode
+ * Chez toi c'est soit SALON soit DOMICILE.
+ * (Si jamais une ancienne donnée "BOTH" traîne, on force DOMICILE par défaut.)
+ */
+function normalizeServiceMode(v: any): "SALON" | "DOMICILE" {
+  const m = safeStr(v).toUpperCase().trim();
+  if (m === "SALON") return "SALON";
+  if (m === "DOMICILE") return "DOMICILE";
+  return "DOMICILE";
+}
+
 function buildBigBuyCreatePayloadFromOrder(order: any) {
-  const products = order.items.map((it: any) => ({
+  const products = (order.items || []).map((it: any) => ({
     id: it.supplierBigbuyId,
     quantity: it.qty,
   }));
@@ -99,19 +111,49 @@ function buildBigBuyCreatePayloadFromOrder(order: any) {
   };
 }
 
+function formatSalonAddress(shop: any): string {
+  const place = shop?.placeAddress || {};
+  const legal = shop?.legal || {};
+
+  // priorité : placeAddress (adresse du salon), fallback : legal
+  const line1 = safeStr(place.addressLine1 || legal.addressLine1).trim();
+  const line2 = safeStr(place.addressLine2 || legal.addressLine2).trim();
+  const postalCode = safeStr(place.postalCode || legal.postalCode).trim();
+  const city = safeStr(place.city || legal.city).trim();
+  const country = safeStr(place.country || legal.country).trim();
+
+  const parts: string[] = [];
+  if (line1) parts.push(line1);
+  if (line2) parts.push(line2);
+  const cityLine = [postalCode, city].filter(Boolean).join(" ");
+  if (cityLine) parts.push(cityLine);
+  if (country && country !== "FR") parts.push(country);
+
+  return parts.join(", ");
+}
+
 function buildBookingPaidSms(params: {
   shopName: string;
   serviceName: string;
   whenHuman: string;
   code: string;
+
+  serviceMode: "SALON" | "DOMICILE";
+  salonAddress?: string;
 }): string {
-  const { shopName, serviceName, whenHuman, code } = params;
+  const { shopName, serviceName, whenHuman, code, serviceMode, salonAddress } = params;
+
+  const addressBlock =
+    serviceMode === "SALON" && salonAddress
+      ? `📍 Adresse : ${salonAddress}\n`
+      : "";
 
   return (
     `✅ Paiement confirmé\n` +
     `Salon : ${shopName}\n` +
     `Prestation : ${serviceName}\n` +
     `Quand : ${whenHuman}\n` +
+    addressBlock +
     `Code : ${code}\n\n` +
     `↩️ Pour annuler : répondez ANNULER à ce SMS.\n` +
     `⛔️ Annulation impossible à moins de 24h (des frais peuvent s’appliquer).\n\n` +
@@ -267,6 +309,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           bookingId: String(booking._id),
           shopFound: !!shop,
           shopName: safeStr(shop?.name),
+          serviceMode: safeStr(shop?.serviceMode),
         });
       } catch (e: any) {
         logger.error({
@@ -296,7 +339,15 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         });
       }
 
-      // ✅ Données SMS - CORRIGÉES
+      if (!shop) {
+        logger.warn({
+          msg: "stripe.webhook.booking.shop_null",
+          bookingId: String(booking._id),
+          shopId: safeStr(booking.shopId),
+        });
+      }
+
+      // ✅ Données SMS
       const smsTo = await resolveClientPhone(booking);
       const smsFrom = await resolveProTwilioFrom(booking);
       const code = safeStr(booking.generatedCode || session.metadata?.generatedCode).trim();
@@ -328,11 +379,24 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         return res.json({ received: true });
       }
 
+      const serviceMode = normalizeServiceMode(shop?.serviceMode);
+      const salonAddress = serviceMode === "SALON" ? formatSalonAddress(shop) : "";
+
+      if (serviceMode === "SALON" && !salonAddress) {
+        logger.warn({
+          msg: "stripe.webhook.booking.salon_address_missing",
+          bookingId: String(booking._id),
+          shopId: safeStr(shop?._id),
+        });
+      }
+
       const smsBody = buildBookingPaidSms({
         shopName: safeStr(shop?.name || booking.establishmentName || "IzyGlam"),
         serviceName: safeStr(service?.name || booking.title || "Prestation"),
         whenHuman: safeStr(booking.date || "Date à confirmer"),
         code,
+        serviceMode,
+        salonAddress,
       });
 
       logger.info({
@@ -402,6 +466,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         return res.json({ received: true });
       }
 
+      // idempotence simple (garde ta logique actuelle)
       if (order.stripe?.lastStripeEventId === event.id) {
         logger.info({ msg: "stripe.webhook.order.idempotent_skip", orderId, eventId: event.id });
         return res.json({ received: true });

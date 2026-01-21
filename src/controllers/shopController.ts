@@ -19,10 +19,44 @@ import { logger } from "../utils/logger";
 import { resolveLang } from "../utils/lang"; // ajuste le chemin si besoin
 import { buildCountryQuery } from '../utils/country';
 import { ollamaChat } from "../services/ollamaClient";
+import mongoose from "mongoose";
 
 // Étendre l'interface Request pour inclure la propriété 'files'
 interface MulterRequest extends Request {
   files: Express.Multer.File[];
+}
+
+function normalizeServiceMode(input: any): "SALON" | "DOMICILE" | null {
+  const raw = String(input ?? "").toUpperCase().trim();
+  if (raw === "SALON") return "SALON";
+  if (raw === "DOMICILE") return "DOMICILE";
+  return null;
+}
+
+function buildServiceModeQuery(mode: any) {
+  if (!mode) return null;
+  if (mode === "SALON") return { serviceMode: { $in: ["SALON", "BOTH"] } };
+  if (mode === "DOMICILE") return { serviceMode: { $in: ["DOMICILE", "BOTH"] } };
+  return null;
+}
+
+function normalizeCountryCode(x: any, fallback = "FR") {
+  const v = String(x || "").trim().toUpperCase();
+  if (!v) return fallback;
+  // petit check simple: 2 lettres
+  return /^[A-Z]{2}$/.test(v) ? v : fallback;
+}
+
+function cleanString(x: any, max = 120) {
+  const v = String(x ?? "").trim();
+  if (!v) return "";
+  return v.slice(0, max);
+}
+
+function cleanPostalCode(x: any, max = 12) {
+  const v = String(x ?? "").trim().toUpperCase();
+  if (!v) return "";
+  return v.replace(/\s+/g, "").slice(0, max);
 }
 
 const getShopsAllCount = async (
@@ -496,25 +530,26 @@ ${product.description ? `Description du produit: ${product.description}` : ""}`.
 const getAllShops = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shops.list.start", route: req.originalUrl, method: req.method });
   try {
-    const shops = await ShopModel.find({
-      active: true, // 👈 règle n°1 : shop actif uniquement
+    const mode = normalizeServiceMode((req.query as any)?.mode);
+    const modeQuery = buildServiceModeQuery(mode);
+
+    const query: any = {
+      active: true,
       $and: [
         {
-          $or: [
-            { flags: { $exists: false } }, // legacy
-            { flags: { $size: 0 } },       // non flaggé
-          ],
+          $or: [{ flags: { $exists: false } }, { flags: { $size: 0 } }],
         },
         {
-          $or: [
-            { status: { $exists: false } }, // legacy
-            { status: { $ne: "needs_manual_review" } },
-          ],
+          $or: [{ status: { $exists: false } }, { status: { $ne: "needs_manual_review" } }],
         },
       ],
-    });
+    };
 
-    logger.info({ msg: "shops.list.success", count: shops.length });
+    if (modeQuery) Object.assign(query, modeQuery);
+
+    const shops = await ShopModel.find(query);
+
+    logger.info({ msg: "shops.list.success", count: shops.length, mode: mode || "ALL" });
     res.json(shops);
   } catch (error: any) {
     logger.error({
@@ -527,6 +562,7 @@ const getAllShops = async (req: express.Request, res: express.Response) => {
     res.status(500).json({ message: "Impossible de récupérer les boutiques" });
   }
 };
+
 
 // Récupérer toutes les boutiques
 const getAllShopsAdmin = async (req: express.Request, res: express.Response) => {
@@ -580,7 +616,14 @@ const getShopsNearby = async (req: express.Request, res: express.Response) => {
     const clientLatitude = parseFloat(lat as string);
     const clientLongitude = parseFloat(lon as string);
 
-    const shops = await ShopModel.find();
+    const mode = normalizeServiceMode((req.query as any)?.mode);
+    const modeQuery = buildServiceModeQuery(mode);
+
+    const baseQuery: any = {};
+    if (modeQuery) Object.assign(baseQuery, modeQuery);
+
+    const shops = await ShopModel.find(baseQuery);
+
 
     const shopsNearby = shops.filter((shop: any) => {
       if (
@@ -686,39 +729,47 @@ function computePerformanceScore(shop: any) {
 
 export const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) => {
   try {
+    const mode = normalizeServiceMode((req.query as any)?.mode); // "SALON" | "DOMICILE"
+    if (!mode) {
+      return res.status(400).json({ message: "Mode requis (SALON ou DOMICILE)" });
+    }
+
     const { codes, country } = req.query;
     if (!codes) {
       return res.status(400).json({ message: "Les codes postaux sont requis" });
     }
 
-    let postalCodes: string[] = [];
-    if (typeof codes === "string") {
-      postalCodes = codes.split(",").map((c) => c.trim()).filter(Boolean);
-    } else if (Array.isArray(codes)) {
-      postalCodes = codes.map((c) => String(c).trim()).filter(Boolean);
+    // 1️⃣ Parse codes postaux
+    const postalCodes = pickPostalCodes(codes);
+    if (!postalCodes.length) {
+      return res.json({ all: [], discover: [], appreciated: [], smart: [], top10: [] });
     }
 
     const countryQuery = buildCountryQuery(country);
 
-    if (countryQuery) {
-      const countryCount = await ShopModel.countDocuments({
-        ...countryQuery,
-        active: true,
-        status: "approved",
-      });
-      if (countryCount === 0) {
-        return res.json({
-          all: [],
-          discover: [],
-          appreciated: [],
-          smart: [],
-          top10: [],
-        });
-      }
+    // 2️⃣ Filtrage par mode + rétro-compat (shops anciens sans serviceMode)
+    let zoneQuery: any;
+
+    if (mode === "SALON") {
+      zoneQuery = {
+        // ✅ fallback: accepte anciens shops sans serviceMode (null / undefined)
+        serviceMode: { $in: ["SALON", null] },
+        $or: [
+          { "placeAddress.postalCode": { $in: postalCodes } },
+          { "legal.postalCode": { $in: postalCodes } }, // fallback
+        ],
+      };
+    } else {
+      zoneQuery = {
+        // ✅ fallback: accepte anciens shops sans serviceMode (null / undefined)
+        serviceMode: { $in: ["DOMICILE", null] },
+        deliveryPostalCodes: { $in: postalCodes },
+      };
     }
 
+    // 3️⃣ Query principale
     const shopQuery: any = {
-      deliveryPostalCodes: { $in: postalCodes },
+      ...zoneQuery,
       active: true,
       status: "approved",
       ...(countryQuery ?? {}),
@@ -726,17 +777,22 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
 
     const shops = await ShopModel.find(shopQuery).lean();
 
-    // ✅ Ajout performance + stats safe (si stats n'existe pas -> 0)
+    if (!shops.length) {
+      return res.json({ all: [], discover: [], appreciated: [], smart: [], top10: [] });
+    }
+
+    // 4️⃣ Performance + stats safe
     const shopsWithPerformance = shops.map((shop: any) => {
       const finished = shop?.stats?.bookings?.finished;
+
       const finishedStats = {
-        last24h: Number(finished?.last24h ?? 0),
-        week: Number(finished?.week ?? 0),
-        month: Number(finished?.month ?? 0),
-        total: Number(finished?.total ?? 0),
+        last24h: toNumber(finished?.last24h, 0),
+        week: toNumber(finished?.week, 0),
+        month: toNumber(finished?.month, 0),
+        total: toNumber(finished?.total, 0),
       };
 
-      const note = Number(shop?.note ?? 0);
+      const note = toNumber(shop?.note, 0);
 
       const performanceScore =
         finishedStats.last24h * 6 +
@@ -758,61 +814,69 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
       };
     });
 
-    // Re-filtrage strict par sécurité
-    const shopsByPostalCodes = shopsWithPerformance.filter((shop) =>
-      Array.isArray(shop.deliveryPostalCodes) &&
-      shop.deliveryPostalCodes.some((d: string) => postalCodes.includes(d))
-    );
+    // 5️⃣ Enrichissement prix moyen (robuste string/ObjectId)
+    const shopIdsStr = shopsWithPerformance.map((s: any) => String(s._id));
+    const shopIdsObj = asObjectIdArray(shopIdsStr);
 
-    // Enrichissement prix moyen
-    const shopIds = shopsWithPerformance.map((s: any) => s._id.toString());
-    const servicesAgg = await ServiceModel.aggregate([
-      { $match: { shopId: { $in: shopIds } } },
-      { $group: { _id: "$shopId", avgPrice: { $avg: "$price" } } },
-    ]);
+    // On tente d’abord en ObjectId (cas le plus fréquent), puis fallback en string si vide
+    let servicesAgg: Array<{ _id: any; avgPrice: number }> = [];
+
+    if (shopIdsObj.length) {
+      servicesAgg = await ServiceModel.aggregate([
+        { $match: { shopId: { $in: shopIdsObj } } },
+        { $group: { _id: "$shopId", avgPrice: { $avg: "$price" } } },
+      ]);
+    }
+
+    // Fallback si aucun match (possible si shopId stocké en string)
+    if (!servicesAgg.length) {
+      servicesAgg = await ServiceModel.aggregate([
+        { $match: { shopId: { $in: shopIdsStr } } },
+        { $group: { _id: "$shopId", avgPrice: { $avg: "$price" } } },
+      ]);
+    }
 
     const avgPriceByShop: Record<string, number> = {};
-    servicesAgg.forEach((s) => { avgPriceByShop[s._id] = s.avgPrice; });
+    servicesAgg.forEach((s: any) => {
+      avgPriceByShop[String(s._id)] = toNumber(s.avgPrice, Infinity);
+    });
 
     const enrichedShops = shopsWithPerformance.map((shop: any) => ({
       ...shop,
-      avgPrice: avgPriceByShop[shop._id.toString()] ?? Infinity,
+      avgPrice: avgPriceByShop[String(shop._id)] ?? Infinity,
     }));
 
-    // ✅ Catégories : on boost la "top10" par performance au lieu de clics
-    // (tu peux garder clics en fallback si tu veux)
+    // 6️⃣ Catégories
+    const sortedByPerf = [...enrichedShops].sort(
+      (a, b) => toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0)
+    );
+
     const categories = {
-      all: shopsByPostalCodes,
+      all: enrichedShops,
 
-      // Découverte : random mais on préfère légèrement les shops qui performent
-      discover: shuffle(enrichedShops)
-        .sort((a, b) => (b.performanceScore ?? 0) - (a.performanceScore ?? 0))
-        .slice(0, 15),
+      // ✅ "discover" : un pool des meilleurs, puis shuffle (sinon shuffle + sort = inutile)
+      discover: shuffle(sortedByPerf.slice(0, 50)).slice(0, 15),
 
-      // Appréciés : note d'abord, puis performance pour départager
       appreciated: [...enrichedShops]
         .sort((a, b) => {
-          const na = Number(a.note ?? 0);
-          const nb = Number(b.note ?? 0);
+          const na = toNumber(a.note, 0);
+          const nb = toNumber(b.note, 0);
           if (nb !== na) return nb - na;
-          return (b.performanceScore ?? 0) - (a.performanceScore ?? 0);
+          return toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0);
         })
         .slice(0, 15),
 
-      // Bons plans : prix bas, puis performance (car un bon plan actif convertit mieux)
       smart: [...enrichedShops]
         .sort((a, b) => {
-          const pa = Number(a.avgPrice ?? Infinity);
-          const pb = Number(b.avgPrice ?? Infinity);
+          const pa = toNumber(a.avgPrice, Infinity);
+          const pb = toNumber(b.avgPrice, Infinity);
           if (pa !== pb) return pa - pb;
-          return (b.performanceScore ?? 0) - (a.performanceScore ?? 0);
+          return toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0);
         })
         .slice(0, 15),
 
-      // Top : performance réelle (week / 24h / month), pas juste clics
-      top10: [...enrichedShops]
-        .sort((a, b) => (b.performanceScore ?? 0) - (a.performanceScore ?? 0))
-        .slice(0, 15),
+      // ✅ top10 = 10
+      top10: sortedByPerf.slice(0, 10),
     };
 
     return res.json(categories);
@@ -829,10 +893,43 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
 };
 
 
+
+
 // Petit helper
-function shuffle<T>(array: T[]): T[] {
-  return [...array].sort(() => Math.random() - 0.5);
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
+
+const toNumber = (v: any, fallback = 0) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+const pickPostalCodes = (codes: any): string[] => {
+  let postalCodes: string[] = [];
+  if (typeof codes === "string") {
+    postalCodes = codes
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+  } else if (Array.isArray(codes)) {
+    postalCodes = codes.map((c) => String(c).trim()).filter(Boolean);
+  }
+  return postalCodes;
+};
+
+const asObjectIdArray = (ids: string[]): mongoose.Types.ObjectId[] => {
+  const out: mongoose.Types.ObjectId[] = [];
+  for (const id of ids) {
+    if (mongoose.Types.ObjectId.isValid(id)) out.push(new mongoose.Types.ObjectId(id));
+  }
+  return out;
+};
 
 // Récupérer une boutique par son ID
 const getShopById = async (req: express.Request, res: express.Response) => {
@@ -861,13 +958,56 @@ const getShopById = async (req: express.Request, res: express.Response) => {
 };
 
 // Mettre à jour une boutique par son ID
+// Mettre à jour une boutique par son ID
 const updateShopById = async (req: express.Request, res: express.Response) => {
-  logger.info({ msg: "shop.update.start", route: req.originalUrl, method: req.method, params: req.params, bodyKeys: Object.keys(req.body || {}) });
+  logger.info({
+    msg: "shop.update.start",
+    route: req.originalUrl,
+    method: req.method,
+    params: req.params,
+    bodyKeys: Object.keys(req.body || {}),
+  });
 
   try {
     const { id } = req.params;
-    const payload: any = { ...(req.body || {}) };
 
+    // 1) On récupère le shop existant (utile pour validation "final state")
+    const existingShop = await ShopModel.findById(id).select("serviceMode placeAddress");
+    if (!existingShop) {
+      return res.status(404).json({ message: "Boutique non trouvée" });
+    }
+
+    // 2) ✅ Whitelist : on filtre strictement ce qu'on accepte en update (anti open-bar)
+    const raw: any = { ...(req.body || {}) };
+
+    const allowedFields = new Set([
+      "name",
+      "type",
+      "description",
+      "image",
+      "galleryImages",
+      "hours",
+      "location",
+      "maxDistance",
+      "deliveryPostalCodes",
+      "minimumDelay",
+      "promo",
+      "trad",
+
+      // ✅ handle
+      "handle",
+
+      // ✅ adresse salon / mode
+      "serviceMode",
+      "placeAddress",
+    ]);
+
+    const payload: any = {};
+    for (const key of Object.keys(raw)) {
+      if (allowedFields.has(key)) payload[key] = raw[key];
+    }
+
+    // 3) ✅ handle : normalise + rend unique si collision
     if (payload.handle !== undefined) {
       const normalized = normalizeHandle(payload.handle);
 
@@ -879,9 +1019,51 @@ const updateShopById = async (req: express.Request, res: express.Response) => {
       payload.handle = await generateUniqueHandle(normalized, id);
     }
 
-    const updatedShop = await ShopModel.findByIdAndUpdate(id, payload, { new: true });
+    // 4) ✅ serviceMode : normalise et valide
+    if (payload.serviceMode !== undefined) {
+      const mode = normalizeServiceMode(payload.serviceMode); // "SALON" | "DOMICILE" | ""
+      if (!mode) {
+        return res.status(400).json({ message: "serviceMode invalide (SALON ou DOMICILE)" });
+      }
+      payload.serviceMode = mode;
+    }
 
-    if (!updatedShop) return res.status(404).json({ message: "Boutique non trouvée" });
+    // 5) ✅ placeAddress : nettoyage + normalisation
+    if (payload.placeAddress !== undefined) {
+      const a = payload.placeAddress || {};
+
+      payload.placeAddress = {
+        label: cleanString(a.label, 180) || undefined,
+        addressLine1: cleanString(a.addressLine1, 120) || undefined,
+        addressLine2: cleanString(a.addressLine2, 120) || undefined,
+        postalCode: cleanPostalCode(a.postalCode, 12) || undefined,
+        city: cleanString(a.city, 80) || undefined,
+        country: normalizeCountryCode(a.country, "FR"),
+      };
+    }
+
+    // 6) ✅ Validation "SALON" sur l'état FINAL (payload + existant)
+    const finalMode = (payload.serviceMode ?? (existingShop as any).serviceMode) as any;
+    const finalAddress = payload.placeAddress ?? (existingShop as any).placeAddress;
+
+    if (finalMode === "SALON") {
+      const a = finalAddress || {};
+      if (!a.addressLine1 || !a.postalCode || !a.city) {
+        return res.status(400).json({
+          message: "Adresse du salon incomplète (adresse, code postal, ville requis).",
+        });
+      }
+    }
+
+    // 7) Update en base
+    const updatedShop = await ShopModel.findByIdAndUpdate(id, payload, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedShop) {
+      return res.status(404).json({ message: "Boutique non trouvée" });
+    }
 
     return res.json(updatedShop);
   } catch (error: any) {
@@ -895,6 +1077,7 @@ const updateShopById = async (req: express.Request, res: express.Response) => {
     return res.status(500).json({ message: "Impossible de mettre à jour la boutique" });
   }
 };
+
 
 
 // Supprimer une boutique par son ID
@@ -1202,49 +1385,95 @@ const updateShopDisplayTime = async (req: express.Request, res: express.Response
 };
 
 const searchShopsWithServices = async (req: express.Request, res: express.Response) => {
-  logger.info({ msg: "shops.searchWithServices.start", route: req.originalUrl, method: req.method, query: req.query });
+  logger.info({
+    msg: "shops.searchWithServices.start",
+    route: req.originalUrl,
+    method: req.method,
+    query: req.query,
+  });
+
   try {
-    const { postalCode, query } = req.query;
+    const { postalCode, query, mode, country } = req.query;
 
     if (!postalCode || !query) {
       return res.status(400).json({ message: "postalCode et query sont requis" });
     }
 
-    const lowerQuery = query.toString().toLowerCase();
+    // ✅ mode optionnel mais fortement recommandé
+    // Si non fourni => par défaut DOMICILE (cohérent avec ton historique "deliveryPostalCodes")
+    const normalizedMode = String(mode || "DOMICILE").toUpperCase();
+    if (normalizedMode !== "SALON" && normalizedMode !== "DOMICILE") {
+      return res.status(400).json({ message: "mode invalide (SALON ou DOMICILE)" });
+    }
+
+    // country optionnel
+    const countryValue = country ? String(country) : null;
+
+    const lowerQuery = String(query).toLowerCase();
+    const pc = String(postalCode).trim();
+
+    // ✅ Filtre géographique selon mode
+    let zoneMatch = {};
+    if (normalizedMode === "SALON") {
+      zoneMatch = {
+        serviceMode: "SALON",
+        $or: [
+          { "placeAddress.postalCode": pc },
+          { "legal.postalCode": pc }, // fallback si placeAddress non rempli
+        ],
+      };
+    } else {
+      zoneMatch = {
+        serviceMode: "DOMICILE",
+        deliveryPostalCodes: pc,
+      };
+    }
+
+    // ✅ Filtre pays si fourni
+    // Attention : dans ton shop model, tu as `country` qui contient souvent "France"
+    // donc on match exactement (comme tu fais ailleurs).
+    const countryMatch = countryValue ? { country: countryValue } : {};
 
     const results = await ShopModel.aggregate([
-      { $match: { deliveryPostalCodes: postalCode } },
+      {
+        $match: {
+          ...zoneMatch,
+          ...countryMatch,
+          active: true,
+          status: "approved",
+        },
+      },
       {
         $lookup: {
-          from: 'services',
-          localField: '_id',
-          foreignField: 'shopId',
-          as: 'services'
-        }
+          from: "services",
+          localField: "_id",
+          foreignField: "shopId",
+          as: "services",
+        },
       },
       {
         $addFields: {
           matchedServices: {
             $filter: {
-              input: '$services',
-              as: 'service',
+              input: "$services",
+              as: "service",
               cond: {
                 $regexMatch: {
-                  input: { $toLower: '$$service.name' },
-                  regex: lowerQuery
-                }
-              }
-            }
-          }
-        }
+                  input: { $toLower: "$$service.name" },
+                  regex: lowerQuery,
+                },
+              },
+            },
+          },
+        },
       },
       {
         $match: {
           $or: [
-            { name: { $regex: query.toString(), $options: 'i' } },
-            { 'matchedServices.0': { $exists: true } }
-          ]
-        }
+            { name: { $regex: String(query), $options: "i" } },
+            { "matchedServices.0": { $exists: true } },
+          ],
+        },
       },
       {
         $project: {
@@ -1268,14 +1497,17 @@ const searchShopsWithServices = async (req: express.Request, res: express.Respon
           taux_conversion: 1,
           temps_affichage_total: 1,
           nombre_affichages_valides: 1,
-          services: '$matchedServices'
-        }
-      }
+          serviceMode: 1,
+          placeAddress: 1,
+          deliveryPostalCodes: 1,
+          services: "$matchedServices",
+        },
+      },
     ]);
 
     logger.info({ msg: "shops.searchWithServices.success", returned: results.length });
-    res.status(200).json(results);
-  } catch (error: any) {
+    return res.status(200).json(results);
+  } catch (error:any) {
     console.error("Erreur dans searchShopsWithServices :", error);
     logger.error({
       msg: "shops.searchWithServices.error",
@@ -1284,9 +1516,10 @@ const searchShopsWithServices = async (req: express.Request, res: express.Respon
       route: req.originalUrl,
       method: req.method,
     });
-    res.status(500).json({ message: "Erreur lors de la recherche des boutiques", error });
+    return res.status(500).json({ message: "Erreur lors de la recherche des boutiques" });
   }
 };
+
 
 const getShopsByBoss = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shops.byBoss.start", route: req.originalUrl, method: req.method });
@@ -1675,7 +1908,7 @@ export const blockShopAndRefundBookings = async (req: Request, res: Response) =>
         const client = await UserModel.findById((b as any).clientId).lean();
         const clientEmail = (client as any)?.email;
         const clientName =
-          [ (client as any)?.firstname, (client as any)?.lastname ].filter(Boolean).join(" ").trim()
+          [(client as any)?.firstname, (client as any)?.lastname].filter(Boolean).join(" ").trim()
           || (client as any)?.firstname
           || "Client";
 

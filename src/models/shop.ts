@@ -21,9 +21,9 @@ type ModerationDesc = {
 
 // ✅ Résumé des prestations (services) flagguées, stocké sur le shop
 type ModerationServicesSummary = {
-  flaggedCount: number;     // nb de services signalés dans ce shop
-  topReasons: string[];     // ex: ["adult", "drugs"]
-  lastFlaggedAt?: Date;     // dernière fois qu'un service a été signalé
+  flaggedCount: number; // nb de services signalés dans ce shop
+  topReasons: string[]; // ex: ["adult", "drugs"]
+  lastFlaggedAt?: Date; // dernière fois qu'un service a été signalé
 };
 
 type Moderation = {
@@ -50,6 +50,17 @@ type Verification = {
   method?: "manual" | "stripe_identity" | "mixed"; // pour plus tard, Stripe Identity
 };
 
+export type ShopServiceMode = "SALON" | "DOMICILE";
+
+type PlaceAddress = {
+  label?: string;       // "12 rue ...", texte complet
+  addressLine1?: string;
+  addressLine2?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;     // "FR"
+};
+
 export interface iShop extends mongoose.Document {
   name: string;
   handle: string;
@@ -63,6 +74,13 @@ export interface iShop extends mongoose.Document {
   ville: string;
   filter: string;
   district?: string;
+
+  // ✅ NEW : sur place / à domicile
+  serviceMode?: ShopServiceMode; // default "SALON"
+
+  // ✅ NEW : adresse du lieu (utile si SALON)
+  placeAddress?: PlaceAddress;
+
   stats?: {
     bookings?: {
       finished?: {
@@ -74,11 +92,13 @@ export interface iShop extends mongoose.Document {
     };
     computedAt?: Date;
   };
+
   reviews: Array<{
     user: mongoose.Types.ObjectId;
     rating?: number;
     comment?: string;
   }>;
+
   maxDistance: number;
   idUser: string;
   country: string;
@@ -117,21 +137,20 @@ export interface iShop extends mongoose.Document {
   // 🔒 Modération / statut
   active?: boolean;
   status?: "pending" | "approved" | "blocked" | "needs_manual_review";
-  flags?: string[]; // raisons synthétiques (mots-clés)
-  moderation?: Moderation; // détail de modération IA/humain + résumé services
+  flags?: string[];
+  moderation?: Moderation;
 
   // ✅ Vérification pro & documents
   verification?: Verification;
   timeZone?: string;
 
-
   legal?: {
-    companyName?: string;        // Raison sociale (si différente du nom shop)
-    legalForm?: string;          // EI / SASU / EURL / etc.
-    siret?: string;              // 14 chiffres
-    siren?: string;              // 9 chiffres (optionnel si tu as siret)
-    vatNumber?: string;          // TVA intracom (FR..)
-    addressLine1?: string;       // adresse pro
+    companyName?: string;
+    legalForm?: string;
+    siret?: string;
+    siren?: string;
+    vatNumber?: string;
+    addressLine1?: string;
     addressLine2?: string;
     postalCode?: string;
     city?: string;
@@ -139,7 +158,6 @@ export interface iShop extends mongoose.Document {
     email?: string;
     phone?: string;
   };
-
 }
 
 const defaultDaySchedule: DaySchedule = {
@@ -154,10 +172,29 @@ const shopSchema = new Schema<iShop>(
     handle: { type: String, required: true, unique: true, index: true },
     country: { type: String, required: true },
     description: { type: String, required: true },
-    filter: { type: String, required: true }, // texte final affiché côté app
-    description_original: { type: String, required: false }, // trace avant correction
+    filter: { type: String, required: true },
+    description_original: { type: String, required: false },
     image: { type: String, required: true, default: "default.png" },
     note: { type: String, required: true },
+
+    // ✅ NEW : mode de prestation
+    serviceMode: {
+      type: String,
+      enum: ["SALON", "DOMICILE"],
+      default: "SALON",
+      required: false,
+      index: true,
+    },
+
+    // ✅ NEW : adresse du lieu (si salon)
+    placeAddress: {
+      label: { type: String, required: false },
+      addressLine1: { type: String, required: false },
+      addressLine2: { type: String, required: false },
+      postalCode: { type: String, required: false },
+      city: { type: String, required: false },
+      country: { type: String, required: false, default: "FR" },
+    },
 
     // 📊 Stats (calculées par cron)
     stats: {
@@ -185,7 +222,6 @@ const shopSchema = new Schema<iShop>(
     trad: { type: String, required: true },
     galleryImages: { type: [String], required: false },
     timeZone: { type: String, required: false, default: "Europe/Paris" },
-
 
     reviews: [
       {
@@ -322,6 +358,7 @@ const shopSchema = new Schema<iShop>(
       reviewedBy: { type: String },
       source: { type: String, enum: ["ai", "human"], default: "ai" },
     },
+
     legal: {
       companyName: { type: String },
       legalForm: { type: String },
@@ -336,19 +373,18 @@ const shopSchema = new Schema<iShop>(
       email: { type: String },
       phone: { type: String },
     },
-
   },
-  { timestamps: true },
-
+  { timestamps: true }
 );
 
 // Index utiles pour les vues d’admin/modération
 shopSchema.index({ status: 1 });
 shopSchema.index({ active: 1 });
 shopSchema.index({ "moderation.desc.safe": 1 });
-
-// ✅ NEW : requêtes admin rapides “shops avec services signalés”
 shopSchema.index({ "moderation.services.flaggedCount": 1 });
+
+// ✅ NEW : filtrage rapide mode
+shopSchema.index({ serviceMode: 1 });
 
 const shopModel = mongoose.model<iShop>("Shop", shopSchema);
 export default shopModel;
