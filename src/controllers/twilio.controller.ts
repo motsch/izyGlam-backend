@@ -206,6 +206,41 @@ async function renderSlotMenu(twiml: any, session: any) {
  * ===========================
  */
 
+function msSince(t0: number) {
+  return Date.now() - t0;
+}
+
+function safeStr(v: any, max = 200) {
+  try {
+    const s = typeof v === "string" ? v : JSON.stringify(v);
+    if (!s) return "";
+    return s.length > max ? s.slice(0, max) + "…" : s;
+  } catch {
+    const s = String(v ?? "");
+    return s.length > max ? s.slice(0, max) + "…" : s;
+  }
+}
+
+function logStep(tag: string, t0: number, data?: any) {
+  const payload = data ? { ...data } : undefined;
+  console.log(`[twilio][voice:entry][${tag}] +${msSince(t0)}ms`, payload || "");
+}
+
+function logErr(tag: string, t0: number, e: any, extra?: any) {
+  console.error(
+    `[twilio][voice:entry][${tag}] +${msSince(t0)}ms ERROR`,
+    {
+      ...extra,
+      message: e?.message,
+      name: e?.name,
+      code: e?.code,
+      status: e?.status,
+      moreInfo: e?.moreInfo,
+      stack: e?.stack,
+    }
+  );
+}
+
 /**
  * 📞 Entrée appel => ASK_CATEGORY
  */
@@ -217,21 +252,65 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
   const from = norm((req.body as any)?.From);
   const callSid = norm((req.body as any)?.CallSid);
 
-  console.log("[twilio][voice:entry] IN", { callSid, to, from, bodyKeys: Object.keys(req.body || {}) });
+  console.log("[twilio][voice:entry] IN", {
+    callSid,
+    to,
+    from,
+    method: req.method,
+    path: (req as any).originalUrl,
+    contentType: req.headers["content-type"],
+    userAgent: req.headers["user-agent"],
+    host: req.headers["host"],
+    bodyKeys: Object.keys(req.body || {}),
+    // ⚠️ évite de log tout le body en prod, mais là ça t’aide à debugguer :
+    bodyPreview: safeStr(req.body, 800),
+  });
 
   try {
+    logStep("lookup_pro:start", t0, { to });
+
     const pro: any = await UserModel.findOne({ twilioPhoneNumber: to }).lean();
 
+    logStep("lookup_pro:done", t0, {
+      found: !!pro,
+      proId: pro?._id ? String(pro._id) : null,
+      assistantProEnabled: !!pro?.assistantProEnabled,
+      assistantShopId: pro?.assistantShopId ? String(pro.assistantShopId) : null,
+      twilioPhoneNumber: pro?.twilioPhoneNumber || null,
+    });
+
     if (!pro || !pro.assistantProEnabled || !pro.assistantShopId) {
-      twiml.say({ language: "fr-FR" }, "Bonjour. Ce numéro n'est pas disponible pour la prise de rendez-vous.");
+      twiml.say(
+        { language: "fr-FR" },
+        "Bonjour. Ce numéro n'est pas disponible pour la prise de rendez-vous."
+      );
       twiml.hangup();
-      console.warn("[twilio][voice:entry] REJECT", { callSid, to, from, elapsedMs: nowMs() - t0 });
+
+      console.warn("[twilio][voice:entry] REJECT", {
+        callSid,
+        to,
+        from,
+        elapsedMs: msSince(t0),
+        reason: !pro
+          ? "PRO_NOT_FOUND"
+          : !pro.assistantProEnabled
+            ? "ASSISTANT_DISABLED"
+            : "MISSING_SHOP_ID",
+      });
+
       return res.type("text/xml").send(twiml.toString());
     }
 
+    logStep("load_shop:start", t0, { shopId: String(pro.assistantShopId) });
     const shop: any = await ShopModel.findById(pro.assistantShopId).lean();
+    logStep("load_shop:done", t0, {
+      found: !!shop,
+      shopName: shop?.name || null,
+      shopId: shop?._id ? String(shop._id) : String(pro.assistantShopId),
+    });
 
-    // 1) on récupère les catégories qui ont AU MOINS 1 service éligible
+    // 1) services éligibles -> récupérer categoryId
+    logStep("eligible_services:start", t0);
     const eligibleServices: any[] = await ServiceModel.find({
       shopId: pro.assistantShopId,
       blocked: { $ne: true },
@@ -241,9 +320,34 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
       .select({ categoryId: 1 })
       .lean();
 
-    const rawCatIds = Array.from(new Set(eligibleServices.map((s) => String(s.categoryId)).filter(Boolean)));
+    logStep("eligible_services:done", t0, {
+      count: eligibleServices.length,
+      sample: eligibleServices.slice(0, 5).map((s) => ({
+        _id: String(s?._id),
+        categoryId: String(s?.categoryId || ""),
+      })),
+    });
 
-    const validCatObjIds = rawCatIds.filter(mongoose.isValidObjectId).map((id) => new mongoose.Types.ObjectId(id));
+    const rawCatIds = Array.from(
+      new Set(eligibleServices.map((s) => String(s.categoryId)).filter(Boolean))
+    );
+
+    const invalidCatIds = rawCatIds.filter((id) => !mongoose.isValidObjectId(id));
+    const validCatObjIds = rawCatIds
+      .filter(mongoose.isValidObjectId)
+      .map((id) => new mongoose.Types.ObjectId(id));
+
+    logStep("categories:ids", t0, {
+      rawCount: rawCatIds.length,
+      validCount: validCatObjIds.length,
+      invalidCount: invalidCatIds.length,
+      invalidSample: invalidCatIds.slice(0, 10),
+    });
+
+    logStep("categories:query:start", t0, {
+      shopId: String(pro.assistantShopId),
+      limit: 9,
+    });
 
     const categories: any[] = await ServiceCategoryModel.find({
       shopId: String(pro.assistantShopId),
@@ -253,13 +357,29 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
       .limit(9)
       .lean();
 
+    logStep("categories:query:done", t0, {
+      count: categories.length,
+      list: categories.map((c) => ({ id: String(c._id), name: c.name })),
+    });
+
     if (!categories.length) {
       twiml.say({ language: "fr-FR" }, "Aucune catégorie n'est disponible actuellement. Au revoir.");
       twiml.hangup();
+
+      console.warn("[twilio][voice:entry] NO_CATEGORIES", {
+        callSid,
+        to,
+        from,
+        elapsedMs: msSince(t0),
+        rawCatIdsCount: rawCatIds.length,
+        validCatIdsCount: validCatObjIds.length,
+      });
+
       return res.type("text/xml").send(twiml.toString());
     }
 
-    // ✅ session stable : on stocke l'ordre proposé
+    // session
+    logStep("session:upsert:start", t0);
     await AssistantSessionModel.findOneAndUpdate(
       { callSid },
       {
@@ -276,19 +396,33 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
       },
       { upsert: true }
     );
+    logStep("session:upsert:done", t0);
 
-    twiml.say({ language: "fr-FR" }, `Bonjour. Je suis Lizy, l'assistante de ${shop?.name || "ce salon"}.`);
+    // twiml
+    logStep("twiml:render:start", t0);
+    twiml.say(
+      { language: "fr-FR" },
+      `Bonjour. Je suis Lizy, l'assistante de ${shop?.name || "ce salon"}.`
+    );
     await renderCategoryMenu(twiml, { proposedCategoryIds: categories.map((c) => String(c._id)) });
+    logStep("twiml:render:done", t0);
 
-    console.log("[twilio][voice:entry] OUT", { callSid, elapsedMs: nowMs() - t0 });
+    console.log("[twilio][voice:entry] OUT", {
+      callSid,
+      elapsedMs: msSince(t0),
+    });
+
     return res.type("text/xml").send(twiml.toString());
   } catch (e: any) {
-    console.error("[twilio][voice:entry] ERROR", dumpErr(e));
+    logErr("catch", t0, e, { callSid, to, from });
+
     twiml.say({ language: "fr-FR" }, "Une erreur est survenue. Au revoir.");
     twiml.hangup();
+
     return res.type("text/xml").send(twiml.toString());
   }
 };
+
 
 /**
  * 📚 Choix catégorie
