@@ -21,10 +21,10 @@ import sitemapRouter from "./routes/sitemap";
 import { scheduleWeeklyPayouts } from "./cron/weeklyPayoutJob";
 import { Request, Response, NextFunction } from "express";
 import { startShopStatsCron } from "./cron/shopStats.cron";
-
-import { stripeWebhook } from "./controllers/stripeWebhook.controller";
 import twilioRoutes from "./routes/twilioRoutes";
 import { startBigBuyCrons } from "./cron/bigbuyCron";
+
+import stripeWebhookRoutes from "./routes/stripeWebhook.routes";
 
 const app = express();
 
@@ -62,13 +62,10 @@ app.options("*", cors(corsOptions));
 
 /**
  * ✅ 1) STRIPE WEBHOOK
- * IMPORTANT: raw body AVANT tout parser JSON
+ * DOIT être monté AVANT express.json()
  */
-app.post(
-  "/stripe",
-  require("express").raw({ type: "application/json" }),
-  stripeWebhook
-);
+app.use("/stripe", stripeWebhookRoutes);
+
 
 /**
  * ✅ 2) TWILIO WEBHOOKS
