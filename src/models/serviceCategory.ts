@@ -33,5 +33,5 @@ const serviceCategorySchema = new mongoose.Schema<iServiceCategory>(
 serviceCategorySchema.index({ shopId: 1, active: 1 });
 serviceCategorySchema.index({ shopId: 1, name: 1 }, { unique: true });
 
-const serviceCategoryModel = mongoose.model<iServiceCategory>("bookingcategories", serviceCategorySchema);
+const serviceCategoryModel = mongoose.model<iServiceCategory>("ServiceCategory", serviceCategorySchema);
 export default serviceCategoryModel;
