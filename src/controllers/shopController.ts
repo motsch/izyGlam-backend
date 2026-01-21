@@ -733,23 +733,18 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
     if (!mode) {
       return res.status(400).json({ message: "Mode requis (SALON ou DOMICILE)" });
     }
-
     const { codes, country } = req.query;
     if (!codes) {
       return res.status(400).json({ message: "Les codes postaux sont requis" });
     }
-
     // 1️⃣ Parse codes postaux
     const postalCodes = pickPostalCodes(codes);
     if (!postalCodes.length) {
       return res.json({ all: [], discover: [], appreciated: [], smart: [], top10: [] });
     }
-
     const countryQuery = buildCountryQuery(country);
-
     // 2️⃣ Filtrage par mode + rétro-compat (shops anciens sans serviceMode)
     let zoneQuery: any;
-
     if (mode === "SALON") {
       zoneQuery = {
         // ✅ fallback: accepte anciens shops sans serviceMode (null / undefined)
