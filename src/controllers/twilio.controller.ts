@@ -227,18 +227,15 @@ function logStep(tag: string, t0: number, data?: any) {
 }
 
 function logErr(tag: string, t0: number, e: any, extra?: any) {
-  console.error(
-    `[twilio][voice:entry][${tag}] +${msSince(t0)}ms ERROR`,
-    {
-      ...extra,
-      message: e?.message,
-      name: e?.name,
-      code: e?.code,
-      status: e?.status,
-      moreInfo: e?.moreInfo,
-      stack: e?.stack,
-    }
-  );
+  console.error(`[twilio][voice:entry][${tag}] +${msSince(t0)}ms ERROR`, {
+    ...extra,
+    message: e?.message,
+    name: e?.name,
+    code: e?.code,
+    status: e?.status,
+    moreInfo: e?.moreInfo,
+    stack: e?.stack,
+  });
 }
 
 /**
@@ -280,10 +277,7 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
     });
 
     if (!pro || !pro.assistantProEnabled || !pro.assistantShopId) {
-      twiml.say(
-        { language: "fr-FR" },
-        "Bonjour. Ce numéro n'est pas disponible pour la prise de rendez-vous."
-      );
+      twiml.say({ language: "fr-FR" }, "Bonjour. Ce numéro n'est pas disponible pour la prise de rendez-vous.");
       twiml.hangup();
 
       console.warn("[twilio][voice:entry] REJECT", {
@@ -291,11 +285,7 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
         to,
         from,
         elapsedMs: msSince(t0),
-        reason: !pro
-          ? "PRO_NOT_FOUND"
-          : !pro.assistantProEnabled
-            ? "ASSISTANT_DISABLED"
-            : "MISSING_SHOP_ID",
+        reason: !pro ? "PRO_NOT_FOUND" : !pro.assistantProEnabled ? "ASSISTANT_DISABLED" : "MISSING_SHOP_ID",
       });
 
       return res.type("text/xml").send(twiml.toString());
@@ -328,9 +318,7 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
       })),
     });
 
-    const rawCatIds = Array.from(
-      new Set(eligibleServices.map((s) => String(s.categoryId)).filter(Boolean))
-    );
+    const rawCatIds = Array.from(new Set(eligibleServices.map((s) => String(s.categoryId)).filter(Boolean)));
 
     const invalidCatIds = rawCatIds.filter((id) => !mongoose.isValidObjectId(id));
     const validCatObjIds = rawCatIds
@@ -400,10 +388,7 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
 
     // twiml
     logStep("twiml:render:start", t0);
-    twiml.say(
-      { language: "fr-FR" },
-      `Bonjour. Je suis Lizy, l'assistante de ${shop?.name || "ce salon"}.`
-    );
+    twiml.say({ language: "fr-FR" }, `Bonjour. Je suis Lizy, l'assistante de ${shop?.name || "ce salon"}.`);
     await renderCategoryMenu(twiml, { proposedCategoryIds: categories.map((c) => String(c._id)) });
     logStep("twiml:render:done", t0);
 
@@ -422,7 +407,6 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
     return res.type("text/xml").send(twiml.toString());
   }
 };
-
 
 /**
  * 📚 Choix catégorie
@@ -569,10 +553,7 @@ export const twilioVoiceServiceGather = async (req: Request, res: Response) => {
       return res.type("text/xml").send(twiml.toString());
     }
 
-    await AssistantSessionModel.updateOne(
-      { callSid },
-      { step: "ASK_SLOT", serviceId: String(selected._id), proposedSlots: top3 }
-    );
+    await AssistantSessionModel.updateOne({ callSid }, { step: "ASK_SLOT", serviceId: String(selected._id), proposedSlots: top3 });
 
     await renderSlotMenu(twiml, { ...session, step: "ASK_SLOT", serviceId: String(selected._id), proposedSlots: top3 });
 
@@ -612,10 +593,7 @@ export const twilioVoiceSlotGather = async (req: Request, res: Response) => {
 
     // BACK => revenir aux services
     if (isBackDigit(digit)) {
-      await AssistantSessionModel.updateOne(
-        { callSid },
-        { step: "ASK_SERVICE", serviceId: null, proposedSlots: [] }
-      );
+      await AssistantSessionModel.updateOne({ callSid }, { step: "ASK_SERVICE", serviceId: null, proposedSlots: [] });
       const updated = await AssistantSessionModel.findOne({ callSid }).lean();
       await renderServiceMenu(twiml, updated);
       return res.type("text/xml").send(twiml.toString());
@@ -746,9 +724,7 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
       await sendSms({
         to: from,
         from: shopPhone,
-        body:
-          "Commandes disponibles :\n" +
-          "• ANNULER : annuler une réservation (si plusieurs, je vous propose 1/2/3)\n",
+        body: "Commandes disponibles :\n" + "• ANNULER : annuler une réservation (si plusieurs, je vous propose 1/2/3)\n",
       });
       return;
     }
@@ -804,10 +780,7 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
           to: from,
           from: shopPhone,
           body:
-            `⚠️ Confirmation d’annulation\n` +
-            `Prestation : ${title}\n` +
-            `Quand : ${when}\n\n` +
-            `Répondez OUI pour confirmer l’annulation.`,
+            `⚠️ Confirmation d’annulation\n` + `Prestation : ${title}\n` + `Quand : ${when}\n\n` + `Répondez OUI pour confirmer l’annulation.`,
         });
         return;
       }
@@ -886,7 +859,7 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
       return;
     }
 
-    // OUI => on applique la règle 24h + refund
+    // OUI => on applique la règle 24h + refund (si payé)
     if (body === "OUI") {
       const smsSession: any = await SmsSessionModel.findOne({ key }).lean();
 
@@ -904,7 +877,11 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
       const booking: any = await bookingModel.findById(bookingIdToCancel).lean();
       if (!booking) {
         await SmsSessionModel.deleteOne({ key });
-        await sendSms({ to: from, from: shopPhone, body: "Je ne retrouve plus cette réservation. Répondez ANNULER si besoin." });
+        await sendSms({
+          to: from,
+          from: shopPhone,
+          body: "Je ne retrouve plus cette réservation. Répondez ANNULER si besoin.",
+        });
         return;
       }
 
@@ -927,7 +904,6 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
       // ✅ règle : pas annulable < 24h
       if (!Number.isFinite(diff) || diff < H24_MS) {
         await SmsSessionModel.deleteOne({ key });
-
         await sendSms({
           to: from,
           from: shopPhone,
@@ -939,14 +915,64 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
         return;
       }
 
-      // ✅ annulation autorisée : refund + remise à zéro fee/commission + tracking refund
-      // 1) refund Stripe (idempotent)
+      // ✅ SI PAS PAYÉ (webhook en retard / test / paiement non confirmé) => on annule localement SANS refund
+      const paymentIntentId = String(booking.paymentIntentId || "").trim();
+      if (!paymentIntentId) {
+        console.warn("[twilio][sms][cancel] booking_unpaid_skip_refund", {
+          bookingId: String(booking._id),
+          status: booking.status,
+          paymentIntentId: "",
+          refundId: String(booking.refundId || ""),
+        });
+
+        await bookingModel.updateOne(
+          { _id: bookingIdToCancel },
+          {
+            status: "cancelled",
+            cancelledAt: new Date(),
+            cancelSource: "sms",
+            cancelReason: "customer_sms_unpaid",
+
+            serviceFee: "0",
+            commission: "0",
+            shopEarnings: "0",
+          }
+        );
+
+        await SmsSessionModel.deleteOne({ key });
+
+        await sendSms({
+          to: from,
+          from: shopPhone,
+          body:
+            "✅ Réservation annulée.\n" +
+            "Aucun paiement n’avait été confirmé, donc aucun remboursement n’est nécessaire.\n" +
+            "Merci de nous avoir prévenus.",
+        });
+        return;
+      }
+
+      // ✅ SI PAYÉ => refund Stripe idempotent + tracking
       let refundId: string | undefined;
       try {
-        const refundRes = await refundBookingIfNeeded({ bookingId: String(booking._id) });
-        refundId = refundRes.refundId;
+        const refundRes: any = await refundBookingIfNeeded({ bookingId: String(booking._id) });
+        refundId = refundRes?.refundId;
+
+        console.log("[twilio][sms][cancel] refund_result", {
+          bookingId: String(booking._id),
+          paymentIntentId,
+          refunded: !!refundRes?.refunded,
+          skipped: !!refundRes?.skipped,
+          reason: refundRes?.reason,
+          refundId: refundRes?.refundId,
+        });
       } catch (e: any) {
-        // si refund échoue, on ne “cancel” pas silencieusement : on informe
+        console.error("[twilio][sms][cancel] refund_failed", {
+          bookingId: String(booking._id),
+          paymentIntentId,
+          error: dumpErr(e),
+        });
+
         await SmsSessionModel.deleteOne({ key });
         await sendSms({
           to: from,
@@ -958,7 +984,7 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
         return;
       }
 
-      // 2) update booking
+      // 2) update booking (cancel + reset finance + refund tracking)
       await bookingModel.updateOne(
         { _id: bookingIdToCancel },
         {
@@ -970,8 +996,6 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
           // ✅ remise à zéro
           serviceFee: "0",
           commission: "0",
-
-          // ✅ shopEarnings = 0 (logique : on rembourse, donc rien à reverser)
           shopEarnings: "0",
 
           // refund tracking (si pas déjà)
@@ -1007,6 +1031,3 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
     console.error("[twilio][sms] ERROR", dumpErr(e));
   }
 };
-
-
-

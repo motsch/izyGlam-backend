@@ -1231,6 +1231,7 @@ const getPendingBookingsByUserPro = async (req: express.Request, res: express.Re
       .find({
         userProId: userId,
         status: "pending",
+        paymentIntentId: { $exists: true, $ne: "" },
       })
       .sort({ orderDate: -1 }); // les plus récentes en premier
 
