@@ -162,7 +162,6 @@ export const deleteBookingCategory = async (req: Request, res: Response) => {
 
     const deleted = await serviceCategoryModel.findOneAndDelete({
       _id: id,
-      userProId,
     });
 
     if (!deleted) {
