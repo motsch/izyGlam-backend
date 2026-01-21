@@ -1,20 +1,69 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
-import orderModel from "../models/order";
-import { bigbuyApi } from "../services/bigbuyApi.service";
-import { logger } from "../utils/logger";
+import mongoose from "mongoose";
 
-import { sendSms } from "../services/twilio.service";
-import shopModel from "../models/shop";
+import orderModel from "../models/order";
 import bookingModel from "../models/booking";
 import serviceModel from "../models/service";
+import shopModel from "../models/shop";
+import UserModel from "../models/user";
+
+import { bigbuyApi } from "../services/bigbuyApi.service";
+import { sendSms } from "../services/twilio.service";
+import { logger } from "../utils/logger";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
 });
 
+/**
+ * Utils
+ */
 function safeStr(v: any) {
   return typeof v === "string" ? v : v === null || v === undefined ? "" : String(v);
+}
+
+function extractGuestPhone(clientId?: string) {
+  const v = String(clientId || "").trim();
+  if (v.startsWith("guest:")) return v.slice("guest:".length).trim();
+  return "";
+}
+
+function normalizeE164(raw: string) {
+  const v = String(raw || "").trim().replace(/\s+/g, "");
+  if (!v) return "";
+  if (v.startsWith("+")) return v;
+  if (/^0\d{9}$/.test(v)) return "+33" + v.slice(1);
+  return v; // fallback
+}
+
+async function resolveClientPhone(booking: any): Promise<string> {
+  // 1) source de vérité : booking.phoneNumber
+  const direct = normalizeE164(booking?.phoneNumber);
+  if (direct) return direct;
+
+  // 2) guest:<phone>
+  const guestPhone = normalizeE164(extractGuestPhone(booking?.clientId));
+  if (guestPhone) return guestPhone;
+
+  // 3) clientId = userId ?
+  const clientId = String(booking?.clientId || "").trim();
+  if (mongoose.isValidObjectId(clientId)) {
+    const user: any = await UserModel.findById(clientId).select({ phone: 1 }).lean();
+    const userPhone = normalizeE164(user?.phone);
+    if (userPhone) return userPhone;
+  }
+
+  return "";
+}
+
+async function resolveProTwilioFrom(booking: any): Promise<string> {
+  // booking.userProId = prestataire
+  const proId = String(booking?.userProId || "").trim();
+  if (!mongoose.isValidObjectId(proId)) return "";
+
+  const pro: any = await UserModel.findById(proId).select({ twilioPhoneNumber: 1 }).lean();
+  return normalizeE164(pro?.twilioPhoneNumber || "");
 }
 
 function buildBigBuyCreatePayloadFromOrder(order: any) {
@@ -73,7 +122,6 @@ function buildBookingPaidSms(params: {
 export const stripeWebhook = async (req: Request, res: Response) => {
   const startedAt = Date.now();
 
-  // Logs "entrée" - attention: req.body est un Buffer (express.raw)
   try {
     const sig = req.headers["stripe-signature"];
     const contentType = req.headers["content-type"];
@@ -180,6 +228,8 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         hasPaymentIntentId: !!booking.paymentIntentId,
         bookingPaymentIntentId: safeStr(booking.paymentIntentId),
         phoneNumber: safeStr(booking.phoneNumber),
+        clientId: safeStr(booking.clientId),
+        userProId: safeStr(booking.userProId),
         shopId: safeStr(booking.shopId),
         serviceId: safeStr(booking.serviceId),
         generatedCodePresent: !!booking.generatedCode,
@@ -206,7 +256,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         paymentIntentId: safeStr(booking.paymentIntentId),
       });
 
-      // Charger shop & service
+      // Charger shop & service (pour le texte du SMS)
       let shop: any = null;
       let service: any = null;
 
@@ -217,7 +267,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           bookingId: String(booking._id),
           shopFound: !!shop,
           shopName: safeStr(shop?.name),
-          shopTwilioPhone: safeStr(shop?.twilioPhoneNumber),
         });
       } catch (e: any) {
         logger.error({
@@ -247,9 +296,9 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         });
       }
 
-      // Données SMS
-      const smsTo = safeStr(booking.phoneNumber || session.metadata?.clientPhone).trim();
-      const smsFrom = safeStr(shop?.twilioPhoneNumber || session.metadata?.shopPhoneNumber).trim();
+      // ✅ Données SMS - CORRIGÉES
+      const smsTo = await resolveClientPhone(booking);
+      const smsFrom = await resolveProTwilioFrom(booking);
       const code = safeStr(booking.generatedCode || session.metadata?.generatedCode).trim();
 
       logger.info({
@@ -257,6 +306,8 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         bookingId: String(booking._id),
         smsTo,
         smsFrom,
+        toPresent: !!smsTo,
+        fromPresent: !!smsFrom,
         codePresent: !!code,
         whenHuman: safeStr(booking.date),
       });
@@ -268,11 +319,12 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           smsToPresent: !!smsTo,
           smsFromPresent: !!smsFrom,
           codePresent: !!code,
-          smsTo,
-          smsFrom,
+          bookingPhoneNumber: safeStr(booking.phoneNumber),
+          bookingClientId: safeStr(booking.clientId),
+          bookingUserProId: safeStr(booking.userProId),
+          sessionClientPhone: safeStr(session.metadata?.clientPhone),
+          sessionGeneratedCode: safeStr(session.metadata?.generatedCode),
         });
-
-        // ⚠️ On ne bloque pas Stripe
         return res.json({ received: true });
       }
 
@@ -310,7 +362,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           status: smsErr?.status,
           stack: smsErr?.stack,
         });
-        // ⚠️ Paiement OK, SMS fail -> on ne throw pas
       }
 
       logger.info({
@@ -389,7 +440,8 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         const payload = buildBigBuyCreatePayloadFromOrder(order);
         const createResp = await bigbuyApi.createOrder(payload);
 
-        const bigbuyOrderId = (createResp as any)?.order_id || (createResp as any)?.id || (createResp as any)?.orderId;
+        const bigbuyOrderId =
+          (createResp as any)?.order_id || (createResp as any)?.id || (createResp as any)?.orderId;
 
         order.bigbuy.lastCreateAt = new Date();
         order.bigbuy.lastCreateRaw = createResp;
@@ -448,7 +500,10 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           order.history.push({
             status: order.status,
             note: "Stripe payment failed (order kept pending)",
-            meta: { paymentIntentId: pi.id, lastPaymentError: (pi.last_payment_error as any)?.message },
+            meta: {
+              paymentIntentId: pi.id,
+              lastPaymentError: (pi.last_payment_error as any)?.message,
+            },
             at: new Date(),
           });
 
