@@ -97,18 +97,21 @@ export const getBookingCategoryById = async (req: Request, res: Response) => {
 
 /**
  * PUT /booking-categories/:id
- * Body: { name?, description?, color?, order?, active? }
+ * Body: { name?, description?, color?, order?, active?, userProId }
  * (shopId et userProId non modifiables ici -> sécurité)
  */
 export const updateBookingCategory = async (req: Request, res: Response) => {
   try {
-    const userProId = getUserProId(req);
-    if (!userProId) return res.status(401).json({ message: "Non authentifié." });
-
     const { id } = req.params;
-    const { name, description, color, order, active } = req.body;
+    const { name, description, color, order, active, userProId } = req.body;
+
+    // ✅ userProId envoyé par le front
+    if (!userProId) {
+      return res.status(401).json({ message: "Non authentifié (userProId manquant)." });
+    }
 
     const updateData: any = {};
+
     if (name !== undefined) updateData.name = String(name).trim();
     if (description !== undefined) updateData.description = description;
     if (color !== undefined) updateData.color = color;
@@ -116,36 +119,55 @@ export const updateBookingCategory = async (req: Request, res: Response) => {
     if (active !== undefined) updateData.active = active;
 
     const updated = await serviceCategoryModel.findOneAndUpdate(
-      { _id: id, userProId },
+      { _id: id, userProId: String(userProId) }, // ✅ protection par ownership
       updateData,
       { new: true, runValidators: true }
     );
 
-    if (!updated) return res.status(404).json({ message: "Catégorie introuvable." });
+    if (!updated) {
+      return res.status(404).json({ message: "Catégorie introuvable ou accès interdit." });
+    }
 
     return res.status(200).json(updated);
   } catch (error: any) {
     if (error?.code === 11000) {
-      return res.status(409).json({ message: "Une catégorie avec ce nom existe déjà pour ce salon." });
+      return res
+        .status(409)
+        .json({ message: "Une catégorie avec ce nom existe déjà pour ce salon." });
     }
-    return res.status(500).json({ message: "Erreur serveur", error: error?.message });
+
+    return res.status(500).json({
+      message: "Erreur serveur",
+      error: error?.message,
+    });
   }
 };
 
 /**
- * DELETE /booking-categories/:id
+ * DELETE /booking-categories/:id?userProId=xxxx
  * Suppression "hard delete"
- * (si tu préfères soft delete => set active=false)
  */
 export const deleteBookingCategory = async (req: Request, res: Response) => {
   try {
-    const userProId = getUserProId(req);
-    if (!userProId) return res.status(401).json({ message: "Non authentifié." });
-
     const { id } = req.params;
 
-    const deleted = await serviceCategoryModel.findOneAndDelete({ _id: id, userProId });
-    if (!deleted) return res.status(404).json({ message: "Catégorie introuvable." });
+    // ✅ userProId envoyé par le front (query recommandé)
+    const userProId = String(
+      (req.query as any)?.userProId || (req.body as any)?.userProId || ""
+    );
+
+    if (!userProId) {
+      return res.status(401).json({ message: "Non authentifié (userProId manquant)." });
+    }
+
+    const deleted = await serviceCategoryModel.findOneAndDelete({
+      _id: id,
+      userProId,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Catégorie introuvable ou accès interdit." });
+    }
 
     return res.status(200).json({ message: "Catégorie supprimée." });
   } catch (error: any) {
