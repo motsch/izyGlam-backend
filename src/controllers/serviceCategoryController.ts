@@ -175,6 +175,7 @@ export const deleteBookingCategory = async (req: Request, res: Response) => {
   }
 };
 
+
 /**
  * PATCH /booking-categories/reorder
  * Body: { shopId: string, orders: Array<{ id: string, order: number }> }
