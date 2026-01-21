@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import orderModel from "../models/order";
 import { bigbuyApi } from "../services/bigbuyApi.service";
 import { logger } from "../utils/logger";
+
 import { sendSms } from "../services/twilio.service";
 import shopModel from "../models/shop";
 import bookingModel from "../models/booking";
@@ -11,6 +12,10 @@ import serviceModel from "../models/service";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
 });
+
+function safeStr(v: any) {
+  return typeof v === "string" ? v : v === null || v === undefined ? "" : String(v);
+}
 
 function buildBigBuyCreatePayloadFromOrder(order: any) {
   const products = order.items.map((it: any) => ({
@@ -45,106 +50,294 @@ function buildBigBuyCreatePayloadFromOrder(order: any) {
   };
 }
 
+function buildBookingPaidSms(params: {
+  shopName: string;
+  serviceName: string;
+  whenHuman: string;
+  code: string;
+}): string {
+  const { shopName, serviceName, whenHuman, code } = params;
+
+  return (
+    `✅ Paiement confirmé\n` +
+    `Salon : ${shopName}\n` +
+    `Prestation : ${serviceName}\n` +
+    `Quand : ${whenHuman}\n` +
+    `Code : ${code}\n\n` +
+    `↩️ Pour annuler : répondez ANNULER à ce SMS.\n` +
+    `⛔️ Annulation impossible à moins de 24h (des frais peuvent s’appliquer).\n\n` +
+    `Merci 💖`
+  );
+}
+
 export const stripeWebhook = async (req: Request, res: Response) => {
-  const sig = req.headers["stripe-signature"];
-  if (!sig) return res.status(400).send("Missing stripe-signature");
+  const startedAt = Date.now();
 
-  let event: Stripe.Event;
+  // Logs "entrée" - attention: req.body est un Buffer (express.raw)
   try {
-    // ✅ req.body est un Buffer grâce à express.raw()
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-  } catch (err: any) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+    const sig = req.headers["stripe-signature"];
+    const contentType = req.headers["content-type"];
+    const userAgent = req.headers["user-agent"];
+    const bodyLen = Buffer.isBuffer(req.body) ? req.body.length : -1;
 
-  try {
+    logger.info({
+      msg: "stripe.webhook.hit",
+      method: req.method,
+      url: req.originalUrl,
+      hasSignature: !!sig,
+      contentType,
+      userAgent,
+      bodyLen,
+    });
+
+    if (!sig) {
+      logger.warn({ msg: "stripe.webhook.missing_signature" });
+      return res.status(400).send("Missing stripe-signature");
+    }
+
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    } catch (err: any) {
+      logger.error({
+        msg: "stripe.webhook.construct_failed",
+        errorMessage: err?.message,
+        stack: err?.stack,
+      });
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    logger.info({
+      msg: "stripe.webhook.event_parsed",
+      eventId: event.id,
+      type: event.type,
+      elapsedMs: Date.now() - startedAt,
+    });
+
     /**
      * =====================================================
      *  A) BOOKINGS (assistant IzyGlam) - Checkout completed
      * =====================================================
-     *
-     * On se base sur checkout.session.completed
-     * car ta metadata (bookingId, shopId, etc.) est posée sur la CheckoutSession.
      */
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      const bookingId = session.metadata?.bookingId;
-      if (bookingId) {
-        const paymentIntentId = session.payment_intent ? String(session.payment_intent) : undefined;
+      logger.info({
+        msg: "stripe.webhook.checkout.completed",
+        eventId: event.id,
+        sessionId: session.id,
+        paymentStatus: session.payment_status,
+        mode: session.mode,
+        paymentIntent: safeStr(session.payment_intent),
+        metadataKeys: session.metadata ? Object.keys(session.metadata) : [],
+        metadata: session.metadata || {},
+      });
 
-        const booking: any = await bookingModel.findById(bookingId);
-        if (!booking) {
-          logger.warn({ msg: "stripe.webhook.booking_not_found", bookingId, eventId: event.id });
-          return res.json({ received: true });
-        }
-
-        // ✅ idempotence simple :
-        // si paymentIntentId déjà présent -> on considère que SMS déjà envoyé / booking déjà "mark paid"
-        if (booking.paymentIntentId) {
-          return res.json({ received: true });
-        }
-
-        // update booking : paymentIntentId, refunded info untouched
-        booking.paymentIntentId = paymentIntentId || booking.paymentIntentId;
-
-        // NOTE: ton business dit "réservation validée manuellement par le pro après paiement"
-        // donc on NE PASSE PAS en "accepted" ici. On garde status = pending.
-        await booking.save();
-
-        // Charger shop & service pour SMS
-        const shop: any = await shopModel.findById(booking.shopId).lean();
-        const service: any = booking.serviceId ? await serviceModel.findById(booking.serviceId).lean() : null;
-
-        const smsTo = String(booking.phoneNumber || session.metadata?.clientPhone || "").trim();
-        const smsFrom = String(shop?.twilioPhoneNumber || session.metadata?.shopPhoneNumber || "").trim();
-
-        // on préfère la valeur DB
-        const code = String(booking.generatedCode || session.metadata?.generatedCode || "").trim();
-
-        if (smsTo && smsFrom && code) {
-          const smsBody = buildBookingPaidSms({
-            shopName: shop?.name || "IzyGlam",
-            serviceName: service?.name || booking.title || "Prestation",
-            whenHuman: booking.date || "Date à confirmer",
-            code,
-          });
-
-          try {
-            await sendSms({ to: smsTo, from: smsFrom, body: smsBody });
-            logger.info({ msg: "stripe.webhook.booking_sms_sent", bookingId: String(booking._id), eventId: event.id });
-          } catch (smsErr: any) {
-            logger.error({
-              msg: "stripe.webhook.booking_sms_failed",
-              bookingId: String(booking._id),
-              errorMessage: smsErr?.message,
-              stack: smsErr?.stack,
-            });
-            // on ne throw pas : paiement OK, SMS fail -> on ne bloque pas Stripe
-          }
-        } else {
-          logger.warn({
-            msg: "stripe.webhook.booking_sms_missing_data",
-            bookingId: String(booking._id),
-            smsToPresent: !!smsTo,
-            smsFromPresent: !!smsFrom,
-            codePresent: !!code,
-          });
-        }
-
+      // On ne traite que les paiements "paid"
+      if (session.payment_status !== "paid") {
+        logger.warn({
+          msg: "stripe.webhook.checkout.not_paid_skip",
+          sessionId: session.id,
+          paymentStatus: session.payment_status,
+        });
         return res.json({ received: true });
       }
+
+      const bookingId = session.metadata?.bookingId;
+      if (!bookingId) {
+        logger.warn({
+          msg: "stripe.webhook.booking.missing_bookingId_metadata",
+          eventId: event.id,
+          sessionId: session.id,
+          metadata: session.metadata || {},
+        });
+        return res.json({ received: true });
+      }
+
+      const paymentIntentId = session.payment_intent ? String(session.payment_intent) : undefined;
+
+      logger.info({
+        msg: "stripe.webhook.booking.begin",
+        bookingId,
+        paymentIntentId,
+      });
+
+      const booking: any = await bookingModel.findById(bookingId);
+      if (!booking) {
+        logger.warn({
+          msg: "stripe.webhook.booking.not_found",
+          bookingId,
+          eventId: event.id,
+          sessionId: session.id,
+        });
+        return res.json({ received: true });
+      }
+
+      logger.info({
+        msg: "stripe.webhook.booking.loaded",
+        bookingId: String(booking._id),
+        status: booking.status,
+        hasPaymentIntentId: !!booking.paymentIntentId,
+        bookingPaymentIntentId: safeStr(booking.paymentIntentId),
+        phoneNumber: safeStr(booking.phoneNumber),
+        shopId: safeStr(booking.shopId),
+        serviceId: safeStr(booking.serviceId),
+        generatedCodePresent: !!booking.generatedCode,
+      });
+
+      // ✅ idempotence: si déjà traité, on stop
+      if (booking.paymentIntentId) {
+        logger.info({
+          msg: "stripe.webhook.booking.idempotent_skip",
+          bookingId: String(booking._id),
+          existingPaymentIntentId: safeStr(booking.paymentIntentId),
+          incomingPaymentIntentId: safeStr(paymentIntentId),
+        });
+        return res.json({ received: true });
+      }
+
+      // update booking : paymentIntentId
+      booking.paymentIntentId = paymentIntentId || booking.paymentIntentId;
+      await booking.save();
+
+      logger.info({
+        msg: "stripe.webhook.booking.updated",
+        bookingId: String(booking._id),
+        paymentIntentId: safeStr(booking.paymentIntentId),
+      });
+
+      // Charger shop & service
+      let shop: any = null;
+      let service: any = null;
+
+      try {
+        shop = await shopModel.findById(booking.shopId).lean();
+        logger.info({
+          msg: "stripe.webhook.booking.shop_loaded",
+          bookingId: String(booking._id),
+          shopFound: !!shop,
+          shopName: safeStr(shop?.name),
+          shopTwilioPhone: safeStr(shop?.twilioPhoneNumber),
+        });
+      } catch (e: any) {
+        logger.error({
+          msg: "stripe.webhook.booking.shop_load_failed",
+          bookingId: String(booking._id),
+          errorMessage: e?.message,
+          stack: e?.stack,
+        });
+      }
+
+      try {
+        if (booking.serviceId) {
+          service = await serviceModel.findById(booking.serviceId).lean();
+        }
+        logger.info({
+          msg: "stripe.webhook.booking.service_loaded",
+          bookingId: String(booking._id),
+          serviceFound: !!service,
+          serviceName: safeStr(service?.name),
+        });
+      } catch (e: any) {
+        logger.error({
+          msg: "stripe.webhook.booking.service_load_failed",
+          bookingId: String(booking._id),
+          errorMessage: e?.message,
+          stack: e?.stack,
+        });
+      }
+
+      // Données SMS
+      const smsTo = safeStr(booking.phoneNumber || session.metadata?.clientPhone).trim();
+      const smsFrom = safeStr(shop?.twilioPhoneNumber || session.metadata?.shopPhoneNumber).trim();
+      const code = safeStr(booking.generatedCode || session.metadata?.generatedCode).trim();
+
+      logger.info({
+        msg: "stripe.webhook.booking.sms.prepare",
+        bookingId: String(booking._id),
+        smsTo,
+        smsFrom,
+        codePresent: !!code,
+        whenHuman: safeStr(booking.date),
+      });
+
+      if (!smsTo || !smsFrom || !code) {
+        logger.warn({
+          msg: "stripe.webhook.booking.sms.missing_data",
+          bookingId: String(booking._id),
+          smsToPresent: !!smsTo,
+          smsFromPresent: !!smsFrom,
+          codePresent: !!code,
+          smsTo,
+          smsFrom,
+        });
+
+        // ⚠️ On ne bloque pas Stripe
+        return res.json({ received: true });
+      }
+
+      const smsBody = buildBookingPaidSms({
+        shopName: safeStr(shop?.name || booking.establishmentName || "IzyGlam"),
+        serviceName: safeStr(service?.name || booking.title || "Prestation"),
+        whenHuman: safeStr(booking.date || "Date à confirmer"),
+        code,
+      });
+
+      logger.info({
+        msg: "stripe.webhook.booking.sms.sending",
+        bookingId: String(booking._id),
+        to: smsTo,
+        from: smsFrom,
+        bodyLen: smsBody.length,
+      });
+
+      try {
+        const resp = await sendSms({ to: smsTo, from: smsFrom, body: smsBody });
+
+        logger.info({
+          msg: "stripe.webhook.booking.sms.sent",
+          bookingId: String(booking._id),
+          twilioMessageSid: safeStr((resp as any)?.sid),
+          twilioStatus: safeStr((resp as any)?.status),
+        });
+      } catch (smsErr: any) {
+        logger.error({
+          msg: "stripe.webhook.booking.sms.failed",
+          bookingId: String(booking._id),
+          errorMessage: smsErr?.message,
+          errorCode: smsErr?.code,
+          moreInfo: smsErr?.moreInfo,
+          status: smsErr?.status,
+          stack: smsErr?.stack,
+        });
+        // ⚠️ Paiement OK, SMS fail -> on ne throw pas
+      }
+
+      logger.info({
+        msg: "stripe.webhook.booking.done",
+        bookingId: String(booking._id),
+        elapsedMs: Date.now() - startedAt,
+      });
+
+      return res.json({ received: true });
     }
 
     /**
      * =====================================================
-     *  B) ORDERS (BigBuy) - Ton code existant
+     *  B) ORDERS (BigBuy) - Code existant
      * =====================================================
      */
 
-    // ---- Payment succeeded ----
     if (event.type === "payment_intent.succeeded") {
       const pi = event.data.object as Stripe.PaymentIntent;
+
+      logger.info({
+        msg: "stripe.webhook.pi.succeeded",
+        eventId: event.id,
+        piId: pi.id,
+        status: pi.status,
+        metadata: pi.metadata || {},
+      });
 
       const orderId = pi.metadata?.orderId;
       if (!orderId) {
@@ -158,8 +351,8 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         return res.json({ received: true });
       }
 
-      // idempotence
       if (order.stripe?.lastStripeEventId === event.id) {
+        logger.info({ msg: "stripe.webhook.order.idempotent_skip", orderId, eventId: event.id });
         return res.json({ received: true });
       }
 
@@ -167,7 +360,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       order.stripe.paymentIntentStatus = pi.status;
       order.stripe.lastStripeEventId = event.id;
 
-      // si déjà commandé chez BigBuy, stop
       if (order.bigbuy?.orderId) {
         order.status = "SUPPLIER_ORDERED";
         order.history.push({
@@ -180,7 +372,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         return res.json({ received: true });
       }
 
-      // passe en PAID
       order.status = "PAID";
       order.history.push({
         status: "PAID",
@@ -190,7 +381,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       });
       await order.save();
 
-      // CREATE BigBuy order
       try {
         order.status = "SUPPLIER_PROCESSING";
         order.history.push({ status: "SUPPLIER_PROCESSING", note: "Sending order to BigBuy", at: new Date() });
@@ -215,7 +405,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
         await order.save();
       } catch (bbErr: any) {
-        // paiement OK, BigBuy fail => on garde trace
         logger.error({
           msg: "bigbuy.create.failed",
           orderId: String(order._id),
@@ -236,15 +425,22 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       return res.json({ received: true });
     }
 
-    // ---- Payment failed ----
     if (event.type === "payment_intent.payment_failed") {
       const pi = event.data.object as Stripe.PaymentIntent;
-      const orderId = pi.metadata?.orderId;
 
+      logger.info({
+        msg: "stripe.webhook.pi.failed",
+        eventId: event.id,
+        piId: pi.id,
+        status: pi.status,
+        metadata: pi.metadata || {},
+        lastPaymentError: (pi.last_payment_error as any)?.message,
+      });
+
+      const orderId = pi.metadata?.orderId;
       if (orderId) {
         const order = await orderModel.findById(orderId);
         if (order) {
-          // règle: on laisse PENDING_PAYMENT
           order.stripe.paymentIntentId = pi.id;
           order.stripe.paymentIntentStatus = pi.status;
           order.stripe.lastStripeEventId = event.id;
@@ -263,32 +459,21 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       return res.json({ received: true });
     }
 
-    // autres events -> ok
+    logger.info({
+      msg: "stripe.webhook.unhandled_event",
+      eventId: event.id,
+      type: event.type,
+      elapsedMs: Date.now() - startedAt,
+    });
+
     return res.json({ received: true });
   } catch (err: any) {
-    logger.error({ msg: "stripe.webhook.failed", errorMessage: err?.message, stack: err?.stack });
+    logger.error({
+      msg: "stripe.webhook.failed",
+      errorMessage: err?.message,
+      stack: err?.stack,
+      elapsedMs: Date.now() - startedAt,
+    });
     return res.status(500).send(err.message);
   }
 };
-
-function buildBookingPaidSms(params: {
-  shopName: string;
-  serviceName: string;
-  whenHuman: string;
-  code: string;
-}): string {
-  const { shopName, serviceName, whenHuman, code } = params;
-
-  return (
-    `✅ Paiement confirmé\n` +
-    `Salon : ${shopName}\n` +
-    `Prestation : ${serviceName}\n` +
-    `Quand : ${whenHuman}\n` +
-    `Code : ${code}\n\n` +
-    `↩️ Pour annuler : répondez ANNULER à ce SMS.\n` +
-    `⛔️ Annulation impossible à moins de 24h (des frais peuvent s’appliquer).\n\n` +
-    `Merci 💖`
-  );
-}
-
-
