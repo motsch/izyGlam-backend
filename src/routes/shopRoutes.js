@@ -136,7 +136,7 @@ router.put("/shop-stats/bulk-update", authMiddleware, shopController.bulkUpdateS
 
 // ✅ NEW : endpoint propre (mode obligatoire)
 router.get(
-  "/shop/by-postal-codes-with-categories",
+  "/shop-search/by-postal-codes-with-categories",
   shopController.getShopsByPostalCodesWithCategories
 );
 
