@@ -25,11 +25,13 @@ function formatHuman(startUtc: Date, tz: string) {
   }).format(startUtc);
 }
 
-function generateCode(len = 6) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
+/**
+ * ✅ Code NUMERIQUE 6 chiffres (100000..999999)
+ * - simple à dicter au téléphone
+ * - simple à taper pour le pro
+ */
+function generate6DigitCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 function normalizePhone(phone: string) {
@@ -67,7 +69,7 @@ function centsToEuro(c: number) {
  */
 function computePricing(params: {
   baseEuro: number;
-  commissionRate: number; // 0.15 ou 15 => géré par toRate en amont si tu veux
+  commissionRate: number; // 0.15 ou 15 => géré par toRate
   serviceFeeEuro: number;
   taxRate: number; // 20 ou 0.2 => géré par toRate
 }) {
@@ -89,8 +91,6 @@ function computePricing(params: {
   // recalcul “propre” depuis centimes (évite les micro-écarts)
   const totalEuro = centsToEuro(totalCents);
 
-  // Pour booking, on peut aussi “figer” commission/fee/tva en € arrondis
-  // (si tu veux 100% cohérence comptable, tu peux aussi tout stocker en centimes)
   return {
     baseEuro: round2(base),
     commissionEuro: round2(commission),
@@ -130,8 +130,8 @@ export async function createBookingAndCheckout(params: {
   // ✅ settings admin
   const settings: any = await AdminSettingsModel.findOne({}).lean();
   const commissionRate = settings?.commissionRate ?? 0; // ex: 15
-  const serviceFeeEuro = settings?.serviceFee ?? 0;     // ex: 2.9
-  const taxRate = settings?.taxRate ?? 20;              // ex: 20
+  const serviceFeeEuro = settings?.serviceFee ?? 0; // ex: 2.9
+  const taxRate = settings?.taxRate ?? 20; // ex: 20
 
   const baseEuro = Number(service.price || 0);
   if (!Number.isFinite(baseEuro) || baseEuro <= 0) throw new Error("Invalid base price");
@@ -151,10 +151,12 @@ export async function createBookingAndCheckout(params: {
   const feeEuro = pricing.serviceFeeEuro;
 
   // Shop earnings = total - commission - fee
-  // (TVA incluse dans total, donc commission/fee doivent être “compatibles” avec ta logique business)
   const shopEarningsEuro = round2(priceEuroTtc - commissionEuro - feeEuro);
 
   const phone = normalizePhone(fromPhone);
+
+  // ✅ générer le code au moment de la création booking
+  const generatedCode = generate6DigitCode();
 
   const booking = await bookingModel.create({
     title: service.name,
@@ -164,6 +166,9 @@ export async function createBookingAndCheckout(params: {
     // ✅ adresse client si fournie
     address: clientAddress || "Adresse à confirmer",
     phoneNumber: phone,
+
+    // ✅ NOUVEAU : categoryId stocké dans booking (pratique pour stats/filtre)
+    categoryId: service.categoryId ? String(service.categoryId) : undefined,
 
     clientId: guestClientId(phone),
     userProId: String(shop.idUser),
@@ -187,7 +192,8 @@ export async function createBookingAndCheckout(params: {
     color: service.color || "#ff4081",
     image: service.image || "",
 
-    generatedCode: generateCode(6),
+    // ✅ CODE 6 chiffres
+    generatedCode,
     proCodeConfirmed: false,
 
     reviewAdded: false,
@@ -212,6 +218,9 @@ export async function createBookingAndCheckout(params: {
       serviceId: String(service._id),
       proId: String(shop.idUser),
       clientPhone: phone,
+
+      // ✅ utile pour le SMS post-paiement (webhook)
+      generatedCode: generatedCode,
 
       // bonus debug pricing (optionnel)
       baseEuro: String(pricing.baseEuro),

@@ -43,7 +43,7 @@ export interface iBooking extends mongoose.Document {
 
   color: string;
   image: string;
-  
+
   // ✅ NOUVEAU
   categoryId?: string;
 
@@ -56,6 +56,11 @@ export interface iBooking extends mongoose.Document {
   // ✅ NOUVEAU : pour éviter double remboursement
   refundId?: string; // Stripe Refund id (re_...)
   refundedAt?: Date;
+
+  // ✅ NOUVEAU : annulation / audit (recommandé)
+  cancelReason?: string; // ex: "customer_sms", "customer_web", "too_late", ...
+  cancelSource?: "sms" | "web" | "admin" | "system";
+  cancelledAt?: Date;
 
   reviewAdded: boolean;
 
@@ -80,6 +85,7 @@ const bookingSchema = new mongoose.Schema<iBooking>(
 
     // ✅ NOUVEAU
     categoryId: { type: String, required: false },
+
     // ---- Relations ----
     clientId: { type: String, required: true },
     userProId: { type: String, required: true },
@@ -116,6 +122,11 @@ const bookingSchema = new mongoose.Schema<iBooking>(
     refundId: { type: String, required: false },
     refundedAt: { type: Date, required: false },
 
+    // ✅ NOUVEAU : annulation / audit
+    cancelReason: { type: String, required: false },
+    cancelSource: { type: String, enum: ["sms", "web", "admin", "system"], required: false },
+    cancelledAt: { type: Date, required: false },
+
     // ---- Dates ----
     date: { type: String, required: true },
     orderDate: { type: Date, required: true },
@@ -137,11 +148,11 @@ const bookingSchema = new mongoose.Schema<iBooking>(
     closedAt: { type: Date },
   },
   {
-    timestamps: true, // utile pour audit / debug
+    timestamps: true,
   }
 );
 
-// Index utiles (optionnels mais recommandés)
+// Index utiles
 bookingSchema.index({ shopId: 1, status: 1 });
 bookingSchema.index({ paymentIntentId: 1 });
 bookingSchema.index({ refundId: 1 });

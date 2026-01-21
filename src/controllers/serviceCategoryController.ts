@@ -151,15 +151,6 @@ export const deleteBookingCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // ✅ userProId envoyé par le front (query recommandé)
-    const userProId = String(
-      (req.query as any)?.userProId || (req.body as any)?.userProId || ""
-    );
-
-    if (!userProId) {
-      return res.status(401).json({ message: "Non authentifié (userProId manquant)." });
-    }
-
     const deleted = await serviceCategoryModel.findOneAndDelete({
       _id: id,
     });

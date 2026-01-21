@@ -5,11 +5,11 @@ export interface iServiceCategory extends mongoose.Document {
   description?: string;
 
   // Relations
-  shopId: string;      // catégorie propre à un salon
+  shopId: string; // catégorie propre à un salon
 
   // UI / organisation
   color?: string;
-  order?: number;      // pour tri manuel
+  order?: number; // pour tri manuel
 }
 
 const serviceCategorySchema = new mongoose.Schema<iServiceCategory>(
@@ -19,7 +19,7 @@ const serviceCategorySchema = new mongoose.Schema<iServiceCategory>(
 
     // ---- Relations ----
     shopId: { type: String, required: true },
-    
+
     // ---- UI ----
     color: { type: String },
     order: { type: Number, default: 0 },
@@ -30,7 +30,7 @@ const serviceCategorySchema = new mongoose.Schema<iServiceCategory>(
 );
 
 // Index utiles
-serviceCategorySchema.index({ shopId: 1, active: 1 });
+serviceCategorySchema.index({ shopId: 1 });
 serviceCategorySchema.index({ shopId: 1, name: 1 }, { unique: true });
 
 const serviceCategoryModel = mongoose.model<iServiceCategory>("ServiceCategory", serviceCategorySchema);

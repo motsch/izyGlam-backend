@@ -40,4 +40,6 @@ router.get("/booking-accounting/:shopId", authMiddleware, bookingController.getS
 router.get("/booking-pending-by-userPro/:userId", authMiddleware, bookingController.getPendingBookingsByUserPro
 );
 
+router.post("/booking-cancel/:id/cancel", authMiddleware, bookingController.bookingController.cancelBookingById);
+
 module.exports = router;

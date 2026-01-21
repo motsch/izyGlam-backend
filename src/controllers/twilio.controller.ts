@@ -1,15 +1,20 @@
 // src/controllers/twilio.controller.ts
 import { Request, Response } from "express";
 import twilio from "twilio";
+import mongoose from "mongoose";
 
 import UserModel from "../models/user";
 import ShopModel from "../models/shop";
 import ServiceModel from "../models/service";
+import ServiceCategoryModel from "../models/serviceCategory";
 import AssistantSessionModel from "../models/assistantSession";
 
 import { computeAvailableSlots } from "../services/availability.service";
 import { createBookingAndCheckout } from "../services/assistantCheckout.service";
 import { sendSms } from "../services/twilio.service";
+import bookingModel from "../models/booking";
+import SmsSessionModel from "../models/smsSession";
+import { refundBookingIfNeeded } from "../services/stripeRefund.service";
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
@@ -22,14 +27,6 @@ function norm(v?: string) {
 
 function nowMs() {
   return Date.now();
-}
-
-function safeJson(obj: any) {
-  try {
-    return JSON.stringify(obj);
-  } catch {
-    return "[unserializable]";
-  }
 }
 
 function dumpErr(e: any) {
@@ -93,13 +90,124 @@ function buildAutoReplySms(params: {
 }
 
 /**
+ * DTMF helpers
+ * - # : retour (Twilio envoie souvent Digits="" quand tu appuies sur # seul)
+ * - 0 : répéter
+ */
+function isBackDigit(d: string) {
+  return d === "" || d === "#";
+}
+function isRepeatDigit(d: string) {
+  return d === "0";
+}
+function digitToIndex(d: string) {
+  const n = Number(d);
+  if (!Number.isFinite(n)) return -1;
+  return n - 1;
+}
+
+function absoluteUrl(path: string) {
+  const base = (process.env.API_BASE_URL || "").replace(/\/$/, "");
+  return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+/**
+ * =========
+ * RENDERERS (menus stables depuis session)
+ * =========
+ */
+
+async function renderCategoryMenu(twiml: any, session: any) {
+  // On reconstruit la liste dans l'ordre exact proposé
+  const ids: string[] = session.proposedCategoryIds || [];
+  const objIds = ids.filter(mongoose.isValidObjectId).map((id) => new mongoose.Types.ObjectId(id));
+
+  const categories: any[] = await ServiceCategoryModel.find({ _id: { $in: objIds } }).lean();
+  const map = new Map(categories.map((c) => [String(c._id), c]));
+  const ordered = ids.map((id) => map.get(id)).filter(Boolean);
+
+  twiml.say({ language: "fr-FR" }, "Choisissez une catégorie. Tapez 1 à 9.");
+  twiml.say({ language: "fr-FR" }, "Appuyez sur 0 pour répéter.");
+
+  const actionUrl = absoluteUrl("/twilio/voice/category");
+  const gather = twiml.gather({
+    input: "dtmf",
+    numDigits: 1,
+    finishOnKey: "#",
+    action: actionUrl,
+    method: "POST",
+    timeout: 7,
+  });
+
+  ordered.forEach((c: any, idx: number) => {
+    gather.say({ language: "fr-FR" }, `Pour ${c.name}, tapez ${idx + 1}.`);
+  });
+
+  twiml.say({ language: "fr-FR" }, "Je n'ai pas reçu votre choix. Au revoir.");
+  twiml.hangup();
+}
+
+async function renderServiceMenu(twiml: any, session: any) {
+  const ids: string[] = session.proposedServiceIds || [];
+  const objIds = ids.filter(mongoose.isValidObjectId).map((id) => new mongoose.Types.ObjectId(id));
+
+  const services: any[] = await ServiceModel.find({ _id: { $in: objIds } }).lean();
+  const map = new Map(services.map((s) => [String(s._id), s]));
+  const ordered = ids.map((id) => map.get(id)).filter(Boolean);
+
+  twiml.say({ language: "fr-FR" }, "Choisissez une prestation. Tapez 1 à 9.");
+  twiml.say({ language: "fr-FR" }, "Appuyez sur # pour revenir en arrière, ou 0 pour répéter.");
+
+  const actionUrl = absoluteUrl("/twilio/voice/service");
+  const gather = twiml.gather({
+    input: "dtmf",
+    numDigits: 1,
+    finishOnKey: "#",
+    action: actionUrl,
+    method: "POST",
+    timeout: 7,
+  });
+
+  ordered.forEach((s: any, idx: number) => {
+    gather.say({ language: "fr-FR" }, `Pour ${s.name}, tapez ${idx + 1}.`);
+  });
+
+  twiml.say({ language: "fr-FR" }, "Je n'ai pas reçu votre choix. Au revoir.");
+  twiml.hangup();
+}
+
+async function renderSlotMenu(twiml: any, session: any) {
+  const top3 = (session.proposedSlots || []).slice(0, 3);
+
+  twiml.say({ language: "fr-FR" }, "Voici les prochains créneaux disponibles.");
+  twiml.say({ language: "fr-FR" }, "Appuyez sur # pour revenir en arrière, ou 0 pour répéter.");
+
+  const actionUrl = absoluteUrl("/twilio/voice/slot");
+  const gather = twiml.gather({
+    input: "dtmf",
+    numDigits: 1,
+    finishOnKey: "#",
+    action: actionUrl,
+    method: "POST",
+    timeout: 7,
+  });
+
+  top3.forEach((s: any, i: number) => {
+    gather.say({ language: "fr-FR" }, `Pour ${saySlotFR(s.date, s.start)}, tapez ${i + 1}.`);
+  });
+
+  twiml.say({ language: "fr-FR" }, "Je n'ai pas reçu votre choix. Au revoir.");
+  twiml.hangup();
+}
+
+/**
  * ===========================
  *           VOICE
  * ===========================
  */
 
 /**
- * 📞 Entrée appel
+ * 📞 Entrée appel => ASK_CATEGORY
  */
 export const twilioVoiceEntry = async (req: Request, res: Response) => {
   const twiml = new VoiceResponse();
@@ -123,6 +231,35 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
 
     const shop: any = await ShopModel.findById(pro.assistantShopId).lean();
 
+    // 1) on récupère les catégories qui ont AU MOINS 1 service éligible
+    const eligibleServices: any[] = await ServiceModel.find({
+      shopId: pro.assistantShopId,
+      blocked: { $ne: true },
+      categoryId: { $exists: true, $ne: "" },
+      $or: [{ flags: { $exists: false } }, { flags: { $size: 0 } }],
+    })
+      .select({ categoryId: 1 })
+      .lean();
+
+    const rawCatIds = Array.from(new Set(eligibleServices.map((s) => String(s.categoryId)).filter(Boolean)));
+
+    const validCatObjIds = rawCatIds.filter(mongoose.isValidObjectId).map((id) => new mongoose.Types.ObjectId(id));
+
+    const categories: any[] = await ServiceCategoryModel.find({
+      shopId: String(pro.assistantShopId),
+      _id: { $in: validCatObjIds },
+    })
+      .sort({ order: 1, createdAt: 1 })
+      .limit(9)
+      .lean();
+
+    if (!categories.length) {
+      twiml.say({ language: "fr-FR" }, "Aucune catégorie n'est disponible actuellement. Au revoir.");
+      twiml.hangup();
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    // ✅ session stable : on stocke l'ordre proposé
     await AssistantSessionModel.findOneAndUpdate(
       { callSid },
       {
@@ -130,49 +267,20 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
         userProId: String(pro._id),
         shopId: String(pro.assistantShopId),
         fromPhone: from,
-        step: "ASK_SERVICE",
+        step: "ASK_CATEGORY",
+        proposedCategoryIds: categories.map((c) => String(c._id)),
+        proposedServiceIds: [],
+        proposedSlots: [],
+        categoryId: null,
+        serviceId: null,
       },
       { upsert: true }
     );
 
-    const services: any[] = await ServiceModel.find({
-      shopId: pro.assistantShopId,
-      blocked: { $ne: true },
-      $or: [{ flags: { $exists: false } }, { flags: { $size: 0 } }],
-    })
-      .sort({ createdAt: 1 })
-      .limit(9)
-      .lean();
+    twiml.say({ language: "fr-FR" }, `Bonjour. Je suis Lizy, l'assistante de ${shop?.name || "ce salon"}.`);
+    await renderCategoryMenu(twiml, { proposedCategoryIds: categories.map((c) => String(c._id)) });
 
-    if (!services.length) {
-      twiml.say({ language: "fr-FR" }, "Aucune prestation n'est disponible actuellement. Au revoir.");
-      twiml.hangup();
-      return res.type("text/xml").send(twiml.toString());
-    }
-
-    twiml.say(
-      { language: "fr-FR" },
-      `Bonjour. Je suis Lizy, l'assistante de ${shop?.name || "ce salon"}. Choisissez une prestation.`
-    );
-
-    // ✅ ABSOLU (Twilio préfère éviter les actions relatives selon config)
-    const actionUrl = `${process.env.API_BASE_URL}/twilio/voice/service`;
-
-    const gather = twiml.gather({
-      numDigits: 1,
-      action: actionUrl,
-      method: "POST",
-      timeout: 7,
-    });
-
-    services.forEach((s, idx) => {
-      gather.say({ language: "fr-FR" }, `Pour ${s.name}, tapez ${idx + 1}.`);
-    });
-
-    twiml.say({ language: "fr-FR" }, "Je n'ai pas reçu votre choix. Au revoir.");
-    twiml.hangup();
-
-    console.log("[twilio][voice:entry] OUT", { callSid, elapsedMs: nowMs() - t0, actionUrl });
+    console.log("[twilio][voice:entry] OUT", { callSid, elapsedMs: nowMs() - t0 });
     return res.type("text/xml").send(twiml.toString());
   } catch (e: any) {
     console.error("[twilio][voice:entry] ERROR", dumpErr(e));
@@ -183,28 +291,45 @@ export const twilioVoiceEntry = async (req: Request, res: Response) => {
 };
 
 /**
- * 🧾 Choix prestation (voice)
+ * 📚 Choix catégorie
  */
-export const twilioVoiceServiceGather = async (req: Request, res: Response) => {
+export const twilioVoiceCategoryGather = async (req: Request, res: Response) => {
   const twiml = new VoiceResponse();
   const t0 = nowMs();
 
-  const to = norm((req.body as any)?.To);
   const callSid = norm((req.body as any)?.CallSid);
-  const digit = norm((req.body as any)?.Digits);
+  const digitRaw = (req.body as any)?.Digits;
+  const digit = digitRaw === undefined || digitRaw === null ? "" : String(digitRaw);
 
-  console.log("[twilio][voice:service] IN", { callSid, to, digit });
+  console.log("[twilio][voice:category] IN", { callSid, digit });
 
   try {
-    const pro: any = await UserModel.findOne({ twilioPhoneNumber: to }).lean();
-    if (!pro || !pro.assistantProEnabled || !pro.assistantShopId) {
-      twiml.say({ language: "fr-FR" }, "Ce numéro n'est pas disponible.");
+    const session: any = await AssistantSessionModel.findOne({ callSid }).lean();
+    if (!session || session.step !== "ASK_CATEGORY" || !session.proposedCategoryIds?.length) {
+      twiml.say({ language: "fr-FR" }, "Session expirée. Veuillez rappeler.");
       twiml.hangup();
       return res.type("text/xml").send(twiml.toString());
     }
 
+    // Au début : # => on répète
+    if (isBackDigit(digit) || isRepeatDigit(digit)) {
+      await renderCategoryMenu(twiml, session);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    const idx = digitToIndex(digit);
+    if (idx < 0 || idx >= session.proposedCategoryIds.length) {
+      twiml.say({ language: "fr-FR" }, "Choix invalide. Je répète.");
+      await renderCategoryMenu(twiml, session);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    const categoryId = session.proposedCategoryIds[idx];
+
+    // Services de cette catégorie (limit 9)
     const services: any[] = await ServiceModel.find({
-      shopId: pro.assistantShopId,
+      shopId: session.shopId,
+      categoryId,
       blocked: { $ne: true },
       $or: [{ flags: { $exists: false } }, { flags: { $size: 0 } }],
     })
@@ -212,48 +337,112 @@ export const twilioVoiceServiceGather = async (req: Request, res: Response) => {
       .limit(9)
       .lean();
 
-    const idx = Number(digit) - 1;
-    if (!Number.isFinite(idx) || idx < 0 || idx >= services.length) {
-      twiml.say({ language: "fr-FR" }, "Choix invalide. Au revoir.");
+    if (!services.length) {
+      twiml.say({ language: "fr-FR" }, "Aucune prestation disponible dans cette catégorie. Je répète.");
+      await renderCategoryMenu(twiml, session);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    await AssistantSessionModel.updateOne(
+      { callSid },
+      {
+        step: "ASK_SERVICE",
+        categoryId,
+        proposedServiceIds: services.map((s) => String(s._id)),
+        serviceId: null,
+        proposedSlots: [],
+      }
+    );
+
+    // On affiche la liste des services (dans l'ordre proposé)
+    await renderServiceMenu(twiml, {
+      ...session,
+      step: "ASK_SERVICE",
+      proposedServiceIds: services.map((s) => String(s._id)),
+    });
+
+    console.log("[twilio][voice:category] OUT", { callSid, elapsedMs: nowMs() - t0 });
+    return res.type("text/xml").send(twiml.toString());
+  } catch (e: any) {
+    console.error("[twilio][voice:category] ERROR", dumpErr(e));
+    twiml.say({ language: "fr-FR" }, "Une erreur est survenue. Au revoir.");
+    twiml.hangup();
+    return res.type("text/xml").send(twiml.toString());
+  }
+};
+
+/**
+ * 🧾 Choix prestation (voice) => ASK_SLOT
+ */
+export const twilioVoiceServiceGather = async (req: Request, res: Response) => {
+  const twiml = new VoiceResponse();
+  const t0 = nowMs();
+
+  const callSid = norm((req.body as any)?.CallSid);
+  const digitRaw = (req.body as any)?.Digits;
+  const digit = digitRaw === undefined || digitRaw === null ? "" : String(digitRaw);
+
+  console.log("[twilio][voice:service] IN", { callSid, digit });
+
+  try {
+    const session: any = await AssistantSessionModel.findOne({ callSid }).lean();
+    if (!session || session.step !== "ASK_SERVICE" || !session.proposedServiceIds?.length) {
+      twiml.say({ language: "fr-FR" }, "Session expirée. Veuillez rappeler.");
       twiml.hangup();
       return res.type("text/xml").send(twiml.toString());
     }
 
-    const selected = services[idx];
-    const slots = await computeAvailableSlots(String(pro.assistantShopId), String(selected._id));
+    // BACK => revenir aux catégories
+    if (isBackDigit(digit)) {
+      await AssistantSessionModel.updateOne(
+        { callSid },
+        { step: "ASK_CATEGORY", categoryId: null, serviceId: null, proposedServiceIds: [], proposedSlots: [] }
+      );
+      const updated = await AssistantSessionModel.findOne({ callSid }).lean();
+      await renderCategoryMenu(twiml, updated);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    // REPEAT => répéter services
+    if (isRepeatDigit(digit)) {
+      await renderServiceMenu(twiml, session);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    const idx = digitToIndex(digit);
+    if (idx < 0 || idx >= session.proposedServiceIds.length) {
+      twiml.say({ language: "fr-FR" }, "Choix invalide. Je répète.");
+      await renderServiceMenu(twiml, session);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    const serviceId = session.proposedServiceIds[idx];
+    const selected: any = await ServiceModel.findById(serviceId).lean();
+
+    if (!selected || selected.blocked) {
+      twiml.say({ language: "fr-FR" }, "Prestation indisponible. Je répète.");
+      await renderServiceMenu(twiml, session);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    const slots = await computeAvailableSlots(String(session.shopId), String(selected._id));
     const top3 = slots.slice(0, 3);
 
     if (!top3.length) {
-      twiml.say({ language: "fr-FR" }, "Aucun créneau disponible prochainement. Au revoir.");
-      twiml.hangup();
+      twiml.say({ language: "fr-FR" }, "Aucun créneau disponible prochainement. Appuyez sur # pour revenir en arrière.");
+      // On reste sur ASK_SERVICE, l'utilisateur peut revenir
+      await renderServiceMenu(twiml, session);
       return res.type("text/xml").send(twiml.toString());
     }
 
-    await AssistantSessionModel.findOneAndUpdate(
+    await AssistantSessionModel.updateOne(
       { callSid },
-      { step: "ASK_SLOT", serviceId: String(selected._id), proposedSlots: top3 },
-      { upsert: true }
+      { step: "ASK_SLOT", serviceId: String(selected._id), proposedSlots: top3 }
     );
 
-    twiml.say({ language: "fr-FR" }, "Voici les prochains créneaux disponibles.");
+    await renderSlotMenu(twiml, { ...session, step: "ASK_SLOT", serviceId: String(selected._id), proposedSlots: top3 });
 
-    const actionUrl = `${process.env.API_BASE_URL}/twilio/voice/slot`;
-
-    const gather = twiml.gather({
-      numDigits: 1,
-      action: actionUrl,
-      method: "POST",
-      timeout: 7,
-    });
-
-    top3.forEach((s, i) => {
-      gather.say({ language: "fr-FR" }, `Pour ${saySlotFR(s.date, s.start)}, tapez ${i + 1}.`);
-    });
-
-    twiml.say({ language: "fr-FR" }, "Je n'ai pas reçu votre choix. Au revoir.");
-    twiml.hangup();
-
-    console.log("[twilio][voice:service] OUT", { callSid, elapsedMs: nowMs() - t0, actionUrl });
+    console.log("[twilio][voice:service] OUT", { callSid, elapsedMs: nowMs() - t0 });
     return res.type("text/xml").send(twiml.toString());
   } catch (e: any) {
     console.error("[twilio][voice:service] ERROR", dumpErr(e));
@@ -273,7 +462,9 @@ export const twilioVoiceSlotGather = async (req: Request, res: Response) => {
   const callSid = norm((req.body as any)?.CallSid);
   const from = normalizePhoneE164(norm((req.body as any)?.From));
   const to = normalizePhoneE164(norm((req.body as any)?.To));
-  const digit = norm((req.body as any)?.Digits);
+
+  const digitRaw = (req.body as any)?.Digits;
+  const digit = digitRaw === undefined || digitRaw === null ? "" : String(digitRaw);
 
   console.log("[twilio][voice:slot] IN", { callSid, from, to, digit });
 
@@ -285,10 +476,27 @@ export const twilioVoiceSlotGather = async (req: Request, res: Response) => {
       return res.type("text/xml").send(twiml.toString());
     }
 
-    const idx = Number(digit) - 1;
-    if (!Number.isFinite(idx) || idx < 0 || idx >= session.proposedSlots.length) {
-      twiml.say({ language: "fr-FR" }, "Choix invalide. Au revoir.");
-      twiml.hangup();
+    // BACK => revenir aux services
+    if (isBackDigit(digit)) {
+      await AssistantSessionModel.updateOne(
+        { callSid },
+        { step: "ASK_SERVICE", serviceId: null, proposedSlots: [] }
+      );
+      const updated = await AssistantSessionModel.findOne({ callSid }).lean();
+      await renderServiceMenu(twiml, updated);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    // REPEAT => répéter créneaux
+    if (isRepeatDigit(digit)) {
+      await renderSlotMenu(twiml, session);
+      return res.type("text/xml").send(twiml.toString());
+    }
+
+    const idx = digitToIndex(digit);
+    if (idx < 0 || idx >= session.proposedSlots.length) {
+      twiml.say({ language: "fr-FR" }, "Choix invalide. Je répète.");
+      await renderSlotMenu(twiml, session);
       return res.type("text/xml").send(twiml.toString());
     }
 
@@ -334,23 +542,28 @@ export const twilioVoiceSlotGather = async (req: Request, res: Response) => {
  * POST /twilio/sms
  */
 export const twilioSmsInbound = async (req: Request, res: Response) => {
-  // Twilio veut un 200 très rapide
   res.status(200).send("OK");
 
   const msgSid = norm((req.body as any)?.MessageSid);
-  const to = normalizePhoneE164(norm((req.body as any)?.To));   // numéro Twilio (du pro)
-  const from = normalizePhoneE164(norm((req.body as any)?.From)); // client
-  const body = norm((req.body as any)?.Body);
+  const to = normalizePhoneE164(norm((req.body as any)?.To));
+  const from = normalizePhoneE164(norm((req.body as any)?.From));
+  const bodyRaw = norm((req.body as any)?.Body);
+  const body = bodyRaw.toUpperCase().trim();
 
-  console.log("[twilio][sms] inbound", { msgSid, to, from, body });
+  console.log("[twilio][sms] inbound", { msgSid, to, from, body: bodyRaw });
+
+  const now = new Date();
+  const H24_MS = 24 * 60 * 60 * 1000;
+
+  const expiresAt10min = () => new Date(Date.now() + 10 * 60 * 1000);
+  const smsKey = (fromPhone: string, toPhone: string) => `${fromPhone}|${toPhone}`;
+  const isDigitChoice = (v: string) => /^[1-9]$/.test(v);
+  const pickIndex = (v: string) => Number(v) - 1;
 
   try {
-    // 1) trouver le pro via le numéro Twilio
     const pro: any = await UserModel.findOne({ twilioPhoneNumber: to }).lean();
 
     if (!pro || !pro.assistantShopId) {
-      console.warn("[twilio][sms] pro/shop not found", { msgSid, to, from, proFound: !!pro });
-      // on envoie quand même un fallback neutre
       await sendSms({
         to: from,
         from: to,
@@ -363,19 +576,290 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
       return;
     }
 
-    // 2) charger shop
     const shop: any = await ShopModel.findById(pro.assistantShopId).lean();
-
     const shopName = shop?.name || "ce salon";
     const shopType = shop?.type || "Salon";
 
-    // si le Shop n'a pas le numéro, on fallback sur le pro / le To
     const shopPhone = shop?.twilioPhoneNumber || pro?.twilioPhoneNumber || to;
-
-    // handle si dispo, sinon fallback shop/<id>
     const shopHandle = shop?.handle;
     const shopId = shop?._id ? String(shop._id) : String(pro.assistantShopId);
 
+    const key = smsKey(from, shopPhone);
+
+    // STOP / START
+    if (["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"].includes(body)) {
+      await sendSms({
+        to: from,
+        from: shopPhone,
+        body:
+          "Vous ne recevrez plus de SMS de ce numéro.\n" +
+          "⚠️ Attention : cela peut aussi bloquer les SMS liés à vos réservations.\n" +
+          "Pour réactiver, répondez START.",
+      });
+      return;
+    }
+    if (body === "START") {
+      await sendSms({
+        to: from,
+        from: shopPhone,
+        body: "✅ C’est noté, vous pouvez à nouveau recevoir des SMS de ce numéro.",
+      });
+      return;
+    }
+
+    // AIDE
+    if (body === "AIDE" || body === "HELP") {
+      await sendSms({
+        to: from,
+        from: shopPhone,
+        body:
+          "Commandes disponibles :\n" +
+          "• ANNULER : annuler une réservation (si plusieurs, je vous propose 1/2/3)\n",
+      });
+      return;
+    }
+
+    // CHOIX 1/2/3 si SELECT_CANCEL
+    if (isDigitChoice(body)) {
+      const session: any = await SmsSessionModel.findOne({ key }).lean();
+
+      if (session && session.step === "SELECT_CANCEL" && Array.isArray(session.bookingIds) && session.bookingIds.length) {
+        const idx = pickIndex(body);
+        if (idx < 0 || idx >= session.bookingIds.length) {
+          await sendSms({ to: from, from: shopPhone, body: "Choix invalide. Répondez 1, 2 ou 3." });
+          return;
+        }
+
+        const selectedBookingId = session.bookingIds[idx];
+        const booking: any = await bookingModel.findById(selectedBookingId).lean();
+
+        if (!booking) {
+          await SmsSessionModel.deleteOne({ key });
+          await sendSms({
+            to: from,
+            from: shopPhone,
+            body: "Je ne retrouve plus cette réservation. Répondez ANNULER pour recommencer.",
+          });
+          return;
+        }
+
+        if (String(booking.shopId) !== String(shopId) || booking.phoneNumber !== from) {
+          await SmsSessionModel.deleteOne({ key });
+          await sendSms({ to: from, from: shopPhone, body: "Impossible d’annuler cette réservation (sécurité)." });
+          return;
+        }
+
+        await SmsSessionModel.findOneAndUpdate(
+          { key },
+          {
+            key,
+            fromPhone: from,
+            toPhone: shopPhone,
+            step: "CONFIRM_CANCEL",
+            bookingIds: session.bookingIds,
+            bookingId: selectedBookingId,
+            expiresAt: expiresAt10min(),
+          },
+          { upsert: true }
+        );
+
+        const when = booking?.date || "votre rendez-vous";
+        const title = booking?.title || "votre prestation";
+
+        await sendSms({
+          to: from,
+          from: shopPhone,
+          body:
+            `⚠️ Confirmation d’annulation\n` +
+            `Prestation : ${title}\n` +
+            `Quand : ${when}\n\n` +
+            `Répondez OUI pour confirmer l’annulation.`,
+        });
+        return;
+      }
+    }
+
+    // ANNULER
+    if (body === "ANNULER") {
+      const bookings: any[] = await bookingModel
+        .find({
+          shopId: shopId,
+          phoneNumber: from,
+          status: { $in: ["pending", "accepted"] },
+          start: { $gt: now },
+        })
+        .sort({ start: 1 })
+        .limit(3)
+        .lean();
+
+      if (!bookings.length) {
+        await sendSms({
+          to: from,
+          from: shopPhone,
+          body: "Je ne trouve pas de réservation à annuler pour ce numéro.\nSi besoin, répondez AIDE.",
+        });
+        return;
+      }
+
+      if (bookings.length === 1) {
+        const b = bookings[0];
+        await SmsSessionModel.findOneAndUpdate(
+          { key },
+          {
+            key,
+            fromPhone: from,
+            toPhone: shopPhone,
+            step: "CONFIRM_CANCEL",
+            bookingIds: [String(b._id)],
+            bookingId: String(b._id),
+            expiresAt: expiresAt10min(),
+          },
+          { upsert: true }
+        );
+
+        await sendSms({
+          to: from,
+          from: shopPhone,
+          body:
+            `⚠️ Confirmation d’annulation\n` +
+            `Prestation : ${b?.title || "Prestation"}\n` +
+            `Quand : ${b?.date || "Date à confirmer"}\n\n` +
+            `Répondez OUI pour confirmer l’annulation.`,
+        });
+        return;
+      }
+
+      await SmsSessionModel.findOneAndUpdate(
+        { key },
+        {
+          key,
+          fromPhone: from,
+          toPhone: shopPhone,
+          step: "SELECT_CANCEL",
+          bookingIds: bookings.map((b) => String(b._id)),
+          bookingId: null,
+          expiresAt: expiresAt10min(),
+        },
+        { upsert: true }
+      );
+
+      let msg = "📌 Plusieurs réservations trouvées.\nRépondez avec 1, 2 ou 3 :\n\n";
+      bookings.forEach((b, i) => {
+        msg += `${i + 1}) ${b?.title || "Prestation"} — ${b?.date || "Date à confirmer"}\n`;
+      });
+
+      await sendSms({ to: from, from: shopPhone, body: msg.trim() });
+      return;
+    }
+
+    // OUI => on applique la règle 24h + refund
+    if (body === "OUI") {
+      const smsSession: any = await SmsSessionModel.findOne({ key }).lean();
+
+      if (!smsSession || smsSession.step !== "CONFIRM_CANCEL" || !smsSession.bookingId) {
+        await sendSms({
+          to: from,
+          from: shopPhone,
+          body: "Je n’ai aucune annulation en attente.\nPour annuler un rendez-vous, répondez ANNULER.",
+        });
+        return;
+      }
+
+      const bookingIdToCancel = smsSession.bookingId;
+
+      const booking: any = await bookingModel.findById(bookingIdToCancel).lean();
+      if (!booking) {
+        await SmsSessionModel.deleteOne({ key });
+        await sendSms({ to: from, from: shopPhone, body: "Je ne retrouve plus cette réservation. Répondez ANNULER si besoin." });
+        return;
+      }
+
+      // sécurité
+      if (String(booking.shopId) !== String(shopId) || booking.phoneNumber !== from) {
+        await SmsSessionModel.deleteOne({ key });
+        await sendSms({ to: from, from: shopPhone, body: "Impossible d’annuler cette réservation (sécurité)." });
+        return;
+      }
+
+      if (!["pending", "accepted"].includes(booking.status)) {
+        await SmsSessionModel.deleteOne({ key });
+        await sendSms({ to: from, from: shopPhone, body: "Cette réservation ne peut plus être annulée." });
+        return;
+      }
+
+      const start = new Date(booking.start);
+      const diff = start.getTime() - now.getTime();
+
+      // ✅ règle : pas annulable < 24h
+      if (!Number.isFinite(diff) || diff < H24_MS) {
+        await SmsSessionModel.deleteOne({ key });
+
+        await sendSms({
+          to: from,
+          from: shopPhone,
+          body:
+            "⛔️ Annulation impossible à moins de 24h du rendez-vous.\n" +
+            "Des frais peuvent s’appliquer selon la politique du salon.\n" +
+            "Pour toute demande urgente, contactez directement le salon.",
+        });
+        return;
+      }
+
+      // ✅ annulation autorisée : refund + remise à zéro fee/commission + tracking refund
+      // 1) refund Stripe (idempotent)
+      let refundId: string | undefined;
+      try {
+        const refundRes = await refundBookingIfNeeded({ bookingId: String(booking._id) });
+        refundId = refundRes.refundId;
+      } catch (e: any) {
+        // si refund échoue, on ne “cancel” pas silencieusement : on informe
+        await SmsSessionModel.deleteOne({ key });
+        await sendSms({
+          to: from,
+          from: shopPhone,
+          body:
+            "⚠️ Je n’ai pas pu finaliser l’annulation automatiquement (problème remboursement).\n" +
+            "Merci de contacter le support ou le salon.",
+        });
+        return;
+      }
+
+      // 2) update booking
+      await bookingModel.updateOne(
+        { _id: bookingIdToCancel },
+        {
+          status: "cancelled",
+          cancelledAt: new Date(),
+          cancelSource: "sms",
+          cancelReason: "customer_sms",
+
+          // ✅ remise à zéro
+          serviceFee: "0",
+          commission: "0",
+
+          // ✅ shopEarnings = 0 (logique : on rembourse, donc rien à reverser)
+          shopEarnings: "0",
+
+          // refund tracking (si pas déjà)
+          refundId: refundId,
+          refundedAt: new Date(),
+        }
+      );
+
+      await SmsSessionModel.deleteOne({ key });
+
+      await sendSms({
+        to: from,
+        from: shopPhone,
+        body:
+          "✅ Réservation annulée.\n" +
+          "Le remboursement a été lancé et apparaîtra prochainement sur votre compte.\n" +
+          "Merci de nous avoir prévenus.",
+      });
+      return;
+    }
+
+    // DEFAULT
     const reply = buildAutoReplySms({
       shopName,
       shopType,
@@ -384,22 +868,11 @@ export const twilioSmsInbound = async (req: Request, res: Response) => {
       phoneNumber: shopPhone,
     });
 
-    console.log("[twilio][sms] replying", {
-      msgSid,
-      toClient: from,
-      fromNumber: shopPhone,
-      shopId,
-      shopHandle: shopHandle || null,
-    });
-
-    await sendSms({
-      to: from,
-      from: shopPhone, // ✅ on renvoie depuis le numéro du salon
-      body: reply,
-    });
-
-    console.log("[twilio][sms] replied OK", { msgSid });
+    await sendSms({ to: from, from: shopPhone, body: reply });
   } catch (e: any) {
     console.error("[twilio][sms] ERROR", dumpErr(e));
   }
 };
+
+
+

@@ -1,4 +1,5 @@
 import BookingModel from "../models/booking";
+import Stripe from "stripe";
 import * as express from "express";
 import moment from "moment-timezone";
 import ServiceModel from "../models/service";
@@ -11,6 +12,10 @@ import mongoose from "mongoose";
 import { logger } from "../utils/logger";
 import bookingModel from "../models/booking";
 import { attributeTargetToFeed } from "../services/feedAttribution.service";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
+});
 
 // -------- utils --------
 function sanitize(obj: any) {
@@ -63,8 +68,21 @@ const getAllCACount = async (req: express.Request, res: express.Response) => {
 
 // ====== CRUD Booking ======
 const createBooking = async (req: express.Request, res: express.Response) => {
+  // helper local : 6 chiffres numériques
+  const generate6DigitCode = () => String(Math.floor(100000 + Math.random() * 900000));
+
+  // helper local : validation simple
+  const isValid6DigitCode = (v: any) => typeof v === "string" && /^[0-9]{6}$/.test(v);
+
   try {
     const { lang = "fr", ...data } = req.body;
+
+    // ✅ garantir generatedCode à la création
+    // - si absent => on génère
+    // - si présent mais invalide => on remplace
+    if (!isValid6DigitCode(data.generatedCode)) {
+      data.generatedCode = generate6DigitCode();
+    }
 
     const newBooking = new BookingModel(data);
     await newBooking.save();
@@ -81,7 +99,12 @@ const createBooking = async (req: express.Request, res: express.Response) => {
 
     // 🔔 Notifier le prestataire (fire & forget acceptable ici)
     notifyProNewBooking(newBooking, lang).catch((e) =>
-      logger.error({ msg: "notifyProNewBooking failed", bookingId: newBooking._id?.toString(), errorMessage: e?.message, stack: e?.stack })
+      logger.error({
+        msg: "notifyProNewBooking failed",
+        bookingId: newBooking._id?.toString(),
+        errorMessage: e?.message,
+        stack: e?.stack,
+      })
     );
 
     res.status(201).json(newBooking);
@@ -100,6 +123,7 @@ const createBooking = async (req: express.Request, res: express.Response) => {
     res.status(500).json({ message: "Impossible de créer la réservation" });
   }
 };
+
 
 const getAllBookings = async (req: express.Request, res: express.Response) => {
   try {
@@ -1217,6 +1241,114 @@ const getPendingBookingsByUserPro = async (req: express.Request, res: express.Re
   }
 };
 
+
+function toEuro(v: any) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+const cancelBookingById = async (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+    const { policy } = req.body as { policy: "full" | "half" };
+
+    const booking: any = await BookingModel.findById(id);
+    if (!booking) return res.status(404).json({ message: "Réservation non trouvée" });
+
+    // déjà annulée
+    if (booking.status === "cancelled") {
+      return res.json({ ok: true, alreadyCancelled: true });
+    }
+
+    // règle 24h
+    const start = new Date(booking.start);
+    const diffMs = start.getTime() - Date.now();
+    const isLessThan24h = diffMs < 24 * 60 * 60 * 1000;
+
+    // si <24h mais policy full => interdit
+    if (isLessThan24h && policy === "full") {
+      return res.status(400).json({ message: "Annulation impossible à moins de 24h (full refund)." });
+    }
+
+    // si >24h mais policy half => on peut refuser ou accepter (je conseille forcer full)
+    if (!isLessThan24h && policy === "half") {
+      // on force full côté serveur (sécurité)
+      // tu peux aussi faire return 400, mais forcer c'est plus UX-friendly
+    }
+
+    // idempotence refund
+    if (booking.refundId) {
+      // refund déjà fait : on s’assure juste que le status est bon
+      booking.status = "cancelled";
+      booking.cancelSource = "web";
+      booking.cancelReason = policy === "half" ? "customer_web_less_24" : "customer_web_more_24";
+      booking.cancelledAt = new Date();
+      booking.serviceFee = "0";
+      booking.commission = "0";
+      booking.shopEarnings = policy === "half" ? String(toEuro(booking.price) * 0.5) : "0";
+      await booking.save();
+      return res.json({ ok: true, alreadyRefunded: true });
+    }
+
+    const paymentIntentId = booking.paymentIntentId;
+    if (!paymentIntentId) {
+      return res.status(400).json({ message: "Paiement introuvable (paymentIntentId manquant)." });
+    }
+
+    const paidEuro = toEuro(booking.price);
+    const paidCents = Math.round(paidEuro * 100);
+
+    const doHalf = isLessThan24h; // <24h => 50%
+    const refundCents = doHalf ? Math.round(paidCents * 0.5) : paidCents;
+
+    // Stripe refund
+    const refund = await stripe.refunds.create({
+      payment_intent: String(paymentIntentId),
+      amount: refundCents,
+      reason: "requested_by_customer",
+      metadata: {
+        bookingId: String(booking._id),
+        policy: doHalf ? "half" : "full",
+      },
+    });
+
+    // update booking
+    booking.status = "cancelled";
+    booking.cancelledAt = new Date();
+    booking.cancelSource = "web";
+    booking.cancelReason = doHalf ? "customer_web_less_24" : "customer_web_more_24";
+
+    booking.refundId = refund.id;
+    booking.refundedAt = new Date();
+
+    // business demandé
+    booking.serviceFee = "0";
+    booking.commission = "0";
+
+    // si half : on garde 50% pour prestataire (à toi de décider si c’est "shopEarnings")
+    booking.shopEarnings = doHalf ? String(paidEuro * 0.5) : "0";
+
+    await booking.save();
+
+    logger.info({
+      msg: "cancelBookingById success",
+      bookingId: String(booking._id),
+      refundId: refund.id,
+      policy: doHalf ? "half" : "full",
+    });
+
+    return res.json({ ok: true, refundId: refund.id, policy: doHalf ? "half" : "full" });
+  } catch (error: any) {
+    logger.error({
+      msg: "cancelBookingById failed",
+      bookingId: req?.params?.id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({ message: "Impossible d'annuler la réservation" });
+  }
+};
+
 module.exports = {
   getAllCACount,
   createBooking,
@@ -1233,4 +1365,5 @@ module.exports = {
   getDashboardStatsByShop,
   getPendingBookingsByUserPro,
   getShopAccounting,
+  cancelBookingById,
 };
