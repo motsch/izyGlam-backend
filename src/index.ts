@@ -65,7 +65,7 @@ app.options("*", cors(corsOptions));
  * IMPORTANT: raw body AVANT tout parser JSON
  */
 app.post(
-  "/stripe/webhook",
+  "/stripe",
   require("express").raw({ type: "application/json" }),
   stripeWebhook
 );
