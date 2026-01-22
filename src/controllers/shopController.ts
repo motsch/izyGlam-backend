@@ -789,10 +789,7 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
     if (mode === "SALON") {
       zoneQuery = {
         serviceMode: { $in: ["SALON", null] },
-        $or: [
-          { "placeAddress.postalCode": { $in: postalCodes } },
-          { "legal.postalCode": { $in: postalCodes } },
-        ],
+        deliveryPostalCodes: { $in: postalCodes },
       };
       log("STEP_4_ZONE_QUERY_SALON", { zoneQuery });
     } else {
