@@ -12,6 +12,24 @@ interface Fidelity {
   }>;
 }
 
+// ✅ AJOUT STRIPE BILLING (Subscription)
+interface SubscriptionInformation {
+  plan?: "free" | "basic" | "pro" | "premium" | "custom";
+  stripeCustomerId?: string; // cus_...
+  stripeSubscriptionId?: string; // sub_...
+  status?:
+    | "incomplete"
+    | "incomplete_expired"
+    | "trialing"
+    | "active"
+    | "past_due"
+    | "canceled"
+    | "unpaid"
+    | "paused";
+  currentPeriodEnd?: Date;
+  cancelAtPeriodEnd?: boolean;
+}
+
 interface BankInformation {
   iban?: string;
   bic?: string;
@@ -20,50 +38,59 @@ interface BankInformation {
   country?: string;
 }
 
-// ✅ AJOUT STRIPE (Connect)
+// ✅ STRIPE CONNECT (pour les pros / payouts)
 interface StripeInformation {
   accountId?: string; // acct_...
   onboardingStatus?: "not_started" | "pending" | "complete";
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
-  weeklyPayoutConfigured?: boolean; // 👈 AJOUT
+  weeklyPayoutConfigured?: boolean;
 }
 
 export interface iUser extends Document {
   lastname: string;
   firstname: string;
-  active: boolean; // ✅ nouvel indicateur d'activation
+  active: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
+
   facebook: any;
   instagram: any;
-  bank?: BankInformation;
-  stripe?: StripeInformation; // ✅ AJOUT STRIPE
   linkedin: any;
   bluesky: any;
-  companyMonthlyCredit?: number; // allocation mensuelle "théorique" de l'employé
-  companyRole?: "employee" | "manager" | "executive"; // rôle interne à l'entreprise
-  companyContractEnd?: Date | null; // date de fin de contrat (pour gérer les 90 jours de grâce)
-
   x: any;
   thread: any;
   tiktok: any;
+
+  bank?: BankInformation;
+  stripe?: StripeInformation;
+  subscription?: SubscriptionInformation; // ✅ AJOUT
+
+  companyMonthlyCredit?: number;
+  companyRole?: "employee" | "manager" | "executive";
+  companyContractEnd?: Date | null;
+
   email: string;
   conversationId: string;
   password: string;
   phone: string;
   companyId: string;
-  abonnement: "free" | "basic" | "pro" | "custom";
+
+  // ✅ IMPORTANT : ajout de "premium" pour matcher ton UI Angular
+  abonnement: "free" | "basic" | "pro" | "premium" | "custom";
   abonnement_end: Date | null;
+
   credit: number;
   favoriteShops: Array<string>;
   sex: "male" | "female";
+
   proches: Array<{
     lastname: string;
     firstname: string;
     email: string;
     phone: string;
   }>;
+
   address: Array<{
     street: string;
     city: string;
@@ -72,12 +99,15 @@ export interface iUser extends Document {
     floor: string;
     main: boolean;
   }>;
+
   createdAt: string;
   updatedAt: string;
   lastSeen: string;
+
   role: "user" | "entreprise" | "professionnel" | "admin" | "boss";
-  managerId?: string; // ID du patron si ce user est un employé
-  employeesIds?: string[]; // Liste des IDs des employés si ce user est un boss
+  managerId?: string;
+  employeesIds?: string[];
+
   shopCompany?: {
     name: string;
     adresse: string;
@@ -90,6 +120,7 @@ export interface iUser extends Document {
     phone: string;
     ccvaccepted: boolean;
   };
+
   availability?: Array<{
     day: string;
     periods: Array<{
@@ -97,22 +128,29 @@ export interface iUser extends Document {
       end: string;
     }>;
   }>;
+
   unavailability?: Array<{
     start: Date;
     end: Date;
   }>;
+
   breaks?: {
     duration: string;
   };
 
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+
+  // Legacy (tu peux garder, mais à terme tu utiliseras subscription.stripeCustomerId)
   customerId?: string;
+
   fidelity: Fidelity;
-  language: string; // ✅ langue préférée de l'utilisateur
+
+  language: string;
   country: string;
-  twilioPhoneNumber?: string; // ex: +337...
-  assistantProEnabled?: boolean; // active le standard IA
+
+  twilioPhoneNumber?: string;
+  assistantProEnabled?: boolean;
   assistantShopId?: string;
 
   comparePassword(password: string): Promise<boolean>;
@@ -141,6 +179,38 @@ const StripeInformationSchema = new Schema(
     },
     chargesEnabled: { type: Boolean, default: false },
     payoutsEnabled: { type: Boolean, default: false },
+
+    // ✅ Manquait dans ton schema (mais présent dans l'interface)
+    weeklyPayoutConfigured: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
+// ✅ Sous-schema Stripe Billing (Subscription)
+const SubscriptionInformationSchema = new Schema(
+  {
+    plan: {
+      type: String,
+      enum: ["free", "basic", "pro", "premium", "custom"],
+      default: "free",
+    },
+    stripeCustomerId: { type: String }, // cus_...
+    stripeSubscriptionId: { type: String }, // sub_...
+    status: {
+      type: String,
+      enum: [
+        "incomplete",
+        "incomplete_expired",
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "unpaid",
+        "paused",
+      ],
+    },
+    currentPeriodEnd: { type: Date },
+    cancelAtPeriodEnd: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -151,12 +221,21 @@ const userSchema = new Schema<iUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String, required: true },
+
   bank: { type: BankInformationSchema, required: false },
-  stripe: { type: StripeInformationSchema, required: false }, // ✅ AJOUT STRIPE
+
+  // Stripe Connect (payouts pro)
+  stripe: { type: StripeInformationSchema, required: false },
+
+  // ✅ Stripe Billing (subscription)
+  subscription: { type: SubscriptionInformationSchema, required: false },
+
   conversationId: { type: String, required: false },
   companyId: { type: String, required: false },
-  active: { type: Boolean, default: false }, // ✅ par défaut à false
+
+  active: { type: Boolean, default: false },
   emailVerificationToken: { type: String },
+  emailVerificationExpires: { type: Date },
 
   companyMonthlyCredit: { type: Number, default: 0 },
   companyRole: {
@@ -169,21 +248,25 @@ const userSchema = new Schema<iUser>({
   createdAt: { type: String },
   updatedAt: { type: String },
   lastSeen: { type: String },
-  emailVerificationExpires: { type: Date },
+
+  // ✅ IMPORTANT : ajout de premium
   abonnement: {
     type: String,
     required: false,
-    enum: ["free", "basic", "pro", "custom"],
+    enum: ["free", "basic", "pro", "premium", "custom"],
     default: "free",
   },
   abonnement_end: { type: Date, required: false },
+
   credit: { type: Number, default: 0 },
   favoriteShops: { type: [String], default: [] },
+
   sex: {
     type: String,
     required: true,
     enum: ["male", "female"],
   },
+
   fidelity: {
     stars: { type: Number, default: 0 },
     card_expiration: { type: Date },
@@ -195,6 +278,7 @@ const userSchema = new Schema<iUser>({
       },
     ],
   },
+
   proches: [
     {
       lastname: { type: String },
@@ -203,6 +287,7 @@ const userSchema = new Schema<iUser>({
       phone: { type: String },
     },
   ],
+
   address: [
     {
       street: { type: String },
@@ -213,17 +298,21 @@ const userSchema = new Schema<iUser>({
       main: { type: Boolean, default: false },
     },
   ],
+
   role: {
     type: String,
     required: true,
     enum: ["user", "entreprise", "professionnel", "admin", "boss"],
   },
+
   managerId: { type: String, required: false },
   employeesIds: { type: [String], default: [] },
+
   shopCompany: {
     type: Object,
     required: false,
   },
+
   availability: [
     {
       day: { type: String },
@@ -235,59 +324,74 @@ const userSchema = new Schema<iUser>({
       ],
     },
   ],
+
   unavailability: [
     {
       start: { type: Date },
       end: { type: Date },
     },
   ],
+
   breaks: {
     duration: { type: String },
   },
+
+  // Legacy Stripe customer id (optionnel)
   customerId: { type: String },
+
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
+
   facebook: {
     accessToken: { type: String },
     tokenExpiresAt: { type: Date },
     userId: { type: String },
   },
+
   instagram: {
     accessToken: { type: String },
     tokenExpiresAt: { type: Date },
     businessAccountId: { type: String },
   },
+
   linkedin: {
     accessToken: { type: String },
     tokenExpiresAt: { type: Date },
     userId: { type: String },
     email: { type: String },
   },
+
   tiktok: {
     accessToken: { type: String },
     tokenExpiresAt: { type: Date },
     userId: { type: String },
   },
+
   x: {
     accessToken: { type: String },
     tokenExpiresAt: { type: Date },
     userId: { type: String },
   },
+
   thread: {
     accessToken: { type: String },
     tokenExpiresAt: { type: Date },
     userId: { type: String },
   },
+
   bluesky: {
     handle: { type: String },
     accessToken: { type: String },
     refreshToken: { type: String },
     tokenExpiresAt: { type: Date },
   },
+
   twilioPhoneNumber: { type: String, required: false, index: true },
   assistantProEnabled: { type: Boolean, default: false },
   assistantShopId: { type: String, required: false, index: true },
+
   country: { type: String },
+
   language: {
     type: String,
     enum: [
@@ -327,7 +431,7 @@ const userSchema = new Schema<iUser>({
       "vi",
       "zh",
     ],
-    default: "fr", // ✅ valeur par défaut
+    default: "fr",
   },
 });
 
