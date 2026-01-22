@@ -728,41 +728,82 @@ function computePerformanceScore(shop: any) {
 }
 
 export const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) => {
+  const requestId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  // petit helper pour standardiser les logs
+  const log = (step: string, data?: any) => {
+    logger.info({
+      requestId,
+      step,
+      route: req.originalUrl,
+      method: req.method,
+      ...(data !== undefined ? { data } : {}),
+    });
+  };
+
   try {
-    const mode = normalizeServiceMode((req.query as any)?.mode); // "SALON" | "DOMICILE"
+    log("START", {
+      query: req.query,
+      params: req.params,
+      ip: (req as any).ip,
+    });
+
+    // 0) mode
+    const rawMode = (req.query as any)?.mode;
+    const mode = normalizeServiceMode(rawMode); // "SALON" | "DOMICILE"
+
+    log("STEP_0_MODE_PARSED", { rawMode, mode });
+
     if (!mode) {
+      log("EARLY_RETURN_MODE_MISSING", { rawMode, mode });
       return res.status(400).json({ message: "Mode requis (SALON ou DOMICILE)" });
     }
+
+    // 1) codes + country
     const { codes, country } = req.query;
+    log("STEP_1_QUERY_INPUTS", { codes, country, mode });
+
     if (!codes) {
+      log("EARLY_RETURN_CODES_MISSING", { codes });
       return res.status(400).json({ message: "Les codes postaux sont requis" });
     }
-    // 1️⃣ Parse codes postaux
+
+    // 2) parse postal codes
     const postalCodes = pickPostalCodes(codes);
+    log("STEP_2_POSTAL_CODES_PARSED", {
+      codesRaw: codes,
+      postalCodes,
+      count: postalCodes?.length ?? 0,
+    });
+
     if (!postalCodes.length) {
+      log("EARLY_RETURN_NO_POSTAL_CODES", { codesRaw: codes });
       return res.json({ all: [], discover: [], appreciated: [], smart: [], top10: [] });
     }
+
     const countryQuery = buildCountryQuery(country);
-    // 2️⃣ Filtrage par mode + rétro-compat (shops anciens sans serviceMode)
+    log("STEP_3_COUNTRY_QUERY", { country, countryQuery });
+
+    // 3) zoneQuery
     let zoneQuery: any;
     if (mode === "SALON") {
       zoneQuery = {
-        // ✅ fallback: accepte anciens shops sans serviceMode (null / undefined)
         serviceMode: { $in: ["SALON", null] },
         $or: [
           { "placeAddress.postalCode": { $in: postalCodes } },
-          { "legal.postalCode": { $in: postalCodes } }, // fallback
+          { "legal.postalCode": { $in: postalCodes } },
         ],
       };
+      log("STEP_4_ZONE_QUERY_SALON", { zoneQuery });
     } else {
       zoneQuery = {
-        // ✅ fallback: accepte anciens shops sans serviceMode (null / undefined)
         serviceMode: { $in: ["DOMICILE", null] },
         deliveryPostalCodes: { $in: postalCodes },
       };
+      log("STEP_4_ZONE_QUERY_DOMICILE", { zoneQuery });
     }
 
-    // 3️⃣ Query principale
+    // 4) query principale
     const shopQuery: any = {
       ...zoneQuery,
       active: true,
@@ -770,13 +811,39 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
       ...(countryQuery ?? {}),
     };
 
+    log("STEP_5_SHOP_QUERY_FINAL", {
+      shopQuery,
+      // utile pour voir la taille du tableau (si énorme)
+      postalCodesCount: postalCodes.length,
+    });
+
+    // 5) find shops
+    log("STEP_6_BEFORE_SHOP_FIND");
     const shops = await ShopModel.find(shopQuery).lean();
+    log("STEP_7_AFTER_SHOP_FIND", { shopsCount: shops.length });
+
+    // petit aperçu (pas tout le doc)
+    log("STEP_7B_SHOPS_SAMPLE", {
+      sample: shops.slice(0, 3).map((s: any) => ({
+        _id: String(s._id),
+        name: s.name,
+        serviceMode: s.serviceMode,
+        active: s.active,
+        status: s.status,
+        placePostal: s?.placeAddress?.postalCode,
+        legalPostal: s?.legal?.postalCode,
+        deliveryPostalCodes: s?.deliveryPostalCodes,
+      })),
+    });
 
     if (!shops.length) {
+      log("EARLY_RETURN_NO_SHOPS", { shopQuery });
       return res.json({ all: [], discover: [], appreciated: [], smart: [], top10: [] });
     }
 
-    // 4️⃣ Performance + stats safe
+    // 6) performance calc
+    log("STEP_8_BEFORE_PERFORMANCE_MAP", { shopsCount: shops.length });
+
     const shopsWithPerformance = shops.map((shop: any) => {
       const finished = shop?.stats?.bookings?.finished;
 
@@ -809,26 +876,52 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
       };
     });
 
-    // 5️⃣ Enrichissement prix moyen (robuste string/ObjectId)
+    log("STEP_9_AFTER_PERFORMANCE_MAP", {
+      count: shopsWithPerformance.length,
+      sample: shopsWithPerformance.slice(0, 3).map((s: any) => ({
+        _id: String(s._id),
+        performanceScore: s.performanceScore,
+        note: s.note,
+        finished: s?.stats?.bookings?.finished,
+      })),
+    });
+
+    // 7) avg price aggregation
     const shopIdsStr = shopsWithPerformance.map((s: any) => String(s._id));
     const shopIdsObj = asObjectIdArray(shopIdsStr);
 
-    // On tente d’abord en ObjectId (cas le plus fréquent), puis fallback en string si vide
+    log("STEP_10_SHOP_IDS_PREPARED", {
+      shopIdsStrCount: shopIdsStr.length,
+      shopIdsObjCount: shopIdsObj.length,
+      sampleIds: shopIdsStr.slice(0, 5),
+    });
+
     let servicesAgg: Array<{ _id: any; avgPrice: number }> = [];
 
     if (shopIdsObj.length) {
-      servicesAgg = await ServiceModel.aggregate([
-        { $match: { shopId: { $in: shopIdsObj } } },
-        { $group: { _id: "$shopId", avgPrice: { $avg: "$price" } } },
-      ]);
+      log("STEP_11_BEFORE_AGG_OBJECTID", { matchCount: shopIdsObj.length });
+      try {
+        servicesAgg = await ServiceModel.aggregate([
+          { $match: { shopId: { $in: shopIdsObj } } },
+          { $group: { _id: "$shopId", avgPrice: { $avg: "$price" } } },
+        ]);
+        log("STEP_12_AFTER_AGG_OBJECTID", { servicesAggCount: servicesAgg.length });
+      } catch (e: any) {
+        log("ERROR_AGG_OBJECTID", { message: e?.message, stack: e?.stack });
+      }
     }
 
-    // Fallback si aucun match (possible si shopId stocké en string)
     if (!servicesAgg.length) {
-      servicesAgg = await ServiceModel.aggregate([
-        { $match: { shopId: { $in: shopIdsStr } } },
-        { $group: { _id: "$shopId", avgPrice: { $avg: "$price" } } },
-      ]);
+      log("STEP_13_BEFORE_AGG_STRING_FALLBACK", { matchCount: shopIdsStr.length });
+      try {
+        servicesAgg = await ServiceModel.aggregate([
+          { $match: { shopId: { $in: shopIdsStr } } },
+          { $group: { _id: "$shopId", avgPrice: { $avg: "$price" } } },
+        ]);
+        log("STEP_14_AFTER_AGG_STRING_FALLBACK", { servicesAggCount: servicesAgg.length });
+      } catch (e: any) {
+        log("ERROR_AGG_STRING_FALLBACK", { message: e?.message, stack: e?.stack });
+      }
     }
 
     const avgPriceByShop: Record<string, number> = {};
@@ -836,22 +929,44 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
       avgPriceByShop[String(s._id)] = toNumber(s.avgPrice, Infinity);
     });
 
+    log("STEP_15_AVG_PRICE_MAP_READY", {
+      keysCount: Object.keys(avgPriceByShop).length,
+      sample: Object.entries(avgPriceByShop).slice(0, 5),
+    });
+
     const enrichedShops = shopsWithPerformance.map((shop: any) => ({
       ...shop,
       avgPrice: avgPriceByShop[String(shop._id)] ?? Infinity,
     }));
 
-    // 6️⃣ Catégories
+    log("STEP_16_ENRICHED_SHOPS_READY", {
+      count: enrichedShops.length,
+      sample: enrichedShops.slice(0, 3).map((s: any) => ({
+        _id: String(s._id),
+        avgPrice: s.avgPrice,
+        performanceScore: s.performanceScore,
+        note: s.note,
+      })),
+    });
+
+    // 8) categories
+    log("STEP_17_BEFORE_SORTS");
     const sortedByPerf = [...enrichedShops].sort(
       (a, b) => toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0)
     );
 
+    log("STEP_18_AFTER_SORT_BY_PERF", {
+      top: sortedByPerf.slice(0, 5).map((s: any) => ({
+        _id: String(s._id),
+        perf: s.performanceScore,
+        note: s.note,
+        avgPrice: s.avgPrice,
+      })),
+    });
+
     const categories = {
       all: enrichedShops,
-
-      // ✅ "discover" : un pool des meilleurs, puis shuffle (sinon shuffle + sort = inutile)
       discover: shuffle(sortedByPerf.slice(0, 50)).slice(0, 15),
-
       appreciated: [...enrichedShops]
         .sort((a, b) => {
           const na = toNumber(a.note, 0);
@@ -860,7 +975,6 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
           return toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0);
         })
         .slice(0, 15),
-
       smart: [...enrichedShops]
         .sort((a, b) => {
           const pa = toNumber(a.avgPrice, Infinity);
@@ -869,26 +983,34 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
           return toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0);
         })
         .slice(0, 15),
-
-      // ✅ top10 = 10
       top10: sortedByPerf.slice(0, 10),
     };
 
+    log("STEP_19_CATEGORIES_READY", {
+      counts: {
+        all: categories.all.length,
+        discover: categories.discover.length,
+        appreciated: categories.appreciated.length,
+        smart: categories.smart.length,
+        top10: categories.top10.length,
+      },
+    });
+
+    log("END_SUCCESS");
     return res.json(categories);
   } catch (error: any) {
     logger.error({
+      requestId,
       msg: "shops.byPostalCodesWithCategories.error",
       errorMessage: error?.message,
       stack: error?.stack,
       route: req.originalUrl,
       method: req.method,
+      query: req.query,
     });
     return res.status(500).json({ message: "Erreur serveur" });
   }
 };
-
-
-
 
 // Petit helper
 function shuffle<T>(arr: T[]): T[] {
@@ -1502,7 +1624,7 @@ const searchShopsWithServices = async (req: express.Request, res: express.Respon
 
     logger.info({ msg: "shops.searchWithServices.success", returned: results.length });
     return res.status(200).json(results);
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Erreur dans searchShopsWithServices :", error);
     logger.error({
       msg: "shops.searchWithServices.error",

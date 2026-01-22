@@ -151,7 +151,7 @@ router.get("/shop/deliveryAll", shopController.getShopsByPostalCodes);
 //
 // Ici je fais un choix "safe" : /shop/delivery devient alias du nouveau,
 // mais avec default mode=DOMICILE si absent (à implémenter dans le controller).
-router.get("/shop/delivery", shopController.getShopsByPostalCodesWithCategories);
+// router.get("/shop/delivery", shopController.getShopsByPostalCodesWithCategories);
 
 // ========================================
 // Search
