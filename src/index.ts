@@ -23,7 +23,6 @@ import { Request, Response, NextFunction } from "express";
 import { startShopStatsCron } from "./cron/shopStats.cron";
 import twilioRoutes from "./routes/twilioRoutes";
 import { startBigBuyCrons } from "./cron/bigbuyCron";
-
 import stripeWebhookRoutes from "./routes/stripeWebhook.routes";
 
 const app = express();
@@ -248,7 +247,7 @@ const feedRoutes = require("./routes/feed");
 const proFeedRoutes = require("./routes/proFeed");
 const feedAnalytics = require("./routes/feedAnalytics");
 const serviceCategoryRoutes = require("./routes/serviceCategoryRoutes");
-const stripeBilling = require("./routes/stripeBilling");
+const stripeBillingRoutes = require("./routes/stripeBillingRoutes");
 
 // Utilisation des routes
 app.use("/api", prospectionRoutes);
@@ -300,7 +299,7 @@ app.use("/api", feedRoutes);
 app.use("/api", proFeedRoutes);
 app.use("/api", feedAnalytics);
 app.use("/api", serviceCategoryRoutes);
-app.use("/api", stripeBilling);
+app.use("/api", stripeBillingRoutes);
 
 /**
  * Static files
