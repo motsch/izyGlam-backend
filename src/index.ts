@@ -248,7 +248,7 @@ const feedRoutes = require("./routes/feed");
 const proFeedRoutes = require("./routes/proFeed");
 const feedAnalytics = require("./routes/feedAnalytics");
 const serviceCategoryRoutes = require("./routes/serviceCategoryRoutes");
-const stripeBillingRoutes = require("./routes/stripeBillingRoutes");
+const stripeBilling = require("./routes/stripeBilling");
 
 // Utilisation des routes
 app.use("/api", prospectionRoutes);
@@ -300,7 +300,7 @@ app.use("/api", feedRoutes);
 app.use("/api", proFeedRoutes);
 app.use("/api", feedAnalytics);
 app.use("/api", serviceCategoryRoutes);
-app.use("/api", stripeBillingRoutes);
+app.use("/api", stripeBilling);
 
 /**
  * Static files
