@@ -23,6 +23,15 @@ function safeStr(v: any) {
   return typeof v === "string" ? v : v === null || v === undefined ? "" : String(v);
 }
 
+function toDateFromUnixSeconds(sec?: number | null) {
+  if (!sec || typeof sec !== "number") return null;
+  return new Date(sec * 1000);
+}
+
+function isMongoId(v: any) {
+  return typeof v === "string" && mongoose.isValidObjectId(v);
+}
+
 function extractGuestPhone(clientId?: string) {
   const v = String(clientId || "").trim();
   if (v.startsWith("guest:")) return v.slice("guest:".length).trim();
@@ -137,16 +146,12 @@ function buildBookingPaidSms(params: {
   serviceName: string;
   whenHuman: string;
   code: string;
-
   serviceMode: "SALON" | "DOMICILE";
   salonAddress?: string;
 }): string {
   const { shopName, serviceName, whenHuman, code, serviceMode, salonAddress } = params;
 
-  const addressBlock =
-    serviceMode === "SALON" && salonAddress
-      ? `📍 Adresse : ${salonAddress}\n`
-      : "";
+  const addressBlock = serviceMode === "SALON" && salonAddress ? `📍 Adresse : ${salonAddress}\n` : "";
 
   return (
     `✅ Paiement confirmé\n` +
@@ -206,12 +211,105 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
     /**
      * =====================================================
-     *  A) BOOKINGS (assistant IzyGlam) - Checkout completed
+     *  A) CHECKOUT COMPLETED
+     *  - Subscriptions (Billing)
+     *  - Bookings (assistant IzyGlam)
      * =====================================================
      */
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
+      // --- 1) SUBSCRIPTIONS checkout ---
+      const isSubscriptionCheckout =
+        session.mode === "subscription" || safeStr(session.metadata?.type) === "subscription";
+
+      if (isSubscriptionCheckout) {
+        logger.info({
+          msg: "stripe.webhook.subscription.checkout.completed",
+          eventId: event.id,
+          sessionId: session.id,
+          paymentStatus: session.payment_status,
+          mode: session.mode,
+          customer: safeStr(session.customer),
+          subscription: safeStr(session.subscription),
+          metadata: session.metadata || {},
+        });
+
+        const userId = safeStr(session.metadata?.userId).trim();
+        const plan = (safeStr(session.metadata?.plan).trim() || "premium") as
+          | "free"
+          | "basic"
+          | "pro"
+          | "premium"
+          | "custom";
+
+        if (!isMongoId(userId)) {
+          logger.warn({
+            msg: "stripe.webhook.subscription.missing_or_invalid_userId_metadata",
+            eventId: event.id,
+            sessionId: session.id,
+            userId,
+            metadata: session.metadata || {},
+          });
+          return res.json({ received: true });
+        }
+
+        const customerId = safeStr(session.customer).trim();
+        const subscriptionId = safeStr(session.subscription).trim();
+
+        try {
+          let stripeSub: Stripe.Subscription | null = null;
+          if (subscriptionId) {
+            stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
+          }
+
+          const status = safeStr(stripeSub?.status || "active");
+          const currentPeriodEnd = stripeSub?.current_period_end
+            ? new Date(stripeSub.current_period_end * 1000)
+            : undefined;
+          const cancelAtPeriodEnd = !!stripeSub?.cancel_at_period_end;
+
+          const update: any = {
+            "subscription.plan": plan,
+            "subscription.stripeCustomerId": customerId || undefined,
+            "subscription.stripeSubscriptionId": subscriptionId || undefined,
+            "subscription.status": status,
+            "subscription.currentPeriodEnd": currentPeriodEnd || undefined,
+            "subscription.cancelAtPeriodEnd": cancelAtPeriodEnd,
+          };
+
+          // sync champ historique
+          if (status === "active" || status === "trialing") {
+            update.abonnement = plan; // premium
+          } else {
+            update.abonnement = "free";
+          }
+
+          await UserModel.updateOne({ _id: userId }, { $set: update });
+
+          logger.info({
+            msg: "stripe.webhook.subscription.user_updated_from_checkout",
+            userId,
+            plan,
+            customerId,
+            subscriptionId,
+            status,
+            currentPeriodEnd: currentPeriodEnd ? currentPeriodEnd.toISOString() : null,
+            cancelAtPeriodEnd,
+          });
+        } catch (e: any) {
+          logger.error({
+            msg: "stripe.webhook.subscription.update_failed_from_checkout",
+            userId,
+            errorMessage: e?.message,
+            stack: e?.stack,
+          });
+        }
+
+        return res.json({ received: true });
+      }
+
+      // --- 2) BOOKING checkout (ton code existant) ---
       logger.info({
         msg: "stripe.webhook.checkout.completed",
         eventId: event.id,
@@ -277,7 +375,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         generatedCodePresent: !!booking.generatedCode,
       });
 
-      // ✅ idempotence: si déjà traité, on stop
+      // idempotence: si déjà traité, on stop
       if (booking.paymentIntentId) {
         logger.info({
           msg: "stripe.webhook.booking.idempotent_skip",
@@ -288,7 +386,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         return res.json({ received: true });
       }
 
-      // update booking : paymentIntentId
       booking.paymentIntentId = paymentIntentId || booking.paymentIntentId;
       await booking.save();
 
@@ -298,7 +395,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         paymentIntentId: safeStr(booking.paymentIntentId),
       });
 
-      // Charger shop & service (pour le texte du SMS)
+      // Charger shop & service
       let shop: any = null;
       let service: any = null;
 
@@ -347,7 +444,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         });
       }
 
-      // ✅ Données SMS
+      // Données SMS
       const smsTo = await resolveClientPhone(booking);
       const smsFrom = await resolveProTwilioFrom(booking);
       const code = safeStr(booking.generatedCode || session.metadata?.generatedCode).trim();
@@ -439,10 +536,118 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
     /**
      * =====================================================
+     *  C) SUBSCRIPTIONS (Stripe Billing) - Lifecycle events
+     * =====================================================
+     */
+    if (
+      event.type === "customer.subscription.created" ||
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted"
+    ) {
+      const sub = event.data.object as Stripe.Subscription;
+
+      const customerId = safeStr(sub.customer).trim();
+      const subscriptionId = safeStr(sub.id).trim();
+      const status = safeStr(sub.status).trim();
+      const currentPeriodEnd = toDateFromUnixSeconds(sub.current_period_end);
+      const cancelAtPeriodEnd = !!sub.cancel_at_period_end;
+
+      logger.info({
+        msg: "stripe.webhook.subscription.lifecycle",
+        eventId: event.id,
+        type: event.type,
+        customerId,
+        subscriptionId,
+        status,
+        currentPeriodEnd: currentPeriodEnd ? currentPeriodEnd.toISOString() : null,
+        cancelAtPeriodEnd,
+      });
+
+      const user: any = await UserModel.findOne({
+        $or: [{ "subscription.stripeCustomerId": customerId }, { customerId: customerId }],
+      });
+
+      if (!user) {
+        logger.warn({
+          msg: "stripe.webhook.subscription.user_not_found",
+          customerId,
+          subscriptionId,
+        });
+        return res.json({ received: true });
+      }
+
+      const plan =
+        (user.subscription?.plan as any) ||
+        (safeStr((sub.metadata as any)?.plan) as any) ||
+        "premium";
+
+      const update: any = {
+        "subscription.plan": plan,
+        "subscription.stripeCustomerId": customerId || undefined,
+        "subscription.stripeSubscriptionId": subscriptionId || undefined,
+        "subscription.status": status,
+        "subscription.currentPeriodEnd": currentPeriodEnd || undefined,
+        "subscription.cancelAtPeriodEnd": cancelAtPeriodEnd,
+      };
+
+      if (status === "active" || status === "trialing") {
+        update.abonnement = plan; // premium
+      } else {
+        update.abonnement = "free";
+      }
+
+      await UserModel.updateOne({ _id: user._id }, { $set: update });
+
+      logger.info({
+        msg: "stripe.webhook.subscription.user_updated_from_lifecycle",
+        userId: String(user._id),
+        plan,
+        status,
+      });
+
+      return res.json({ received: true });
+    }
+
+    /**
+     * =====================================================
+     *  D) SUBSCRIPTIONS - Invoice payment failed (optionnel)
+     * =====================================================
+     */
+    if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object as Stripe.Invoice;
+      const customerId = safeStr(invoice.customer).trim();
+
+      logger.warn({
+        msg: "stripe.webhook.invoice.payment_failed",
+        eventId: event.id,
+        customerId,
+        invoiceId: invoice.id,
+      });
+
+      const user: any = await UserModel.findOne({
+        $or: [{ "subscription.stripeCustomerId": customerId }, { customerId }],
+      });
+
+      if (user) {
+        await UserModel.updateOne(
+          { _id: user._id },
+          {
+            $set: {
+              "subscription.status": "past_due",
+              abonnement: "free", // ou garder premium si tu veux une période de grâce
+            },
+          }
+        );
+      }
+
+      return res.json({ received: true });
+    }
+
+    /**
+     * =====================================================
      *  B) ORDERS (BigBuy) - Code existant
      * =====================================================
      */
-
     if (event.type === "payment_intent.succeeded") {
       const pi = event.data.object as Stripe.PaymentIntent;
 
@@ -466,7 +671,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         return res.json({ received: true });
       }
 
-      // idempotence simple (garde ta logique actuelle)
+      // idempotence simple
       if (order.stripe?.lastStripeEventId === event.id) {
         logger.info({ msg: "stripe.webhook.order.idempotent_skip", orderId, eventId: event.id });
         return res.json({ received: true });
