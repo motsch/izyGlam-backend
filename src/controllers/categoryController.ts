@@ -23,6 +23,13 @@ function sanitize(obj: any) {
   return clone;
 }
 
+function normalizeServiceMode(input: any): "SALON" | "DOMICILE" | null {
+  const raw = String(input ?? "").toUpperCase().trim();
+  if (raw === "SALON") return "SALON";
+  if (raw === "DOMICILE") return "DOMICILE";
+  return null;
+}
+
 // Créer une nouvelle catégorie
 const createCategory = async (req: Request, res: Response) => {
   try {
@@ -106,9 +113,15 @@ function parsePostalCodes(codesParam: unknown): string[] {
 
 export const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
   try {
-    const { lat, lon, codes, country } = req.query;
+    const { lat, lon, codes, country, mode } = req.query;
     const hasGeo = lat != null && lon != null;
     const postalCodes = parsePostalCodes(codes);
+
+    const rawMode = mode as string | undefined;
+    const normalizedMode = normalizeServiceMode(rawMode); // "SALON" | "DOMICILE" | null
+    if (!normalizedMode) {
+      return res.status(400).json({ message: "Mode requis (SALON ou DOMICILE)" });
+    }
 
     const countryQuery = buildCountryQuery(country);
 
@@ -118,17 +131,19 @@ export const getCategoriesWithAvailableShops = async (req: Request, res: Respons
         ...countryQuery,
         active: true,
         status: "approved",
+        serviceMode: { $in: [normalizedMode, null] },
       });
       if (countryCount === 0) {
-        return res.json([]); // aucune boutique dans ce pays
+        return res.json([]);
       }
     }
 
-    // 2) Base query (cohérente prod)
+    // 2) Base query (cohérente prod) + filtre mode
     const baseQuery: any = {
       ...(countryQuery ?? {}),
       active: true,
       status: "approved",
+      serviceMode: { $in: [normalizedMode, null] },
     };
 
     // 3) Si filtres "codes" (et PAS de géoloc), on laisse Mongo pré-filtrer
@@ -136,9 +151,9 @@ export const getCategoriesWithAvailableShops = async (req: Request, res: Respons
       baseQuery.deliveryPostalCodes = { $in: postalCodes };
     }
 
-    // 4) Sélection minimale pour charger moins de data
+    // 4) Sélection minimale
     let shops = await ShopModel.find(baseQuery)
-      .select("filter type trad location.maxDistance location.latitude location.longitude deliveryPostalCodes")
+      .select("filter type trad serviceMode location.maxDistance location.latitude location.longitude deliveryPostalCodes")
       .lean();
 
     // 5) Filtre géographique OU filtre strict par codes (comme avant)
@@ -156,17 +171,14 @@ export const getCategoriesWithAvailableShops = async (req: Request, res: Respons
         );
         return typeof shop.maxDistance === "number" && distance <= shop.maxDistance;
       });
-
     } else if (postalCodes.length > 0) {
-      // stricte vérification côté Node (au cas où)
       shops = shops.filter((shop: any) => {
         if (!Array.isArray(shop.deliveryPostalCodes)) return false;
         return shop.deliveryPostalCodes.some((d: string) => postalCodes.includes(d));
       });
     }
 
-    // 6) Construire la liste des slugs de catégories à partir des shops
-    // Priorité : shop.filter -> shop.type -> suffixe de shop.trad
+    // 6) Slugs catégories depuis shops
     const slugSet = new Set<string>();
     for (const s of shops) {
       const slug = toSlug(s.filter) || toSlug(s.type) || slugFromTrad(s.trad);
@@ -174,21 +186,18 @@ export const getCategoriesWithAvailableShops = async (req: Request, res: Respons
     }
 
     const slugs = [...slugSet];
-    if (slugs.length === 0) {
-      return res.json([]); // aucun shop éligible => aucune catégorie
-    }
+    if (slugs.length === 0) return res.json([]);
 
-    // 7) Récupérer les catégories correspondantes (actives), triées par position
+    // 7) Catégories correspondantes
     const categories = await CategoryModel.find({
       filter: { $in: slugs },
-      active: true, // commente si tu veux tout, même inactives
+      active: true,
     })
       .sort({ position: 1 })
       .lean();
 
     return res.json(categories);
   } catch (error: any) {
-    // ton logger
     logger.error({
       msg: "getCategoriesWithAvailableShops.failed",
       errorMessage: error?.message,
@@ -199,6 +208,7 @@ export const getCategoriesWithAvailableShops = async (req: Request, res: Respons
     return res.status(500).json({ message: "Erreur lors de la récupération des catégories disponibles" });
   }
 };
+
 
 
 // Récupérer toutes les catégories triées par position
