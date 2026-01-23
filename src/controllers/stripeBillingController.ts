@@ -29,9 +29,9 @@ export const createPremiumCheckoutSession = async (req: Request, res: Response) 
       return res.status(404).json({ message: "User not found" });
     }
 
-    const priceId = process.env.STRIPE_PREMIUM_PRICE_ID;
+    const priceId = process.env.STRIPE_PRICE_PREMIUM;
     if (!priceId) {
-      return res.status(500).json({ message: "Missing STRIPE_PREMIUM_PRICE_ID" });
+      return res.status(500).json({ message: "Missing STRIPE_PRICE_PREMIUM" });
     }
 
     // 1) Customer Stripe (réutilise si déjà présent)
