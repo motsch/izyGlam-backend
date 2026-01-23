@@ -13,40 +13,139 @@ function getFrontendUrl() {
   return (process.env.FRONTEND_URL || "https://izyglam.com").replace(/\/$/, "");
 }
 
+function safeStr(v: any) {
+  return typeof v === "string" ? v : v === null || v === undefined ? "" : String(v);
+}
+
+function maskId(id: string) {
+  if (!id) return "";
+  if (id.length <= 10) return id;
+  return id.slice(0, 6) + "..." + id.slice(-4);
+}
+
 export const createPremiumCheckoutSession = async (req: Request, res: Response) => {
+  const startedAt = Date.now();
+  const reqId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
   try {
-    // ✅ Ici on récupère userId depuis le body (comme tu veux pour l’instant)
+    // ✅ log entrée
+    logger.info({
+      msg: "stripe.billing.checkout_session.hit",
+      reqId,
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      ua: safeStr(req.headers["user-agent"]),
+      origin: safeStr(req.headers["origin"]),
+      referer: safeStr(req.headers["referer"]),
+      contentType: safeStr(req.headers["content-type"]),
+      hasBody: !!req.body,
+      bodyKeys: req.body ? Object.keys(req.body) : [],
+      elapsedMs: Date.now() - startedAt,
+    });
+
+    // ✅ Ici on récupère userId depuis le body
     const userId = String(req.body?.userId || "").trim();
 
+    logger.info({
+      msg: "stripe.billing.checkout_session.input",
+      reqId,
+      userId,
+      isValidMongoId: mongoose.isValidObjectId(userId),
+      elapsedMs: Date.now() - startedAt,
+    });
+
     if (!userId || !mongoose.isValidObjectId(userId)) {
+      logger.warn({
+        msg: "stripe.billing.checkout_session.invalid_userId",
+        reqId,
+        userId,
+        elapsedMs: Date.now() - startedAt,
+      });
       return res.status(400).json({ message: "Missing or invalid userId" });
     }
 
-    const user: any = await UserModel.findById(userId);
+    const user: any = await UserModel.findById(userId).lean();
+    logger.info({
+      msg: "stripe.billing.checkout_session.user_loaded",
+      reqId,
+      userFound: !!user,
+      userId,
+      email: safeStr(user?.email),
+      abonnement: safeStr(user?.abonnement),
+      subPlan: safeStr(user?.subscription?.plan),
+      subStatus: safeStr(user?.subscription?.status),
+      cancelAtPeriodEnd: !!user?.subscription?.cancelAtPeriodEnd,
+      currentPeriodEnd: user?.subscription?.currentPeriodEnd
+        ? new Date(user.subscription.currentPeriodEnd).toISOString()
+        : null,
+      elapsedMs: Date.now() - startedAt,
+    });
+
     if (!user) {
+      logger.warn({
+        msg: "stripe.billing.checkout_session.user_not_found",
+        reqId,
+        userId,
+        elapsedMs: Date.now() - startedAt,
+      });
       return res.status(404).json({ message: "User not found" });
     }
 
-    const priceId = process.env.STRIPE_PRICE_PREMIUM;
+    const priceId = safeStr(process.env.STRIPE_PRICE_PREMIUM).trim();
+    logger.info({
+      msg: "stripe.billing.checkout_session.env",
+      reqId,
+      hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
+      stripeApiVersion: safeStr(process.env.STRIPE_API_VERSION),
+      hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+      hasPriceId: !!priceId,
+      priceIdMasked: maskId(priceId),
+      frontendUrl: getFrontendUrl(),
+      elapsedMs: Date.now() - startedAt,
+    });
+
     if (!priceId) {
+      logger.error({
+        msg: "stripe.billing.checkout_session.missing_price_id",
+        reqId,
+        envKey: "STRIPE_PRICE_PREMIUM",
+        elapsedMs: Date.now() - startedAt,
+      });
       return res.status(500).json({ message: "Missing STRIPE_PRICE_PREMIUM" });
     }
 
     /**
-     * =====================================================
-     * ✅ BLOC IMPORTANT : éviter de recréer si déjà premium actif
-     * =====================================================
+     * ✅ éviter de recréer si déjà premium actif
      */
-    const subStatus = user?.subscription?.status;
-    const subPlan = user?.subscription?.plan;
+    const subStatus = safeStr(user?.subscription?.status);
+    const subPlan = safeStr(user?.subscription?.plan);
     const currentPeriodEnd = user?.subscription?.currentPeriodEnd || null;
 
     const isAlreadyPremiumActive =
-      (subPlan === "premium" || user?.abonnement === "premium") &&
+      (subPlan === "premium" || safeStr(user?.abonnement) === "premium") &&
       (subStatus === "active" || subStatus === "trialing") &&
       !user?.subscription?.cancelAtPeriodEnd;
 
+    logger.info({
+      msg: "stripe.billing.checkout_session.already_active_check",
+      reqId,
+      subPlan,
+      subStatus,
+      abonnement: safeStr(user?.abonnement),
+      cancelAtPeriodEnd: !!user?.subscription?.cancelAtPeriodEnd,
+      isAlreadyPremiumActive,
+      elapsedMs: Date.now() - startedAt,
+    });
+
     if (isAlreadyPremiumActive) {
+      logger.warn({
+        msg: "stripe.billing.checkout_session.skip_already_active",
+        reqId,
+        userId,
+        elapsedMs: Date.now() - startedAt,
+      });
+
       return res.status(200).json({
         alreadyActive: true,
         url: null,
@@ -61,22 +160,45 @@ export const createPremiumCheckoutSession = async (req: Request, res: Response) 
     }
 
     /**
-     * =====================================================
      * 1) Customer Stripe (réutilise si déjà présent)
-     * =====================================================
      */
-    let customerId = user.subscription?.stripeCustomerId || user.customerId;
+    let customerId = safeStr(user?.subscription?.stripeCustomerId || user?.customerId).trim();
+
+    logger.info({
+      msg: "stripe.billing.checkout_session.customer.resolve",
+      reqId,
+      hasExistingCustomerId: !!customerId,
+      customerIdMasked: maskId(customerId),
+      elapsedMs: Date.now() - startedAt,
+    });
 
     if (!customerId) {
+      logger.info({
+        msg: "stripe.billing.checkout_session.customer.create.begin",
+        reqId,
+        userId,
+        email: safeStr(user.email),
+        name: `${safeStr(user.firstname)} ${safeStr(user.lastname)}`.trim(),
+        elapsedMs: Date.now() - startedAt,
+      });
+
       const customer = await stripe.customers.create({
         email: user.email,
         name: `${user.firstname} ${user.lastname}`,
-        metadata: { userId: String(user._id) },
+        metadata: { userId: String(userId) },
       });
+
       customerId = customer.id;
 
+      logger.info({
+        msg: "stripe.billing.checkout_session.customer.create.done",
+        reqId,
+        customerIdMasked: maskId(customerId),
+        elapsedMs: Date.now() - startedAt,
+      });
+
       await UserModel.updateOne(
-        { _id: user._id },
+        { _id: userId },
         {
           $set: {
             "subscription.stripeCustomerId": customerId,
@@ -84,34 +206,66 @@ export const createPremiumCheckoutSession = async (req: Request, res: Response) 
           },
         }
       );
+
+      logger.info({
+        msg: "stripe.billing.checkout_session.customer.saved",
+        reqId,
+        userId,
+        customerIdMasked: maskId(customerId),
+        elapsedMs: Date.now() - startedAt,
+      });
     }
 
     /**
-     * =====================================================
-     * ✅ BLOC OPTIONNEL : marquer l'abonnement "pending"
-     * (utile pour UI ; la vérité finale vient du webhook)
-     * =====================================================
+     * (optionnel) Marquer pending dans Mongo
      */
     await UserModel.updateOne(
-      { _id: user._id },
+      { _id: userId },
       {
         $set: {
           "subscription.plan": "premium",
-          "subscription.status": "incomplete", // "en cours"
+          "subscription.status": "incomplete", // pending
           "subscription.cancelAtPeriodEnd": false,
-          // on ne touche PAS currentPeriodEnd ici (Stripe le donnera via webhook)
         },
       }
     );
 
+    logger.info({
+      msg: "stripe.billing.checkout_session.user_marked_pending",
+      reqId,
+      userId,
+      elapsedMs: Date.now() - startedAt,
+    });
+
     /**
-     * =====================================================
      * 2) Checkout Session (subscription)
-     * =====================================================
      */
     const frontend = getFrontendUrl();
     const successUrl = `${frontend}/thank-you?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${frontend}/payment/cancel`;
+
+    logger.info({
+      msg: "stripe.billing.checkout_session.create.begin",
+      reqId,
+      mode: "subscription",
+      customerIdMasked: maskId(customerId),
+      priceIdMasked: maskId(priceId),
+      successUrl,
+      cancelUrl,
+      elapsedMs: Date.now() - startedAt,
+    });
+
+    // ✅ TIP DEBUG : forcer https en prod si jamais FRONTEND_URL est bizarre
+    // (ici on log juste, on ne modifie pas)
+    if (!successUrl.startsWith("http")) {
+      logger.warn({
+        msg: "stripe.billing.checkout_session.url_invalid",
+        reqId,
+        successUrl,
+        cancelUrl,
+        elapsedMs: Date.now() - startedAt,
+      });
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -120,28 +274,59 @@ export const createPremiumCheckoutSession = async (req: Request, res: Response) 
       success_url: successUrl,
       cancel_url: cancelUrl,
       allow_promotion_codes: false,
-
-      // ✅ IMPORTANT: metadata pour webhook
       metadata: {
         type: "subscription",
-        userId: String(user._id),
+        userId: String(userId),
         plan: "premium",
       },
     });
+
+    logger.info({
+      msg: "stripe.billing.checkout_session.create.done",
+      reqId,
+      sessionId: session.id,
+      sessionUrlPresent: !!session.url,
+      sessionUrl: safeStr(session.url),
+      paymentStatus: safeStr((session as any)?.payment_status), // souvent vide à la création
+      mode: safeStr(session.mode),
+      customer: maskId(safeStr(session.customer)),
+      subscription: maskId(safeStr(session.subscription)),
+      elapsedMs: Date.now() - startedAt,
+    });
+
+    // ⚠️ Si session.url est vide, on log un warning (ça indique un souci d'API / type / lib)
+    if (!session.url) {
+      logger.warn({
+        msg: "stripe.billing.checkout_session.missing_session_url",
+        reqId,
+        sessionId: session.id,
+        elapsedMs: Date.now() - startedAt,
+      });
+    }
 
     return res.status(200).json({
       url: session.url,
       sessionId: session.id,
     });
   } catch (err: any) {
+    // Stripe error details
     logger.error({
-      msg: "stripe.createPremiumCheckoutSession.failed",
+      msg: "stripe.billing.checkout_session.failed",
+      reqId,
       errorMessage: err?.message,
+      type: err?.type,
+      code: err?.code,
+      statusCode: err?.statusCode,
+      rawType: err?.rawType,
+      param: err?.param,
       stack: err?.stack,
+      elapsedMs: Date.now() - startedAt,
     });
+
     return res.status(500).json({ message: err?.message || "Stripe error" });
   }
 };
+
 
 export const getCheckoutSessionStatus = async (req: Request, res: Response) => {
   try {
