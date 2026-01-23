@@ -280,10 +280,13 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
           // sync champ historique
           if (status === "active" || status === "trialing") {
-            update.abonnement = plan; // premium
+            update.abonnement = plan;                // premium
+            update.abonnement_end = currentPeriodEnd || null; // ✅ AJOUT DATE FIN
           } else {
             update.abonnement = "free";
+            update.abonnement_end = null;            // ✅ AJOUT
           }
+
 
           await UserModel.updateOne({ _id: userId }, { $set: update });
 
@@ -591,10 +594,13 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       };
 
       if (status === "active" || status === "trialing") {
-        update.abonnement = plan; // premium
+        update.abonnement = plan;                // premium
+        update.abonnement_end = currentPeriodEnd || null; // ✅ DATE FIN = currentPeriodEnd
       } else {
         update.abonnement = "free";
+        update.abonnement_end = null;
       }
+
 
       await UserModel.updateOne({ _id: user._id }, { $set: update });
 
@@ -635,6 +641,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
             $set: {
               "subscription.status": "past_due",
               abonnement: "free", // ou garder premium si tu veux une période de grâce
+              abonnement_end: null,
             },
           }
         );
