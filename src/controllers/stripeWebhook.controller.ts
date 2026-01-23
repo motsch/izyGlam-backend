@@ -12,6 +12,8 @@ import { bigbuyApi } from "../services/bigbuyApi.service";
 import { sendSms } from "../services/twilio.service";
 import { logger } from "../utils/logger";
 
+import { provisionTwilioNumberForUser } from "../services/twilioProvision.service";
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
 });
@@ -280,13 +282,12 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
           // sync champ historique
           if (status === "active" || status === "trialing") {
-            update.abonnement = plan;                // premium
-            update.abonnement_end = currentPeriodEnd || null; // ✅ AJOUT DATE FIN
+            update.abonnement = plan; // premium
+            update.abonnement_end = currentPeriodEnd || null; // ✅ DATE FIN
           } else {
             update.abonnement = "free";
-            update.abonnement_end = null;            // ✅ AJOUT
+            update.abonnement_end = null;
           }
-
 
           await UserModel.updateOne({ _id: userId }, { $set: update });
 
@@ -309,6 +310,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           });
         }
 
+        // ✅ IMPORTANT : on ACK, et on laisse lifecycle faire Twilio provisioning
         return res.json({ received: true });
       }
 
@@ -539,7 +541,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
     /**
      * =====================================================
-     *  C) SUBSCRIPTIONS (Stripe Billing) - Lifecycle events
+     *  B) SUBSCRIPTIONS (Stripe Billing) - Lifecycle events
      * =====================================================
      */
     if (
@@ -594,15 +596,34 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       };
 
       if (status === "active" || status === "trialing") {
-        update.abonnement = plan;                // premium
-        update.abonnement_end = currentPeriodEnd || null; // ✅ DATE FIN = currentPeriodEnd
+        update.abonnement = plan;
+        update.abonnement_end = currentPeriodEnd || null;
       } else {
         update.abonnement = "free";
         update.abonnement_end = null;
+
+        // si deleted => on force canceled dans la doc (plus propre)
+        if (event.type === "customer.subscription.deleted") {
+          update["subscription.status"] = "canceled";
+        }
       }
 
-
       await UserModel.updateOne({ _id: user._id }, { $set: update });
+
+      // ✅ Provision Twilio UNIQUEMENT ici (source de vérité)
+      if ((status === "active" || status === "trialing") && plan === "premium") {
+        try {
+          await provisionTwilioNumberForUser(String(user._id));
+        } catch (e: any) {
+          logger.error({
+            msg: "twilio.provision.failed_after_premium",
+            userId: String(user._id),
+            errorMessage: e?.message,
+            stack: e?.stack,
+          });
+          // on ACK quand même
+        }
+      }
 
       logger.info({
         msg: "stripe.webhook.subscription.user_updated_from_lifecycle",
@@ -616,7 +637,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
     /**
      * =====================================================
-     *  D) SUBSCRIPTIONS - Invoice payment failed (optionnel)
+     *  C) SUBSCRIPTIONS - Invoice payment failed (optionnel)
      * =====================================================
      */
     if (event.type === "invoice.payment_failed") {
@@ -640,7 +661,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           {
             $set: {
               "subscription.status": "past_due",
-              abonnement: "free", // ou garder premium si tu veux une période de grâce
+              abonnement: "free",
               abonnement_end: null,
             },
           }
@@ -652,7 +673,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
     /**
      * =====================================================
-     *  B) ORDERS (BigBuy) - Code existant
+     *  D) ORDERS (BigBuy) - Code existant
      * =====================================================
      */
     if (event.type === "payment_intent.succeeded") {
