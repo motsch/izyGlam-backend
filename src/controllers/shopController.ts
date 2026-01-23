@@ -1093,31 +1093,37 @@ const asObjectIdArray = (ids: string[]): mongoose.Types.ObjectId[] => {
 // Récupérer une boutique par son ID
 const getShopById = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shop.get.start", route: req.originalUrl, method: req.method, params: req.params });
+
   try {
     const { id } = req.params;
-    console.log("ID : " + id);
-    const shop = await ShopModel.findById(id);
-    if (shop) {
-      logger.info({ msg: "shop.get.success", id });
-      // Valeur par défaut
-      let twilioPhoneNumber: string | null = null;
-      // ✅ Si shop premium => récupérer le twilioPhoneNumber du user associé
-      if (shop.isPremium === true) {
-        const userId = String(shop.idUser || "").trim();
-        if (mongoose.isValidObjectId(userId)) {
-          const user: any = await UserModel.findById(userId).select({ twilioPhoneNumber: 1 }).lean();
-          twilioPhoneNumber = user?.twilioPhoneNumber ? String(user.twilioPhoneNumber) : null;
-        }
-      }
-      // ✅ Renvoie shop + champ additionnel (sans toucher la DB)
-      return res.json({
-        ...shop,
-        twilioPhoneNumber,
-      });
-    } else {
-      logger.warn({ msg: "shop.get.not_found", id });
-      res.status(404).json({ message: "Boutique non trouvée" });
+
+    // ✅ Stop immédiatement si id absent / invalide
+    if (!id || id === "undefined" || !mongoose.isValidObjectId(id)) {
+      logger.warn({ msg: "shop.get.invalid_id", id, route: req.originalUrl });
+      return res.status(400).json({ message: "Shop id invalide" });
     }
+
+    const shop = await ShopModel.findById(id);
+    if (!shop) {
+      logger.warn({ msg: "shop.get.not_found", id });
+      return res.status(404).json({ message: "Boutique non trouvée" });
+    }
+
+    let twilioPhoneNumber: string | null = null;
+
+    if (shop.isPremium === true) {
+      const userId = String(shop.idUser || "").trim();
+      if (mongoose.isValidObjectId(userId)) {
+        const user: any = await UserModel.findById(userId).select({ twilioPhoneNumber: 1 }).lean();
+        twilioPhoneNumber = user?.twilioPhoneNumber ? String(user.twilioPhoneNumber) : null;
+      }
+    }
+
+    return res.json({
+      ...shop.toObject(), // ✅ important
+      twilioPhoneNumber,
+    });
+
   } catch (error: any) {
     logger.error({
       msg: "shop.get.error",
@@ -1126,11 +1132,10 @@ const getShopById = async (req: express.Request, res: express.Response) => {
       route: req.originalUrl,
       method: req.method,
     });
-    res.status(500).json({ message: "Impossible de récupérer la boutique" });
+    return res.status(500).json({ message: "Impossible de récupérer la boutique" });
   }
 };
 
-// Mettre à jour une boutique par son ID
 // Mettre à jour une boutique par son ID
 const updateShopById = async (req: express.Request, res: express.Response) => {
   logger.info({
