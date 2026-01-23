@@ -421,3 +421,135 @@ export const getPremiumSubscription = async (req: Request, res: Response) => {
     return res.status(500).json({ message: err?.message || "Server error" });
   }
 };
+
+/**
+ * POST /premium/cancel { userId }
+ * => cancel_at_period_end=true (annulation à la fin de période)
+ */
+export const cancelPremiumSubscription = async (req: Request, res: Response) => {
+  try {
+    const userId = String(req.body?.userId || "").trim();
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Missing or invalid userId" });
+    }
+
+    const user: any = await UserModel.findById(userId).select({ subscription: 1, abonnement: 1 }).lean();
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const subId = safeStr(user?.subscription?.stripeSubscriptionId).trim();
+    if (!subId) {
+      return res.status(400).json({ message: "No Stripe subscription id on user" });
+    }
+
+    const sub = await stripe.subscriptions.update(subId, {
+      cancel_at_period_end: true,
+    });
+
+    const currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          "subscription.status": sub.status,
+          "subscription.cancelAtPeriodEnd": !!sub.cancel_at_period_end,
+          "subscription.currentPeriodEnd": currentPeriodEnd || undefined,
+          // on garde abonnement premium tant que période pas terminée
+          abonnement: "premium",
+          abonnement_end: currentPeriodEnd || null,
+        },
+      }
+    );
+
+    return res.status(200).json({
+      ok: true,
+      plan: "premium",
+      status: sub.status,
+      cancelAtPeriodEnd: !!sub.cancel_at_period_end,
+      currentPeriodEnd,
+    });
+  } catch (err: any) {
+    logger.error({ msg: "stripe.cancelPremiumSubscription.failed", errorMessage: err?.message, stack: err?.stack });
+    return res.status(500).json({ message: err?.message || "Stripe error" });
+  }
+};
+
+/**
+ * POST /premium/resume { userId }
+ * => cancel_at_period_end=false (réactiver)
+ */
+export const resumePremiumSubscription = async (req: Request, res: Response) => {
+  try {
+    const userId = String(req.body?.userId || "").trim();
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Missing or invalid userId" });
+    }
+
+    const user: any = await UserModel.findById(userId).select({ subscription: 1 }).lean();
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const subId = safeStr(user?.subscription?.stripeSubscriptionId).trim();
+    if (!subId) return res.status(400).json({ message: "No Stripe subscription id on user" });
+
+    const sub = await stripe.subscriptions.update(subId, {
+      cancel_at_period_end: false,
+    });
+
+    const currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          "subscription.status": sub.status,
+          "subscription.cancelAtPeriodEnd": !!sub.cancel_at_period_end,
+          "subscription.currentPeriodEnd": currentPeriodEnd || undefined,
+          abonnement: "premium",
+          abonnement_end: currentPeriodEnd || null,
+        },
+      }
+    );
+
+    return res.status(200).json({
+      ok: true,
+      plan: "premium",
+      status: sub.status,
+      cancelAtPeriodEnd: !!sub.cancel_at_period_end,
+      currentPeriodEnd,
+    });
+  } catch (err: any) {
+    logger.error({ msg: "stripe.resumePremiumSubscription.failed", errorMessage: err?.message, stack: err?.stack });
+    return res.status(500).json({ message: err?.message || "Stripe error" });
+  }
+};
+
+/**
+ * POST /premium/portal { userId }
+ * => renvoie une url Stripe Customer Portal (recommandé)
+ */
+export const createCustomerPortalSession = async (req: Request, res: Response) => {
+  try {
+    const userId = String(req.body?.userId || "").trim();
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Missing or invalid userId" });
+    }
+
+    const user: any = await UserModel.findById(userId).select({ subscription: 1, customerId: 1 }).lean();
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const customerId = safeStr(user?.subscription?.stripeCustomerId || user?.customerId).trim();
+    if (!customerId) return res.status(400).json({ message: "No Stripe customer id on user" });
+
+    const returnUrl = `${getFrontendUrl()}/billing`;
+
+    const portal = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+
+    return res.status(200).json({ url: portal.url });
+  } catch (err: any) {
+    logger.error({ msg: "stripe.createCustomerPortalSession.failed", errorMessage: err?.message, stack: err?.stack });
+    return res.status(500).json({ message: err?.message || "Stripe error" });
+  }
+};

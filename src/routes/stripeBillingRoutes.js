@@ -11,5 +11,8 @@ router.get("/premium/checkout-session-status", stripeBillingController.getChecko
 
 router.get("/premium/subscription", stripeBillingController.getPremiumSubscription);
 
+router.post("/premium/cancel", stripeBillingController.cancelPremiumSubscription);
+router.post("/premium/resume", stripeBillingController.resumePremiumSubscription);
+router.post("/premium/portal", stripeBillingController.createCustomerPortalSession);
 
 module.exports = router;
