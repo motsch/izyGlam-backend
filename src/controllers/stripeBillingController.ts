@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Stripe from "stripe";
 import UserModel from "../models/user";
 import { logger } from "../utils/logger";
+import mongoose from "mongoose";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
@@ -17,13 +18,13 @@ export const createPremiumCheckoutSession = async (req: Request, res: Response) 
     // ✅ IMPORTANT :
     // Ici je pars du principe que ton middleware auth met l’ID user dans req.user._id (ou req.userId).
     // Adapte 1 ligne si besoin.
-    const authUserId = (req as any)?.user?._id || (req as any)?.userId;
+    const userId = String(req.body?.userId || "").trim();
 
-    if (!authUserId) {
-      return res.status(401).json({ message: "Unauthorized" });
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Missing or invalid userId" });
     }
 
-    const user = await UserModel.findById(authUserId);
+    const user = await UserModel.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
