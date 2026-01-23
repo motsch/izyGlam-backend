@@ -9,4 +9,7 @@ router.post("/premium/checkout-session", /* authMiddleware, */ stripeBillingCont
 
 router.get("/premium/checkout-session-status", stripeBillingController.getCheckoutSessionStatus);
 
+router.get("/premium/subscription", stripeBillingController.getPremiumSubscription);
+
+
 module.exports = router;

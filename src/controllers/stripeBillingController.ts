@@ -385,3 +385,39 @@ export const getCheckoutSessionStatus = async (req: Request, res: Response) => {
   }
 };
 
+export const getPremiumSubscription = async (req: Request, res: Response) => {
+  try {
+    const userId = String(req.query.userId || "").trim();
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Missing or invalid userId" });
+    }
+
+    const user: any = await UserModel.findById(userId).select({
+      abonnement: 1,
+      abonnement_end: 1,
+      subscription: 1,
+    }).lean();
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const plan = user?.subscription?.plan || user?.abonnement || "free";
+    const status = user?.subscription?.status || (plan !== "free" ? "active" : "unknown");
+    const currentPeriodEnd = user?.subscription?.currentPeriodEnd || user?.abonnement_end || null;
+
+    return res.status(200).json({
+      plan,
+      status,
+      currentPeriodEnd,
+      cancelAtPeriodEnd: !!user?.subscription?.cancelAtPeriodEnd,
+      stripeCustomerId: user?.subscription?.stripeCustomerId || null,
+      stripeSubscriptionId: user?.subscription?.stripeSubscriptionId || null,
+    });
+  } catch (err: any) {
+    logger.error({
+      msg: "stripe.getPremiumSubscription.failed",
+      errorMessage: err?.message,
+      stack: err?.stack,
+    });
+    return res.status(500).json({ message: err?.message || "Server error" });
+  }
+};
