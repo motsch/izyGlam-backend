@@ -139,16 +139,20 @@ export const createPremiumCheckoutSession = async (req: Request, res: Response) 
     });
 
     if (isAlreadyPremiumActive) {
+      const frontend = getFrontendUrl();
+      const redirectUrl = `${frontend}/thank-you?alreadyActive=1`;
+
       logger.warn({
         msg: "stripe.billing.checkout_session.skip_already_active",
         reqId,
         userId,
+        redirectUrl,
         elapsedMs: Date.now() - startedAt,
       });
 
       return res.status(200).json({
         alreadyActive: true,
-        url: null,
+        url: redirectUrl, // ✅ on renvoie une vraie URL
         sessionId: null,
         subscription: {
           plan: "premium",
@@ -158,6 +162,7 @@ export const createPremiumCheckoutSession = async (req: Request, res: Response) 
         message: "Subscription already active",
       });
     }
+
 
     /**
      * 1) Customer Stripe (réutilise si déjà présent)
