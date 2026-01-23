@@ -730,7 +730,6 @@ function computePerformanceScore(shop: any) {
 export const getShopsByPostalCodesWithCategories = async (req: Request, res: Response) => {
   const requestId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-  // petit helper pour standardiser les logs
   const log = (step: string, data?: any) => {
     logger.info({
       requestId,
@@ -739,6 +738,15 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
       method: req.method,
       ...(data !== undefined ? { data } : {}),
     });
+  };
+
+  // ✅ helper : priorité premium puis fallback non-premium
+  const pickWithPremiumFirst = (items: any[], limit: number) => {
+    const premium = items.filter((s) => !!s.isPremium);
+    const normal = items.filter((s) => !s.isPremium);
+
+    if (premium.length >= limit) return premium.slice(0, limit);
+    return [...premium, ...normal.slice(0, limit - premium.length)];
   };
 
   try {
@@ -751,7 +759,6 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
     // 0) mode
     const rawMode = (req.query as any)?.mode;
     const mode = normalizeServiceMode(rawMode); // "SALON" | "DOMICILE"
-
     log("STEP_0_MODE_PARSED", { rawMode, mode });
 
     if (!mode) {
@@ -810,7 +817,6 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
 
     log("STEP_5_SHOP_QUERY_FINAL", {
       shopQuery,
-      // utile pour voir la taille du tableau (si énorme)
       postalCodesCount: postalCodes.length,
     });
 
@@ -819,7 +825,6 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
     const shops = await ShopModel.find(shopQuery).lean();
     log("STEP_7_AFTER_SHOP_FIND", { shopsCount: shops.length });
 
-    // petit aperçu (pas tout le doc)
     log("STEP_7B_SHOPS_SAMPLE", {
       sample: shops.slice(0, 3).map((s: any) => ({
         _id: String(s._id),
@@ -931,9 +936,27 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
       sample: Object.entries(avgPriceByShop).slice(0, 5),
     });
 
+    // ✅ 7B) PREMIUM SHOPS detection (users active + assistantShopId in current shops)
+    log("STEP_15B_PREMIUM_LOOKUP_START", { shopIdsObjCount: shopIdsObj.length });
+
+    const premiumUsers = await UserModel.find({
+      "subscription.status": "active",
+      assistantShopId: { $in: shopIdsObj }, // assistantShopId est un ObjectId de shop
+    })
+      .select({ assistantShopId: 1 })
+      .lean();
+
+    const premiumShopIdSet = new Set<string>(premiumUsers.map((u: any) => String(u.assistantShopId)));
+    log("STEP_15C_PREMIUM_LOOKUP_DONE", {
+      premiumUsersCount: premiumUsers.length,
+      premiumShopsCount: premiumShopIdSet.size,
+      samplePremiumShopIds: Array.from(premiumShopIdSet).slice(0, 10),
+    });
+
     const enrichedShops = shopsWithPerformance.map((shop: any) => ({
       ...shop,
       avgPrice: avgPriceByShop[String(shop._id)] ?? Infinity,
+      isPremium: premiumShopIdSet.has(String(shop._id)), // ✅ flag simple
     }));
 
     log("STEP_16_ENRICHED_SHOPS_READY", {
@@ -943,11 +966,14 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
         avgPrice: s.avgPrice,
         performanceScore: s.performanceScore,
         note: s.note,
+        isPremium: !!s.isPremium,
       })),
     });
 
-    // 8) categories
+    // 8) categories (avec priorité premium)
     log("STEP_17_BEFORE_SORTS");
+
+    // Tri perf (base)
     const sortedByPerf = [...enrichedShops].sort(
       (a, b) => toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0)
     );
@@ -958,29 +984,41 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
         perf: s.performanceScore,
         note: s.note,
         avgPrice: s.avgPrice,
+        isPremium: !!s.isPremium,
       })),
     });
 
+    // ⭐ discover : on garde l’idée "top50 perf + shuffle", mais premium first
+    const discoverBase = shuffle(sortedByPerf.slice(0, 50));
+    const discover = pickWithPremiumFirst(discoverBase, 15);
+
+    // ⭐ appreciated : tri note puis perf, puis premium first
+    const appreciatedSorted = [...enrichedShops].sort((a, b) => {
+      const na = toNumber(a.note, 0);
+      const nb = toNumber(b.note, 0);
+      if (nb !== na) return nb - na;
+      return toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0);
+    });
+    const appreciated = pickWithPremiumFirst(appreciatedSorted, 15);
+
+    // ⭐ smart : tri prix puis perf, puis premium first
+    const smartSorted = [...enrichedShops].sort((a, b) => {
+      const pa = toNumber(a.avgPrice, Infinity);
+      const pb = toNumber(b.avgPrice, Infinity);
+      if (pa !== pb) return pa - pb;
+      return toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0);
+    });
+    const smart = pickWithPremiumFirst(smartSorted, 15);
+
+    // ⭐ top10 : perf, mais premium first
+    const top10 = pickWithPremiumFirst(sortedByPerf, 10);
+
     const categories = {
-      all: enrichedShops,
-      discover: shuffle(sortedByPerf.slice(0, 50)).slice(0, 15),
-      appreciated: [...enrichedShops]
-        .sort((a, b) => {
-          const na = toNumber(a.note, 0);
-          const nb = toNumber(b.note, 0);
-          if (nb !== na) return nb - na;
-          return toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0);
-        })
-        .slice(0, 15),
-      smart: [...enrichedShops]
-        .sort((a, b) => {
-          const pa = toNumber(a.avgPrice, Infinity);
-          const pb = toNumber(b.avgPrice, Infinity);
-          if (pa !== pb) return pa - pb;
-          return toNumber(b.performanceScore, 0) - toNumber(a.performanceScore, 0);
-        })
-        .slice(0, 15),
-      top10: sortedByPerf.slice(0, 10),
+      all: enrichedShops, // (on laisse tel quel, tu peux aussi le trier premium-first si tu veux)
+      discover,
+      appreciated,
+      smart,
+      top10,
     };
 
     log("STEP_19_CATEGORIES_READY", {
@@ -990,6 +1028,12 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
         appreciated: categories.appreciated.length,
         smart: categories.smart.length,
         top10: categories.top10.length,
+      },
+      premiumCounts: {
+        discover: categories.discover.filter((s: any) => !!s.isPremium).length,
+        appreciated: categories.appreciated.filter((s: any) => !!s.isPremium).length,
+        smart: categories.smart.filter((s: any) => !!s.isPremium).length,
+        top10: categories.top10.filter((s: any) => !!s.isPremium).length,
       },
     });
 
@@ -1008,6 +1052,7 @@ export const getShopsByPostalCodesWithCategories = async (req: Request, res: Res
     return res.status(500).json({ message: "Erreur serveur" });
   }
 };
+
 
 // Petit helper
 function shuffle<T>(arr: T[]): T[] {
