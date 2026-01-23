@@ -1099,7 +1099,21 @@ const getShopById = async (req: express.Request, res: express.Response) => {
     const shop = await ShopModel.findById(id);
     if (shop) {
       logger.info({ msg: "shop.get.success", id });
-      res.json(shop);
+      // Valeur par défaut
+      let twilioPhoneNumber: string | null = null;
+      // ✅ Si shop premium => récupérer le twilioPhoneNumber du user associé
+      if (shop.isPremium === true) {
+        const userId = String(shop.idUser || "").trim();
+        if (mongoose.isValidObjectId(userId)) {
+          const user: any = await UserModel.findById(userId).select({ twilioPhoneNumber: 1 }).lean();
+          twilioPhoneNumber = user?.twilioPhoneNumber ? String(user.twilioPhoneNumber) : null;
+        }
+      }
+      // ✅ Renvoie shop + champ additionnel (sans toucher la DB)
+      return res.json({
+        ...shop,
+        twilioPhoneNumber,
+      });
     } else {
       logger.warn({ msg: "shop.get.not_found", id });
       res.status(404).json({ message: "Boutique non trouvée" });
