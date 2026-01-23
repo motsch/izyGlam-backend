@@ -2225,14 +2225,30 @@ const getShopByHandle = async (req: express.Request, res: express.Response) => {
   logger.info({ msg: "shop.getByHandle.start", route: req.originalUrl, method: req.method, params: req.params });
 
   try {
-    const handle = req.params.handle;
-
+    const handle = String(req.params.handle || "").trim();
     if (!handle) return res.status(400).json({ message: "Handle invalide" });
 
-    const shop = await ShopModel.findOne({ handle });
+    const shop: any = await ShopModel.findOne({ handle }).lean();
     if (!shop) return res.status(404).json({ message: "Boutique non trouvée" });
 
-    return res.json(shop);
+    // Valeur par défaut
+    let twilioPhoneNumber: string | null = null;
+
+    // ✅ Si shop premium => récupérer le twilioPhoneNumber du user associé
+    if (shop.isPremium === true) {
+      const userId = String(shop.idUser || "").trim();
+
+      if (mongoose.isValidObjectId(userId)) {
+        const user: any = await UserModel.findById(userId).select({ twilioPhoneNumber: 1 }).lean();
+        twilioPhoneNumber = user?.twilioPhoneNumber ? String(user.twilioPhoneNumber) : null;
+      }
+    }
+
+    // ✅ Renvoie shop + champ additionnel (sans toucher la DB)
+    return res.json({
+      ...shop,
+      twilioPhoneNumber,
+    });
   } catch (error: any) {
     logger.error({
       msg: "shop.getByHandle.error",
