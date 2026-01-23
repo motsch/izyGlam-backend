@@ -70,6 +70,7 @@ export interface iShop extends mongoose.Document {
   note: string;
   averagePrice?: string;
   minimumDelay: string;
+  isPremium?: boolean;
   type: string;
   ville: string;
   filter: string;
@@ -176,6 +177,12 @@ const shopSchema = new Schema<iShop>(
     description_original: { type: String, required: false },
     image: { type: String, required: true, default: "default.png" },
     note: { type: String, required: true },
+    // ⭐ Premium (piloté par Stripe)
+    isPremium: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
 
     // ✅ NEW : mode de prestation
     serviceMode: {

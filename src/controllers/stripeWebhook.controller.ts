@@ -1,3 +1,4 @@
+// src/controllers/stripeWebhook.controller.ts
 import { Request, Response } from "express";
 import Stripe from "stripe";
 import mongoose from "mongoose";
@@ -171,6 +172,49 @@ function buildBookingPaidSms(params: {
   );
 }
 
+/**
+ * ✅ PREMIUM SYNC
+ * - Quand user devient Premium (subscription active/trialing + plan premium) => shop.isPremium = true
+ * - Quand user perd Premium => shop.isPremium = false
+ *
+ * Source shop:
+ * 1) user.assistantShopId (prioritaire)
+ * 2) fallback : Shop.idUser == user._id (string)
+ */
+async function setShopPremiumForUser(userId: string, isPremium: boolean) {
+  try {
+    const user: any = await UserModel.findById(userId).select({ assistantShopId: 1 }).lean();
+    if (!user) return;
+
+    const assistantShopId = safeStr(user.assistantShopId).trim();
+
+    // 1) assistantShopId
+    if (mongoose.isValidObjectId(assistantShopId)) {
+      await shopModel.updateOne(
+        { _id: assistantShopId },
+        { $set: { isPremium } }
+      );
+      return;
+    }
+
+    // 2) fallback via idUser (chez toi c’est une string)
+    await shopModel.updateOne(
+      { idUser: String(userId) },
+      { $set: { isPremium } }
+    );
+  } catch (e: any) {
+    logger.error({
+      msg: "shop.premium.sync.failed",
+      userId,
+      isPremium,
+      errorMessage: e?.message,
+      stack: e?.stack,
+    });
+  }
+}
+
+const SHOULD_DEPROVISION_ON_PAST_DUE = String(process.env.TWILIO_DEPROVISION_ON_PAST_DUE || "false") === "true";
+
 export const stripeWebhook = async (req: Request, res: Response) => {
   const startedAt = Date.now();
 
@@ -285,8 +329,8 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
           // sync champ historique
           if (status === "active" || status === "trialing") {
-            update.abonnement = plan; // premium
-            update.abonnement_end = currentPeriodEnd || null; // ✅ DATE FIN
+            update.abonnement = plan;
+            update.abonnement_end = currentPeriodEnd || null;
           } else {
             update.abonnement = "free";
             update.abonnement_end = null;
@@ -313,11 +357,11 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           });
         }
 
-        // ✅ IMPORTANT : on ACK, et on laisse lifecycle faire Twilio provisioning
+        // ✅ IMPORTANT : on ACK, et on laisse lifecycle gérer Twilio + isPremium
         return res.json({ received: true });
       }
 
-      // --- 2) BOOKING checkout (ton code existant) ---
+      // --- 2) BOOKING checkout ---
       logger.info({
         msg: "stripe.webhook.checkout.completed",
         eventId: event.id,
@@ -598,14 +642,16 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         "subscription.cancelAtPeriodEnd": cancelAtPeriodEnd,
       };
 
-      if (status === "active" || status === "trialing") {
+      const isActiveLike = status === "active" || status === "trialing";
+      const isPremiumPlan = plan === "premium";
+
+      if (isActiveLike) {
         update.abonnement = plan;
         update.abonnement_end = currentPeriodEnd || null;
       } else {
         update.abonnement = "free";
         update.abonnement_end = null;
 
-        // si deleted => on force canceled dans la doc (plus propre)
         if (event.type === "customer.subscription.deleted") {
           update["subscription.status"] = "canceled";
         }
@@ -613,10 +659,24 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
       await UserModel.updateOne({ _id: user._id }, { $set: update });
 
-      // ✅ Provision Twilio UNIQUEMENT ici (source de vérité)
-      const isPremiumActive = (status === "active" || status === "trialing") && plan === "premium";
+      /**
+       * ✅ SHOP Premium flag
+       * - premium ON seulement si active/trialing ET plan premium
+       * - sinon OFF
+       */
+      if (isActiveLike && isPremiumPlan) {
+        await setShopPremiumForUser(String(user._id), true);
+      } else {
+        await setShopPremiumForUser(String(user._id), false);
+      }
 
-      if (isPremiumActive) {
+      /**
+       * ✅ TWILIO
+       * - Provision si premium actif
+       * - Deprovision seulement si plus premium actif (canceled/incomplete/unpaid/etc.)
+       *   (si cancel_at_period_end = true mais status active => on garde le numéro)
+       */
+      if (isActiveLike && isPremiumPlan) {
         try {
           await provisionTwilioNumberForUser(String(user._id));
         } catch (e: any) {
@@ -626,16 +686,14 @@ export const stripeWebhook = async (req: Request, res: Response) => {
             errorMessage: e?.message,
             stack: e?.stack,
           });
-          // on ACK quand même
         }
       } else {
-        // ✅ Deprovision seulement quand Stripe dit que c'est plus actif
-        // - si cancel_at_period_end=true, Stripe restera "active" jusqu'à la fin => donc on NE passe pas ici.
         try {
+          // si pas premium actif => on coupe Twilio (fin abonnement réel)
           await deprovisionTwilioNumberForUser(String(user._id));
         } catch (e: any) {
           logger.error({
-            msg: "twilio.deprovision.failed_after_subscription_end",
+            msg: "twilio.deprovision.failed_after_unpremium",
             userId: String(user._id),
             errorMessage: e?.message,
             stack: e?.stack,
@@ -648,6 +706,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         userId: String(user._id),
         plan,
         status,
+        cancelAtPeriodEnd,
       });
 
       return res.json({ received: true });
@@ -685,16 +744,20 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           }
         );
 
-        // ✅ cohérent avec ton downgrade : on retire le numéro + on désactive assistant
-        try {
-          await deprovisionTwilioNumberForUser(String(user._id));
-        } catch (e: any) {
-          logger.error({
-            msg: "twilio.deprovision.failed_after_invoice_payment_failed",
-            userId: String(user._id),
-            errorMessage: e?.message,
-            stack: e?.stack,
-          });
+        // Par défaut je ne coupe PAS Twilio sur past_due (trop brutal),
+        // mais si tu veux, active l’env TWILIO_DEPROVISION_ON_PAST_DUE=true
+        if (SHOULD_DEPROVISION_ON_PAST_DUE) {
+          await setShopPremiumForUser(String(user._id), false);
+          try {
+            await deprovisionTwilioNumberForUser(String(user._id));
+          } catch (e: any) {
+            logger.error({
+              msg: "twilio.deprovision.failed_after_past_due",
+              userId: String(user._id),
+              errorMessage: e?.message,
+              stack: e?.stack,
+            });
+          }
         }
       }
 

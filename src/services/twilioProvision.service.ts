@@ -7,7 +7,8 @@ const client = Twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_T
 
 function buildSmsWebhookUrl() {
   const base = (process.env.API_BASE_URL || "").replace(/\/$/, "");
-  const path = process.env.TWILIO_SMS_WEBHOOK_PATH || "/twilio/inbound-sms";
+  // ✅ par défaut chez toi c'est /twilio/sms
+  const path = process.env.TWILIO_SMS_WEBHOOK_PATH || "/twilio/sms";
   return `${base}${path}`;
 }
 
@@ -15,11 +16,9 @@ function buildSmsWebhookUrl() {
  * ✅ Provision (buy + attach) a Twilio number for a user (idempotent).
  */
 export async function provisionTwilioNumberForUser(userId: string) {
-  // 1) reload user (idempotence)
   const user: any = await UserModel.findById(userId).select({ twilioPhoneNumber: 1, firstname: 1, lastname: 1 }).lean();
   if (!user) throw new Error("User not found");
 
-  // ✅ If already has number => do nothing
   if (user.twilioPhoneNumber) {
     logger.info({ msg: "twilio.provision.skip_already_has_number", userId, twilioPhoneNumber: user.twilioPhoneNumber });
     return { phoneNumber: user.twilioPhoneNumber, created: false };
@@ -28,10 +27,8 @@ export async function provisionTwilioNumberForUser(userId: string) {
   const country = (process.env.TWILIO_DEFAULT_COUNTRY || "FR").toUpperCase();
   const smsUrl = buildSmsWebhookUrl();
 
-  // 2) find available number
   const available = await client.availablePhoneNumbers(country).local.list({
     smsEnabled: true,
-    // voiceEnabled: true, // (optional) if you want voice too
     limit: 1,
   });
 
@@ -41,18 +38,16 @@ export async function provisionTwilioNumberForUser(userId: string) {
 
   const chosen = available[0].phoneNumber;
 
-  // 3) buy number
   const friendlyPrefix = process.env.TWILIO_NUMBER_FRIENDLY_PREFIX || "IzyGlam";
   const friendlyName = `${friendlyPrefix} - ${user.firstname || ""} ${user.lastname || ""}`.trim();
 
   const incoming = await client.incomingPhoneNumbers.create({
     phoneNumber: chosen,
     friendlyName,
-    smsUrl, // ✅ inbound SMS webhook
+    smsUrl,
     smsMethod: "POST",
   });
 
-  // 4) save in DB (idempotence guard)
   await UserModel.updateOne(
     { _id: userId, $or: [{ twilioPhoneNumber: { $exists: false } }, { twilioPhoneNumber: null }, { twilioPhoneNumber: "" }] },
     { $set: { twilioPhoneNumber: incoming.phoneNumber } }
@@ -69,16 +64,11 @@ export async function provisionTwilioNumberForUser(userId: string) {
   return { phoneNumber: incoming.phoneNumber, created: true };
 }
 
-/**
- * ✅ Release a Twilio number (IncomingPhoneNumbers) by its E.164 phone number.
- * - Safe / idempotent: if not found => no error thrown.
- */
 export async function releaseTwilioNumber(phoneNumberE164: string) {
   const phoneNumber = String(phoneNumberE164 || "").trim();
   if (!phoneNumber) return { released: false, reason: "empty_phoneNumber" };
 
   try {
-    // Find incoming number by phoneNumber
     const list = await client.incomingPhoneNumbers.list({ phoneNumber, limit: 20 });
 
     if (!list?.length) {
@@ -86,7 +76,6 @@ export async function releaseTwilioNumber(phoneNumberE164: string) {
       return { released: false, reason: "not_found" };
     }
 
-    // There should be only one, but just in case:
     for (const n of list) {
       await client.incomingPhoneNumbers(n.sid).remove();
       logger.info({ msg: "twilio.release.removed", phoneNumber: n.phoneNumber, sid: n.sid });
@@ -107,22 +96,16 @@ export async function releaseTwilioNumber(phoneNumberE164: string) {
   }
 }
 
-/**
- * ✅ Deprovision user: release Twilio number + clean DB fields.
- * - Safe / idempotent.
- */
 export async function deprovisionTwilioNumberForUser(userId: string) {
   const user: any = await UserModel.findById(userId).select({ twilioPhoneNumber: 1 }).lean();
   if (!user) return { done: false, reason: "user_not_found" };
 
   const twilioPhoneNumber = String(user.twilioPhoneNumber || "").trim();
 
-  // Release Twilio number if exists
   if (twilioPhoneNumber) {
     await releaseTwilioNumber(twilioPhoneNumber);
   }
 
-  // Clean DB: remove number + disable assistant fields (safe)
   await UserModel.updateOne(
     { _id: userId },
     {
