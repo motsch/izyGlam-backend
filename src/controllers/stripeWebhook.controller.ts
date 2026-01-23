@@ -12,7 +12,10 @@ import { bigbuyApi } from "../services/bigbuyApi.service";
 import { sendSms } from "../services/twilio.service";
 import { logger } from "../utils/logger";
 
-import { provisionTwilioNumberForUser } from "../services/twilioProvision.service";
+import {
+  provisionTwilioNumberForUser,
+  deprovisionTwilioNumberForUser,
+} from "../services/twilioProvision.service";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
@@ -611,7 +614,9 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       await UserModel.updateOne({ _id: user._id }, { $set: update });
 
       // ✅ Provision Twilio UNIQUEMENT ici (source de vérité)
-      if ((status === "active" || status === "trialing") && plan === "premium") {
+      const isPremiumActive = (status === "active" || status === "trialing") && plan === "premium";
+
+      if (isPremiumActive) {
         try {
           await provisionTwilioNumberForUser(String(user._id));
         } catch (e: any) {
@@ -622,6 +627,19 @@ export const stripeWebhook = async (req: Request, res: Response) => {
             stack: e?.stack,
           });
           // on ACK quand même
+        }
+      } else {
+        // ✅ Deprovision seulement quand Stripe dit que c'est plus actif
+        // - si cancel_at_period_end=true, Stripe restera "active" jusqu'à la fin => donc on NE passe pas ici.
+        try {
+          await deprovisionTwilioNumberForUser(String(user._id));
+        } catch (e: any) {
+          logger.error({
+            msg: "twilio.deprovision.failed_after_subscription_end",
+            userId: String(user._id),
+            errorMessage: e?.message,
+            stack: e?.stack,
+          });
         }
       }
 
@@ -666,6 +684,18 @@ export const stripeWebhook = async (req: Request, res: Response) => {
             },
           }
         );
+
+        // ✅ cohérent avec ton downgrade : on retire le numéro + on désactive assistant
+        try {
+          await deprovisionTwilioNumberForUser(String(user._id));
+        } catch (e: any) {
+          logger.error({
+            msg: "twilio.deprovision.failed_after_invoice_payment_failed",
+            userId: String(user._id),
+            errorMessage: e?.message,
+            stack: e?.stack,
+          });
+        }
       }
 
       return res.json({ received: true });
