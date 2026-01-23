@@ -35,6 +35,7 @@ const getUserInfo = async (
       lastname: string;
       email: string;
       twilioPhoneNumber: string;
+      assistantShopId: string;
       firstname: string;
       role: string;
       phone: string;
@@ -63,6 +64,7 @@ const getUserInfo = async (
       email: string;
       firstname: string;
       twilioPhoneNumber: string;
+      assistantShopId: string;
       role: string;
       phone: string;
       conversationId: string;
@@ -129,6 +131,7 @@ const getUserInfo = async (
             firstname,
             role,
             twilioPhoneNumber,
+            assistantShopId,
             address,
             proches,
             phone,
@@ -153,6 +156,7 @@ const getUserInfo = async (
             firstname,
             role,
             twilioPhoneNumber,
+            assistantShopId,
             address,
             proches,
             phone,
