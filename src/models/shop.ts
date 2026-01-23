@@ -181,7 +181,7 @@ const shopSchema = new Schema<iShop>(
     isPremium: {
       type: Boolean,
       default: false,
-      index: true,
+      required: false,
     },
 
     // ✅ NEW : mode de prestation
