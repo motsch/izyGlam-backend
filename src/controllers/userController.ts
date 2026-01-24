@@ -1516,11 +1516,6 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
 
     /* ------------------ Sécurité de base ------------------ */
 
-    const allowedRoles = ["professionnel", "boss", "admin"];
-    if (!allowedRoles.includes(author.role)) {
-      return res.status(403).json({ message: "Accès refusé." });
-    }
-
     if (!clientId) {
       return res.status(400).json({ message: "clientId manquant dans l’URL." });
     }
