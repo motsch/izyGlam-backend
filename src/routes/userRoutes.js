@@ -87,18 +87,8 @@ router.put("/update-user-favs/:id", authMiddleware, usersController.updateUserFa
 // Route pour mettre à jour les favoris de l'utilisateur
 router.get("/geolocation", usersController.geolocation);
 
-// Routes pour Bluesky
-router.post('/bluesky/connect/:userId', usersController.connectToBluesky); // Connexion à Bluesky
-router.post('/bluesky/post/:userId', authMiddleware, usersController.postToBluesky); // Publier un post sur Bluesky
-router.delete('/bluesky/revoke/:userId', authMiddleware, usersController.revokeBlueskyAccess); // Révoquer l'accès à Bluesky
-
-
-
-
-
-
-
-
+// ✅ Notes internes pro -> client (visibles aux pros ensuite)
+router.post("/users/:id/pro-client-notes", authMiddleware, usersController.addProClientNoteToClient);
 
 
 // 👑 Récupérer les employés d’un boss

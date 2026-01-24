@@ -1181,85 +1181,6 @@ export const updateUserFavorites = async (req: any, res: express.Response) => {
   }
 };
 
-const connectToBluesky = async (req: express.Request, res: express.Response) => {
-  const { handle, password } = (req as any).body;
-  const userId = (req as any).params.userId;
-
-  try {
-    logger.info({ msg: "bluesky.connect.start", userId });
-    const response = await axios.post('https://bsky.social/xrpc/com.atproto.server.createSession', {
-      identifier: handle,
-      password: password,
-    });
-
-    const accessToken = response.data.accessJwt;
-    const refreshToken = response.data.refreshJwt || null;
-
-    await UserModel.findByIdAndUpdate(userId, {
-      'bluesky.accessToken': accessToken,
-      'bluesky.tokenExpiresAt': new Date(Date.now() + 3600 * 1000),
-      ...(refreshToken && { 'bluesky.refreshToken': refreshToken }),
-    });
-
-    logger.info({ msg: "bluesky.connect.success", userId });
-    return res.status(200).json({
-      message: 'Connexion réussie et jeton sauvegardé.',
-      accessToken,
-      tokenExpiresAt: new Date(Date.now() + 3600 * 1000),
-    });
-  } catch (error: any) {
-    logger.error({ msg: "bluesky.connect.error", userId, errorMessage: error?.message, stack: error?.stack });
-    console.error('Erreur lors de la connexion à Bluesky :', error);
-    return res.status(500).json({ error: 'Connexion échouée.' });
-  }
-};
-
-const postToBluesky = async (req: express.Request, res: express.Response) => {
-  const { content } = (req as any).body;
-  const userId = (req as any).params.userId;
-
-  try {
-    logger.info({ msg: "bluesky.post.start", userId });
-    const user = await UserModel.findById(userId);
-    if (!user || !user.bluesky || !user.bluesky.accessToken) {
-      logger.warn({ msg: "bluesky.post.notConnected", userId });
-      return res.status(401).json({ error: 'Utilisateur non connecté à Bluesky.' });
-    }
-
-    const response = await axios.post(
-      'https://bsky.social/xrpc/com.atproto.repo.createRecord',
-      {
-        repo: user.bluesky.userId,
-        collection: 'app.bsky.feed.post',
-        record: { text: content, createdAt: new Date().toISOString() },
-      },
-      { headers: { Authorization: `Bearer ${user.bluesky.accessToken}` } }
-    );
-
-    logger.info({ msg: "bluesky.post.success", userId });
-    return res.status(200).json({ message: 'Post publié avec succès.', data: response.data });
-  } catch (error: any) {
-    logger.error({ msg: "bluesky.post.error", userId, errorMessage: error?.message, stack: error?.stack });
-    console.error('Erreur lors de la publication sur Bluesky :', error);
-    return res.status(500).json({ error: 'Impossible de publier le post.' });
-  }
-};
-
-const revokeBlueskyAccess = async (req: express.Request, res: express.Response) => {
-  const userId = (req as any).params.userId;
-
-  try {
-    logger.info({ msg: "bluesky.revoke.start", userId });
-    await UserModel.findByIdAndUpdate(userId, { $unset: { bluesky: '' } });
-    logger.info({ msg: "bluesky.revoke.success", userId });
-    return res.status(200).json({ message: 'Accès Bluesky révoqué.' });
-  } catch (error: any) {
-    logger.error({ msg: "bluesky.revoke.error", userId, errorMessage: error?.message, stack: error?.stack });
-    console.error('Erreur lors de la révocation :', error);
-    return res.status(500).json({ error: 'Impossible de révoquer l\'accès.' });
-  }
-};
-
 async function incrementStars(userId: string) {
   logger.info({ msg: "user.incrementStars.start", userId });
   const user = await UserModel.findById(userId);
@@ -1517,11 +1438,95 @@ const subscribeToPlan = async (req: any, res: express.Response) => {
   }
 };
 
+/**
+ * POST /users/:id/pro-client-notes
+ * Body: { comment: string, shopId?: string, bookingId?: string }
+ * -> Ajoute une note interne écrite par un pro sur un client.
+ *
+ * Visibilité: à terme, tu pourras montrer ces notes aux pros lors d'une réservation du client.
+ */
+const addProClientNoteToClient = async (req: any, res: express.Response) => {
+  try {
+    const clientId = String(req.params.id || "").trim();
+    const author = req.user; // posé par authMiddleware
+    const { comment, shopId, bookingId } = req.body || {};
+
+    logger.info({
+      msg: "user.addProClientNote.start",
+      clientId,
+      authorId: author?._id?.toString(),
+      authorRole: author?.role,
+    });
+
+    if (!author) {
+      return res.status(401).json({ message: "Non authentifié." });
+    }
+
+    // ✅ Qui a le droit ?
+    const allowedRoles = ["professionnel", "boss", "admin"];
+    if (!allowedRoles.includes(author.role)) {
+      return res.status(403).json({ message: "Accès refusé." });
+    }
+
+    if (!clientId) {
+      return res.status(400).json({ message: "clientId manquant dans l’URL." });
+    }
+
+    const cleanComment = String(comment || "").trim();
+    if (!cleanComment || cleanComment.length < 2) {
+      return res.status(400).json({ message: "Commentaire invalide." });
+    }
+
+    // ✅ Récup client
+    const clientUser = await UserModel.findById(clientId);
+    if (!clientUser) {
+      return res.status(404).json({ message: "Client introuvable." });
+    }
+
+    // ✅ Optionnel : empêcher un pro de noter lui-même (si jamais)
+    if (String(clientUser._id) === String(author._id)) {
+      return res.status(400).json({ message: "Impossible de commenter votre propre compte." });
+    }
+
+    // ✅ Construction note
+    const note = {
+      authorId: author._id,
+      shopId: shopId || undefined,
+      bookingId: bookingId || undefined,
+      comment: cleanComment,
+      createdAt: new Date(),
+    };
+
+    clientUser.proClientNotes = clientUser.proClientNotes || [];
+    clientUser.proClientNotes.push(note as any);
+
+    // (Optionnel) mettre à jour updatedAt si tu veux garder cohérence
+    clientUser.updatedAt = new Date().toISOString();
+
+    await clientUser.save();
+
+    logger.info({
+      msg: "user.addProClientNote.success",
+      clientId,
+      notesCount: clientUser.proClientNotes.length,
+    });
+
+    return res.status(201).json({
+      message: "Note enregistrée.",
+      note,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "user.addProClientNote.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({ message: "Erreur serveur.", error: error?.message });
+  }
+};
+
 module.exports = {
   getAllByAdminOptions,
-  revokeBlueskyAccess,
-  connectToBluesky,
-  postToBluesky,
   getUsersAllCount,
   getUsersByCompanyId,
   getUserInfo,
@@ -1553,5 +1558,6 @@ module.exports = {
   resetEmployeePasswordFromCompany,
   verifyEmail,
   resendVerificationEmail,
+  addProClientNoteToClient,
   createAndAddEmployeeToBoss,
 };

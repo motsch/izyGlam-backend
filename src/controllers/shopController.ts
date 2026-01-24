@@ -2306,7 +2306,6 @@ const isHandleAvailable = async (req: express.Request, res: express.Response) =>
   }
 };
 
-
 module.exports = {
   getShopsByBoss,
   getShopsAllCount,

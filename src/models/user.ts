@@ -47,6 +47,15 @@ interface StripeInformation {
   weeklyPayoutConfigured?: boolean;
 }
 
+/** ✅ NEW : Note interne laissée par un prestataire sur un client */
+interface ProClientNote {
+  authorId: string;        // pro qui écrit
+  shopId?: string;         // optionnel
+  bookingId?: string;      // optionnel
+  comment: string;
+  createdAt: Date;
+}
+
 export interface iUser extends Document {
   lastname: string;
   firstname: string;
@@ -56,11 +65,6 @@ export interface iUser extends Document {
 
   facebook: any;
   instagram: any;
-  linkedin: any;
-  bluesky: any;
-  x: any;
-  thread: any;
-  tiktok: any;
 
   bank?: BankInformation;
   stripe?: StripeInformation;
@@ -153,6 +157,9 @@ export interface iUser extends Document {
   assistantProEnabled?: boolean;
   assistantShopId?: string;
 
+  /** ✅ NEW : notes internes sur le client */
+  proClientNotes?: ProClientNote[];
+
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -213,6 +220,21 @@ const SubscriptionInformationSchema = new Schema(
     cancelAtPeriodEnd: { type: Boolean, default: false },
   },
   { _id: false }
+);
+
+/** ✅ NEW : Sous-schema Mongoose pour les notes pro -> client */
+const ProClientNoteSchema = new Schema(
+  {
+    authorId: { type: Schema.Types.ObjectId, ref: "Users", required: true },
+
+    // Optionnel : adapte les refs si tes modèles ont un autre nom
+    shopId: { type: Schema.Types.ObjectId, ref: "Shops", required: false },
+    bookingId: { type: Schema.Types.ObjectId, ref: "Bookings", required: false },
+
+    comment: { type: String, required: true, trim: true, maxlength: 1500 },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: true }
 );
 
 const userSchema = new Schema<iUser>({
@@ -354,43 +376,14 @@ const userSchema = new Schema<iUser>({
     businessAccountId: { type: String },
   },
 
-  linkedin: {
-    accessToken: { type: String },
-    tokenExpiresAt: { type: Date },
-    userId: { type: String },
-    email: { type: String },
-  },
-
-  tiktok: {
-    accessToken: { type: String },
-    tokenExpiresAt: { type: Date },
-    userId: { type: String },
-  },
-
-  x: {
-    accessToken: { type: String },
-    tokenExpiresAt: { type: Date },
-    userId: { type: String },
-  },
-
-  thread: {
-    accessToken: { type: String },
-    tokenExpiresAt: { type: Date },
-    userId: { type: String },
-  },
-
-  bluesky: {
-    handle: { type: String },
-    accessToken: { type: String },
-    refreshToken: { type: String },
-    tokenExpiresAt: { type: Date },
-  },
-
   twilioPhoneNumber: { type: String, required: false, index: true },
   assistantProEnabled: { type: Boolean, default: false },
   assistantShopId: { type: String, required: false, index: true },
 
   country: { type: String },
+
+  /** ✅ NEW : Notes internes pro -> client */
+  proClientNotes: { type: [ProClientNoteSchema], default: [] },
 
   language: {
     type: String,
