@@ -1446,6 +1446,13 @@ const subscribeToPlan = async (req: any, res: express.Response) => {
  *
  * + BLOQUE si un pro a déjà commenté CE booking (booking.proCommentAdded = true)
  */
+/**
+ * POST /users/:id/pro-client-notes
+ * Body: { comment: string, shopId?: string, bookingId: string }
+ *
+ * Ajoute une note interne écrite par un pro sur un client.
+ * 🔒 Un seul commentaire pro possible par booking (proCommentAdded).
+ */
 const addProClientNoteToClient = async (req: any, res: express.Response) => {
   try {
     const clientId = String(req.params.id || "").trim();
@@ -1460,11 +1467,12 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
       bookingId,
     });
 
+    /* ------------------ Sécurité de base ------------------ */
+
     if (!author) {
       return res.status(401).json({ message: "Non authentifié." });
     }
 
-    // ✅ Qui a le droit ?
     const allowedRoles = ["professionnel", "boss", "admin"];
     if (!allowedRoles.includes(author.role)) {
       return res.status(403).json({ message: "Accès refusé." });
@@ -1479,69 +1487,86 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
       return res.status(400).json({ message: "Commentaire invalide." });
     }
 
-    // ✅ Récup client
-    const clientUser = await UserModel.findById(clientId);
-    if (!clientUser) {
-      return res.status(404).json({ message: "Client introuvable." });
-    }
-
-    // ✅ Empêcher un pro de se commenter lui-même
-    if (String(clientUser._id) === String(author._id)) {
-      return res.status(400).json({ message: "Impossible de commenter votre propre compte." });
-    }
-
-    // ✅ IMPORTANT : bookingId obligatoire pour bloquer le multi-commentaire
-    if (!bookingId) {
+    const safeBookingId = String(bookingId || "").trim();
+    if (!safeBookingId) {
       return res.status(400).json({
         message: "bookingId manquant : impossible de garantir un seul commentaire par réservation.",
       });
     }
 
-    // 1) Vérifier booking + appartenance + anti doublon (atomique)
-    //    On ne "consomme" proCommentAdded qu'une seule fois.
+    /* ------------------ Récupération client ------------------ */
+
+    const clientUser = await UserModel.findById(clientId);
+    if (!clientUser) {
+      return res.status(404).json({ message: "Client introuvable." });
+    }
+
+    if (String(clientUser._id) === String(author._id)) {
+      return res.status(400).json({ message: "Impossible de commenter votre propre compte." });
+    }
+
+    /* ------------------ Lock booking (anti doublon) ------------------ */
+
     const lockedBooking = await bookingModel.findOneAndUpdate(
-      {
-        _id: bookingId,
-        proCommentAdded: false, // ✅ clé anti-doublon
-      },
-      {
-        $set: { proCommentAdded: true },
-      },
+      { _id: safeBookingId, proCommentAdded: false },
+      { $set: { proCommentAdded: true } },
       { new: true }
     );
 
     if (!lockedBooking) {
-      // déjà commenté OU booking inexistant
+      const exists = await bookingModel
+        .findById(safeBookingId)
+        .select("_id proCommentAdded");
+
+      if (!exists) {
+        return res.status(404).json({ message: "Réservation introuvable." });
+      }
+
       return res.status(409).json({
         message: "Un commentaire prestataire a déjà été ajouté pour cette réservation.",
       });
     }
 
-    // 2) Vérifications métier : le bon pro et le bon client
-    //    (Si ça échoue, on revert proCommentAdded à false pour ne pas bloquer)
+    /* ------------------ Vérifications métier ------------------ */
+
     const authorId = String(author._id);
 
     if (String(lockedBooking.userProId) !== authorId && author.role !== "admin") {
-      await bookingModel.updateOne({ _id: bookingId }, { $set: { proCommentAdded: false } });
-      return res.status(403).json({ message: "Accès refusé : réservation non associée à ce prestataire." });
+      await bookingModel.updateOne(
+        { _id: safeBookingId },
+        { $set: { proCommentAdded: false } }
+      );
+      return res.status(403).json({
+        message: "Accès refusé : réservation non associée à ce prestataire.",
+      });
     }
 
     if (String(lockedBooking.clientId) !== String(clientId)) {
-      await bookingModel.updateOne({ _id: bookingId }, { $set: { proCommentAdded: false } });
-      return res.status(400).json({ message: "Le client ne correspond pas à cette réservation." });
+      await bookingModel.updateOne(
+        { _id: safeBookingId },
+        { $set: { proCommentAdded: false } }
+      );
+      return res.status(400).json({
+        message: "Le client ne correspond pas à cette réservation.",
+      });
     }
 
-    // Optionnel : si tu veux forcer shopId cohérent
     if (shopId && String(lockedBooking.shopId) !== String(shopId)) {
-      await bookingModel.updateOne({ _id: bookingId }, { $set: { proCommentAdded: false } });
-      return res.status(400).json({ message: "Le shopId ne correspond pas à cette réservation." });
+      await bookingModel.updateOne(
+        { _id: safeBookingId },
+        { $set: { proCommentAdded: false } }
+      );
+      return res.status(400).json({
+        message: "Le shopId ne correspond pas à cette réservation.",
+      });
     }
 
-    // ✅ Construction note
+    /* ------------------ Enregistrement note ------------------ */
+
     const note = {
       authorId: author._id,
-      shopId: shopId || lockedBooking.shopId || undefined,
-      bookingId: bookingId,
+      shopId: shopId || lockedBooking.shopId,
+      bookingId: safeBookingId,
       comment: cleanComment,
       createdAt: new Date(),
     };
@@ -1555,12 +1580,12 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
     logger.info({
       msg: "user.addProClientNote.success",
       clientId,
-      bookingId,
+      bookingId: safeBookingId,
       notesCount: clientUser.proClientNotes.length,
     });
 
     return res.status(201).json({
-      message: "Note enregistrée.",
+      message: "Commentaire enregistré.",
       note,
     });
   } catch (error: any) {
@@ -1569,9 +1594,13 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
       errorMessage: error?.message,
       stack: error?.stack,
     });
-    return res.status(500).json({ message: "Erreur serveur.", error: error?.message });
+    return res.status(500).json({
+      message: "Erreur serveur.",
+      error: error?.message,
+    });
   }
 };
+
 
 
 module.exports = {
