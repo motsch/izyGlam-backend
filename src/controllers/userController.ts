@@ -9,6 +9,7 @@ import { logger } from "../utils/logger";
 import { randomBytes } from "node:crypto";
 import { makeTransport } from "../utils/mailer";
 import CompanyModel from "../models/company";
+import bookingModel from "../models/booking";
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://izyglam.com";
 
 // import
@@ -1443,7 +1444,7 @@ const subscribeToPlan = async (req: any, res: express.Response) => {
  * Body: { comment: string, shopId?: string, bookingId?: string }
  * -> Ajoute une note interne écrite par un pro sur un client.
  *
- * Visibilité: à terme, tu pourras montrer ces notes aux pros lors d'une réservation du client.
+ * + BLOQUE si un pro a déjà commenté CE booking (booking.proCommentAdded = true)
  */
 const addProClientNoteToClient = async (req: any, res: express.Response) => {
   try {
@@ -1456,6 +1457,7 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
       clientId,
       authorId: author?._id?.toString(),
       authorRole: author?.role,
+      bookingId,
     });
 
     if (!author) {
@@ -1483,16 +1485,63 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
       return res.status(404).json({ message: "Client introuvable." });
     }
 
-    // ✅ Optionnel : empêcher un pro de noter lui-même (si jamais)
+    // ✅ Empêcher un pro de se commenter lui-même
     if (String(clientUser._id) === String(author._id)) {
       return res.status(400).json({ message: "Impossible de commenter votre propre compte." });
+    }
+
+    // ✅ IMPORTANT : bookingId obligatoire pour bloquer le multi-commentaire
+    if (!bookingId) {
+      return res.status(400).json({
+        message: "bookingId manquant : impossible de garantir un seul commentaire par réservation.",
+      });
+    }
+
+    // 1) Vérifier booking + appartenance + anti doublon (atomique)
+    //    On ne "consomme" proCommentAdded qu'une seule fois.
+    const lockedBooking = await bookingModel.findOneAndUpdate(
+      {
+        _id: bookingId,
+        proCommentAdded: false, // ✅ clé anti-doublon
+      },
+      {
+        $set: { proCommentAdded: true },
+      },
+      { new: true }
+    );
+
+    if (!lockedBooking) {
+      // déjà commenté OU booking inexistant
+      return res.status(409).json({
+        message: "Un commentaire prestataire a déjà été ajouté pour cette réservation.",
+      });
+    }
+
+    // 2) Vérifications métier : le bon pro et le bon client
+    //    (Si ça échoue, on revert proCommentAdded à false pour ne pas bloquer)
+    const authorId = String(author._id);
+
+    if (String(lockedBooking.userProId) !== authorId && author.role !== "admin") {
+      await bookingModel.updateOne({ _id: bookingId }, { $set: { proCommentAdded: false } });
+      return res.status(403).json({ message: "Accès refusé : réservation non associée à ce prestataire." });
+    }
+
+    if (String(lockedBooking.clientId) !== String(clientId)) {
+      await bookingModel.updateOne({ _id: bookingId }, { $set: { proCommentAdded: false } });
+      return res.status(400).json({ message: "Le client ne correspond pas à cette réservation." });
+    }
+
+    // Optionnel : si tu veux forcer shopId cohérent
+    if (shopId && String(lockedBooking.shopId) !== String(shopId)) {
+      await bookingModel.updateOne({ _id: bookingId }, { $set: { proCommentAdded: false } });
+      return res.status(400).json({ message: "Le shopId ne correspond pas à cette réservation." });
     }
 
     // ✅ Construction note
     const note = {
       authorId: author._id,
-      shopId: shopId || undefined,
-      bookingId: bookingId || undefined,
+      shopId: shopId || lockedBooking.shopId || undefined,
+      bookingId: bookingId,
       comment: cleanComment,
       createdAt: new Date(),
     };
@@ -1500,14 +1549,13 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
     clientUser.proClientNotes = clientUser.proClientNotes || [];
     clientUser.proClientNotes.push(note as any);
 
-    // (Optionnel) mettre à jour updatedAt si tu veux garder cohérence
     clientUser.updatedAt = new Date().toISOString();
-
     await clientUser.save();
 
     logger.info({
       msg: "user.addProClientNote.success",
       clientId,
+      bookingId,
       notesCount: clientUser.proClientNotes.length,
     });
 
@@ -1524,6 +1572,7 @@ const addProClientNoteToClient = async (req: any, res: express.Response) => {
     return res.status(500).json({ message: "Erreur serveur.", error: error?.message });
   }
 };
+
 
 module.exports = {
   getAllByAdminOptions,

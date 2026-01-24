@@ -20,14 +20,14 @@ export interface iBooking extends mongoose.Document {
   shopId: string;
 
   status:
-    | "pending"
-    | "refused"
-    | "accepted"
-    | "deleted"
-    | "cancelled"
-    | "finished"
-    | "no-show-client"
-    | "no-show-pro";
+  | "pending"
+  | "refused"
+  | "accepted"
+  | "deleted"
+  | "cancelled"
+  | "finished"
+  | "no-show-client"
+  | "no-show-pro";
 
   price: string; // Prix total payé par le client
   serviceFee: string; // Frais plateforme
@@ -41,6 +41,8 @@ export interface iBooking extends mongoose.Document {
   start: Date;
   end: Date;
 
+  reviewAdded: boolean;
+  proCommentAdded: boolean; // ✅ NEW
   color: string;
   image: string;
 
@@ -62,8 +64,6 @@ export interface iBooking extends mongoose.Document {
   cancelSource?: "sms" | "web" | "admin" | "system";
   cancelledAt?: Date;
 
-  reviewAdded: boolean;
-
   /**
    * 🔒 Clôture comptable
    * true = déjà inclus dans un payout hebdomadaire
@@ -82,7 +82,11 @@ const bookingSchema = new mongoose.Schema<iBooking>(
 
     address: { type: String, required: true },
     phoneNumber: { type: String, required: true },
+    // ---- Avis ----
+    reviewAdded: { type: Boolean, default: false },
 
+    // ---- Commentaire prestataire -> client ----
+    proCommentAdded: { type: Boolean, default: false },
     // ✅ NOUVEAU
     categoryId: { type: String, required: false },
 
@@ -139,9 +143,6 @@ const bookingSchema = new mongoose.Schema<iBooking>(
     // ---- Validation prestation ----
     generatedCode: { type: String, required: false },
     proCodeConfirmed: { type: Boolean, default: false },
-
-    // ---- Avis ----
-    reviewAdded: { type: Boolean, default: false },
 
     // ---- 🔒 Clôture comptable ----
     closed: { type: Boolean, default: false },
