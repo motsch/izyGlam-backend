@@ -13,6 +13,35 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
 });
 
+async function ensureStripeCustomerForUser(user: any) {
+  // Ton modèle a déjà "customerId" (legacy)
+  const existing = String(user?.customerId || "").trim();
+  if (existing) return existing;
+
+  const email = String(user?.email || "").trim() || undefined;
+  const phone = String(user?.phone || "").trim() || undefined;
+
+  // Création customer Stripe
+  const customer = await stripe.customers.create({
+    email,
+    phone,
+    name: `${String(user?.firstname || "").trim()} ${String(user?.lastname || "").trim()}`.trim() || undefined,
+    metadata: {
+      userId: String(user?._id || ""),
+      role: String(user?.role || ""),
+    },
+  });
+
+  // On persiste sur le user (idempotent-ish)
+  await UserModel.updateOne(
+    { _id: user._id, $or: [{ customerId: { $exists: false } }, { customerId: null }, { customerId: "" }] },
+    { $set: { customerId: customer.id } }
+  );
+
+  return customer.id;
+}
+
+
 function formatHuman(startUtc: Date, tz: string) {
   return new Intl.DateTimeFormat("fr-FR", {
     timeZone: tz,
@@ -233,15 +262,23 @@ export async function createBookingAndCheckout(params: {
     closed: false,
   });
 
+  // ✅ Crée / récupère le customer Stripe AVANT Checkout
+  const stripeCustomerId = await ensureStripeCustomerForUser(clientUser);
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
 
-    // ✅ Stripe collect
-    customer_creation: "always",
-    billing_address_collection: "auto",
+    // ✅ IMPORTANT: on fournit un customer EXISTANT (fix Accounts V2 testmode)
+    customer: stripeCustomerId,
 
-    // ✅ pré-rempli
-    customer_email: clientUser.email,
+    // ✅ Stripe collecte et met à jour sur le customer
+    customer_update: {
+      name: "auto",
+      address: "auto",
+      shipping: "auto",
+    },
+
+    billing_address_collection: "auto",
 
     line_items: [
       {
@@ -253,13 +290,13 @@ export async function createBookingAndCheckout(params: {
         },
       },
     ],
+
     metadata: {
       bookingId: String(booking._id),
       shopId: String(shop._id),
       serviceId: String(service._id),
       proId: String(shop.idUser),
 
-      // ✅ super important pour webhook / debug
       clientId: String(clientUser._id),
       clientPhone: phone,
 
@@ -271,9 +308,11 @@ export async function createBookingAndCheckout(params: {
       taxEuro: String(pricing.taxEuro),
       totalEuro: String(pricing.totalEuro),
     },
+
     success_url: `${process.env.FRONTEND_URL}/paiement-validation?success=true&bookingId=${booking._id}`,
     cancel_url: `${process.env.FRONTEND_URL}/paiement-validation?success=false&bookingId=${booking._id}`,
   });
+
 
   if (!session.url) throw new Error("Stripe session url missing");
 

@@ -5,10 +5,48 @@ import ServiceModel from "../models/service";
 import UserModel from "../models/user";
 import ShopModel from "../models/shop";
 import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
 });
+
+/**
+ * ✅ IMPORTANT
+ * En testmode + Accounts V2, Stripe Checkout ne supporte pas `customer_creation: "always"`
+ * sans customer existant. Donc:
+ * - on crée/récupère un Customer Stripe nous-mêmes
+ * - on passe `customer: cus_...` à Checkout
+ * - on laisse Stripe collecter & MAJ via customer_update + billing_address_collection
+ */
+async function ensureStripeCustomerForUser(user: any) {
+  const existing = String(user?.customerId || "").trim();
+  if (existing) return existing;
+
+  const email = String(user?.email || "").trim() || undefined;
+  const phone = String(user?.phone || "").trim() || undefined;
+
+  const name = `${String(user?.firstname || "").trim()} ${String(user?.lastname || "").trim()}`
+    .trim()
+    || undefined;
+
+  const customer = await stripe.customers.create({
+    email,
+    phone,
+    name,
+    metadata: {
+      userId: String(user?._id || ""),
+      role: String(user?.role || ""),
+    },
+  });
+
+  await UserModel.updateOne(
+    { _id: user._id, $or: [{ customerId: { $exists: false } }, { customerId: null }, { customerId: "" }] },
+    { $set: { customerId: customer.id } }
+  );
+
+  return customer.id;
+}
 
 function humanDate(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -35,15 +73,20 @@ function makeGuestEmail(phoneE164: string) {
 }
 
 /**
- * ✅ Get or Create "guest" user par phone
- * - atomique (upsert) => pas de double création si appels concurrents
+ * ✅ Get or Create "guest" user par phone (UPSERT atomique)
+ * ⚠️ IMPORTANT: findOneAndUpdate bypass le pre-save bcrypt
+ * => on hashe le password avant $setOnInsert pour éviter un password en clair.
  */
 async function getOrCreateGuestUserByPhone(phoneRaw: string) {
   const phone = normalizePhone(phoneRaw);
   if (!phone) throw new Error("PHONE_REQUIRED");
 
   const email = makeGuestEmail(phone);
-  const guestPassword = randomBytes(24).toString("hex");
+
+  const guestPasswordPlain = randomBytes(24).toString("hex");
+  const guestPasswordHashed = await bcrypt.hash(guestPasswordPlain, 10);
+
+  const nowIso = new Date().toISOString();
 
   const user = await UserModel.findOneAndUpdate(
     { phone },
@@ -53,7 +96,7 @@ async function getOrCreateGuestUserByPhone(phoneRaw: string) {
         lastname: "IzyGlam",
         phone,
         email,
-        password: guestPassword,
+        password: guestPasswordHashed,
         sex: "female",
         role: "guest",
         active: true,
@@ -62,11 +105,16 @@ async function getOrCreateGuestUserByPhone(phoneRaw: string) {
         favoriteShops: [],
         fidelity: { stars: 0, card_expiration: new Date(), rewards_history: [] },
 
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        lastSeen: new Date().toISOString(),
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        lastSeen: nowIso,
       },
-      $set: { updatedAt: new Date().toISOString() },
+      $set: {
+        updatedAt: nowIso,
+        lastSeen: nowIso,
+        // (optionnel) si tu veux garder l'email "guest+..." aligné au tel:
+        // email,
+      },
     },
     { new: true, upsert: true }
   ).exec();
@@ -109,7 +157,7 @@ export const createAssistantCheckout = async (req: Request, res: Response) => {
     const phone = normalizePhone(phoneNumber);
     const clientUser: any = await getOrCreateGuestUserByPhone(phone);
 
-    // 3) Pricing simple (tu as déjà une version avancée ailleurs)
+    // 3) Pricing simple
     const priceEuro = Number(service.price || 0);
     if (!Number.isFinite(priceEuro) || priceEuro <= 0) {
       return res.status(400).json({ message: "Invalid service price" });
@@ -158,16 +206,23 @@ export const createAssistantCheckout = async (req: Request, res: Response) => {
       closed: false,
     });
 
-    // 5) Stripe Checkout Session
+    // ✅ 5) Stripe Customer (fix Accounts V2 testmode)
+    const stripeCustomerId = await ensureStripeCustomerForUser(clientUser);
+
+    // ✅ 6) Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
 
-      // ✅ Stripe collect (dans le code)
-      customer_creation: "always",
-      billing_address_collection: "auto",
+      // ✅ IMPORTANT: on passe un customer existant
+      customer: stripeCustomerId,
 
-      // ✅ pré-rempli
-      customer_email: clientUser.email,
+      // ✅ Stripe collect + MAJ automatique du customer
+      customer_update: {
+        name: "auto",
+        address: "auto",
+        shipping: "auto",
+      },
+      billing_address_collection: "auto",
 
       line_items: [
         {
