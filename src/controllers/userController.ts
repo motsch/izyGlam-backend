@@ -1,4 +1,5 @@
 import UserModel from "../models/user";
+import fs from "fs";
 import * as express from "express";
 import axios from 'axios';
 import path from "path"; // Pour manipuler les chemins locaux
@@ -7,8 +8,9 @@ import { resolveLang } from "../i18n/resolveLang";
 import { logger } from "../utils/logger";
 import { randomBytes } from "node:crypto";
 import { makeTransport } from "../utils/mailer";
-
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:4200";
+import CompanyModel from "../models/company";
+import bookingModel from "../models/booking";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://izyglam.com";
 
 // import
 require("dotenv").config();
@@ -33,18 +35,28 @@ const getUserInfo = async (
       companyId: string;
       lastname: string;
       email: string;
+      twilioPhoneNumber: string;
+      assistantShopId: string;
+      assistantProEnabled: boolean;
       firstname: string;
       role: string;
       phone: string;
       conversationId: string;
       sex: string;
+      subscription: any;
       bank: any;
       customerId: string;
       address: any[];
       proches: any[];
       favoriteShops: any[];
-      fidelity: any[];
+      fidelity: any;
       abonnement: string;
+<<<<<<< HEAD
+=======
+      country: string;
+      _id: string;
+      lastSeen?: string; // ✅ pour exposer lastSeen si tu veux
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
     }) => void;
   }
 ) => {
@@ -56,6 +68,9 @@ const getUserInfo = async (
       lastname: string;
       email: string;
       firstname: string;
+      twilioPhoneNumber: string;
+      assistantShopId: string;
+      assistantProEnabled: boolean;
       role: string;
       phone: string;
       conversationId: string;
@@ -64,19 +79,22 @@ const getUserInfo = async (
       abonnement: string;
       address: any[];
       proches: any[];
+      subscription: any;
       bank: any;
       favoriteShops: any[];
       fidelity: any;
       _id: string;
+      lastSeen?: string; // ✅
     };
-    const token = req.header("Authorization");
 
-    if (!token) {
+    const rawAuth = req.header("Authorization");
+    if (!rawAuth) {
       logger.warn({ msg: "user.getInfo.missingToken" });
-      return res
-        .status(401)
-        .json({ message: "Token d'authentification manquant" });
+      return res.status(401).json({ message: "Token d'authentification manquant" });
     }
+
+    // ✅ Support "Bearer x.y.z" ou token brut
+    const token = rawAuth.startsWith("Bearer ") ? rawAuth.slice(7) : rawAuth;
 
     jwt.verify(
       token,
@@ -84,9 +102,7 @@ const getUserInfo = async (
       async (err: any, decodedToken: { userId: any }) => {
         if (err) {
           logger.warn({ msg: "user.getInfo.invalidToken" });
-          return res
-            .status(403)
-            .json({ message: "Token d'authentification invalide" });
+          return res.status(403).json({ message: "Token d'authentification invalide" });
         }
 
         const userId = decodedToken.userId;
@@ -99,12 +115,30 @@ const getUserInfo = async (
               message: "Votre compte n’est pas encore activé. Veuillez vérifier vos emails."
             });
           }
+
+          // ✅ Met à jour lastSeen (et updatedAt) AVANT de répondre
+          try {
+            const nowIso = new Date().toISOString();
+            user.lastSeen = nowIso;
+            user.updatedAt = nowIso; // utile vu que tu n'as pas { timestamps:true }
+            await user.save();
+          } catch (saveErr: any) {
+            // On log juste : ne bloque pas la réponse utilisateur
+            logger.error({
+              msg: "user.getInfo.lastSeenUpdateFailed",
+              errorMessage: saveErr?.message,
+            });
+          }
+
           const {
             lastname,
             email,
             firstname,
             role,
+            twilioPhoneNumber,
+            assistantShopId,
             address,
+            assistantProEnabled,
             proches,
             phone,
             sex,
@@ -113,9 +147,15 @@ const getUserInfo = async (
             companyId,
             _id,
             favoriteShops,
+            subscription,
             fidelity,
             abonnement,
             conversationId,
+<<<<<<< HEAD
+=======
+            country,
+            lastSeen, // ✅ on le renvoie si besoin
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
           } = user;
 
           logger.info({ msg: "user.getInfo.success", userId: _id?.toString() });
@@ -124,11 +164,15 @@ const getUserInfo = async (
             email,
             firstname,
             role,
+            twilioPhoneNumber,
+            assistantShopId,
+            assistantProEnabled,
             address,
             proches,
             phone,
             conversationId,
             sex,
+            subscription,
             bank,
             abonnement,
             customerId,
@@ -136,6 +180,7 @@ const getUserInfo = async (
             favoriteShops,
             fidelity,
             _id,
+            lastSeen, // ✅
           } as UserInfo);
         } else {
           logger.warn({ msg: "user.getInfo.notFound", userId });
@@ -151,6 +196,7 @@ const getUserInfo = async (
     });
   }
 };
+
 
 const refreshToken = async (
   req: { userId: any },
@@ -433,38 +479,141 @@ export const resetPassword = async (req: express.Request, res: express.Response)
   }
 };
 
+<<<<<<< HEAD
+=======
+/**
+ * PUT /users-country-update/:id
+ * Body: { country: string }
+ */
+export const updateUserCountryById = async (req: express.Request, res: express.Response) => {
+  try {
+    const userId = req.params.id?.trim();
+    const { country } = (req.body || {}) as { country?: string };
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID manquant dans l’URL.' });
+    }
+    if (!country || typeof country !== 'string' || !country.trim()) {
+      return res.status(400).json({ message: 'Paramètre "country" invalide.' });
+    }
+
+    // 1) Récupère le user par son ID
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur introuvable.' });
+    }
+
+    // 2) Met à jour le champ
+    user.country = country.trim();
+
+    // 3) Sauvegarde
+    await user.save();
+
+    // 4) Nettoie la réponse (pas de champs sensibles)
+    const { password, resetPasswordToken, resetPasswordExpires, emailVerificationToken, emailVerificationExpires, ...safeUser } =
+      user.toObject();
+
+    return res.json({
+      message: 'Country mis à jour avec succès.',
+      user: safeUser,
+    });
+  } catch (err: any) {
+    console.error('Erreur updateUserCountryById:', err);
+    return res.status(500).json({ message: 'Erreur serveur.', error: err?.message });
+  }
+};
+
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
 /* --------------------------
    Create user (send verify)
+   - création "classique" web
+   - ne touche pas aux guests créés via Twilio
 --------------------------- */
 export const createUser = async (req: express.Request, res: express.Response) => {
   try {
     logger.info({ msg: "user.create.start" });
+
     const payload = { ...req.body };
     const lang = resolveLang(req);
 
+    // ✅ ne jamais faire confiance au client
     delete (payload as any).active;
+    delete (payload as any).role;
     delete (payload as any).emailVerificationToken;
     delete (payload as any).emailVerificationExpires;
+    delete (payload as any).customerId; // si tu veux éviter injection
+    delete (payload as any).subscription; // idem
+    delete (payload as any).stripe; // idem
 
-    const newUser = new UserModel({ ...payload, active: false });
+    const email = String(payload.email || "").trim().toLowerCase();
+    const phone = String(payload.phone || "").trim();
 
+    if (!email) return res.status(400).json({ message: "Email manquant." });
+    if (!phone) return res.status(400).json({ message: "Téléphone manquant." });
+
+    // ✅ email unique
+    const emailExists = await UserModel.findOne({ email }).select({ _id: 1, role: 1 }).lean();
+    if (emailExists) {
+      return res.status(409).json({ message: "Cet email est déjà utilisé." });
+    }
+
+    // ✅ phone unique (si tu as mis unique index sur phone)
+    const phoneExists: any = await UserModel.findOne({ phone }).select({ _id: 1, role: 1 }).lean();
+    if (phoneExists) {
+      if (phoneExists.role === "guest") {
+        // 🔒 IMPORTANT : on ne "convertit" PAS automatiquement un guest en user ici
+        // (sinon prise de contrôle du guest possible)
+        return res.status(409).json({
+          message:
+            "Un compte invité existe déjà avec ce numéro. Veuillez vous connecter ou finaliser la conversion via un parcours dédié.",
+          code: "GUEST_PHONE_EXISTS",
+        });
+      }
+
+      return res.status(409).json({ message: "Ce numéro est déjà utilisé." });
+    }
+
+    // ✅ rôle forcé : création web => user
+    const newUser = new UserModel({
+      ...payload,
+      email,
+      phone,
+      role: "user",
+      active: false, // inactif tant que non vérifié
+      createdAt: new Date().toString(),
+      updatedAt: new Date().toString(),
+      lastSeen: new Date().toString(),
+    });
+
+    // token vérif valable 1h
     const token = randomBytes(32).toString("hex");
     newUser.emailVerificationToken = token;
     newUser.emailVerificationExpires = new Date(Date.now() + 3600000);
+
     await newUser.save();
 
+    // lien d’activation
     const verifyLink = `${FRONTEND_URL}/verify-email?token=${token}`;
+
     const { subject, html } = renderEmailHTML("verify", lang, verifyLink, new Date().getFullYear());
 
     const transporter = makeTransport();
+
     const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
+    const attachments: Array<{ filename: string; path: string; cid: string }> = [];
+
+    if (fs.existsSync(logoPath)) {
+      attachments.push({ filename: "logo.png", path: logoPath, cid: "logo" });
+    } else {
+      logger.warn({ msg: "email.logo.missing", triedPath: logoPath });
+    }
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM || `IzyGlam <${process.env.SMTP_USER}>`,
       to: newUser.email,
       subject,
       html,
-      attachments: [{ filename: "logo.png", path: logoPath, cid: "logo" }],
+      attachments,
     });
 
     const safeUser = newUser.toObject();
@@ -473,16 +622,27 @@ export const createUser = async (req: express.Request, res: express.Response) =>
     delete (safeUser as any).emailVerificationExpires;
 
     logger.info({ msg: "user.create.success", userId: newUser._id?.toString() });
-    res.status(201).json(safeUser);
+    return res.status(201).json(safeUser);
   } catch (error: any) {
-    logger.error({ msg: "user.create.error", errorMessage: error?.message, stack: error?.stack });
-    console.error("Erreur création user:", error);
-    res.status(500).json({
+    logger.error({
+      msg: "user.create.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+
+    // bonus : gestion unique index propre
+    if (error?.code === 11000) {
+      const key = Object.keys(error?.keyPattern || {})[0] || "field";
+      return res.status(409).json({ message: `Conflit d'unicité sur ${key}.` });
+    }
+
+    return res.status(500).json({
       message: "Impossible de créer l'utilisateur",
-      error: (error as any)?.message || error,
+      error: error?.message || error,
     });
   }
 };
+
 
 export const resendVerificationEmail = async (req: express.Request, res: express.Response) => {
   try {
@@ -614,6 +774,121 @@ const getAllByAdminOptions = async (req: any, res: express.Response) => {
     res.status(500).json({ message: "Impossible de récupérer les utilisateurs" });
   }
 };
+
+
+/**
+ * POST /users/:id/reset-company-password
+ * Réinitialise le mot de passe d'un employé avec le mot de passe par défaut
+ * défini sur l'entreprise (company.defaultPassword).
+ *
+ * Accès : admin / entreprise / boss
+ */
+const resetEmployeePasswordFromCompany = async (
+  req: any,
+  res: express.Response
+) => {
+  try {
+    const employeeId = (req.params.id || "").trim();
+    logger.info({ msg: "user.resetCompanyPassword.start", employeeId });
+
+    if (!employeeId) {
+      return res.status(400).json({ message: "ID employé manquant dans l’URL." });
+    }
+
+    // ✅ authMiddleware doit avoir posé req.user
+    const requester = req.user;
+    if (!requester) {
+      logger.warn({ msg: "user.resetCompanyPassword.noRequester", employeeId });
+      return res.status(401).json({ message: "Non authentifié." });
+    }
+
+    const allowedRoles = ["admin", "entreprise", "boss"];
+    if (!allowedRoles.includes(requester.role)) {
+      logger.warn({
+        msg: "user.resetCompanyPassword.forbiddenRole",
+        employeeId,
+        role: requester.role,
+      });
+      return res.status(403).json({
+        message: "Accès refusé : seuls admin / entreprise / boss peuvent réinitialiser un mot de passe employé.",
+      });
+    }
+
+    // 🔎 On récupère l’employé
+    const employee = await UserModel.findById(employeeId);
+    if (!employee) {
+      logger.warn({ msg: "user.resetCompanyPassword.employeeNotFound", employeeId });
+      return res.status(404).json({ message: "Employé introuvable." });
+    }
+
+    // 🔗 On attend un companyId sur l’employé
+    const companyId = employee.companyId;
+    if (!companyId) {
+      logger.warn({
+        msg: "user.resetCompanyPassword.noCompanyId",
+        employeeId,
+      });
+      return res.status(400).json({
+        message:
+          "Cet utilisateur n'est pas rattaché à une entreprise (companyId manquant).",
+      });
+    }
+
+    // 🏢 Récupérer la company pour lire defaultPassword
+    const company = await CompanyModel.findById(companyId);
+    if (!company) {
+      logger.warn({
+        msg: "user.resetCompanyPassword.companyNotFound",
+        employeeId,
+        companyId,
+      });
+      return res.status(404).json({ message: "Entreprise introuvable pour cet employé." });
+    }
+
+    // 🔐 Mot de passe par défaut : priorité à company.defaultPassword
+    let defaultPassword: string;
+
+    if (company.defaultPassword && typeof company.defaultPassword === "string") {
+      defaultPassword = company.defaultPassword;
+    } else {
+      // Fallback de sécurité si jamais defaultPassword n’est pas défini
+      defaultPassword = "izyGl@m" + new Date().getFullYear() + "!";
+    }
+
+    // ✅ On applique le nouveau mot de passe
+    employee.password = defaultPassword;
+    await employee.save(); // hook mongoose => hash du mot de passe
+
+    // On nettoie la réponse (pas de password ni tokens)
+    const safeEmployee = employee.toObject();
+    delete (safeEmployee as any).password;
+    delete (safeEmployee as any).resetPasswordToken;
+    delete (safeEmployee as any).resetPasswordExpires;
+
+    logger.info({
+      msg: "user.resetCompanyPassword.success",
+      employeeId,
+      companyId,
+    });
+
+    return res.status(200).json({
+      message: "Mot de passe réinitialisé avec succès pour cet employé.",
+      employee: safeEmployee,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "user.resetCompanyPassword.error",
+      employeeId: (req as any)?.params?.id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    console.error("Erreur resetCompanyPassword:", error);
+    return res.status(500).json({
+      message: "Erreur serveur lors de la réinitialisation du mot de passe.",
+    });
+  }
+};
+
 
 const getUserById = async (req: any, res: express.Response) => {
   try {
@@ -785,17 +1060,21 @@ const updateUserById = async (req: any, res: express.Response) => {
   try {
     const { id } = req.params;
     logger.info({ msg: "user.update.start", id });
-    const updates = { ...req.body };
 
+    // Copie des champs reçus
+    const updates: Record<string, any> = { ...req.body };
+
+    // On protège certains champs sensibles (mais on LAISSE passer 'active')
     delete (updates as any).password;
     delete (updates as any)._id;
     delete (updates as any).email;
-    delete (updates as any).active;
     delete (updates as any).emailVerificationToken;
     delete (updates as any).emailVerificationExpires;
     delete (updates as any).role;
 
-    const token = req.header("Authorization");
+    // Récupération du token (support "Bearer xxx")
+    const rawAuth = req.header("authorization") || req.header("Authorization");
+    const token = rawAuth?.replace(/^Bearer\s+/i, "");
     if (!token) {
       logger.warn({ msg: "user.update.missingToken", id });
       return res.status(401).json({ message: "Token d'authentification manquant" });
@@ -803,32 +1082,44 @@ const updateUserById = async (req: any, res: express.Response) => {
 
     jwt.verify(
       token,
-      process.env.SECRET_KEY,
+      process.env.SECRET_KEY as string,
       async (err: any, decodedToken: { userId: string; role: string }) => {
         if (err) {
           logger.warn({ msg: "user.update.invalidToken", id });
           return res.status(403).json({ message: "Token d'authentification invalide" });
         }
 
+        // Marque la MÀJ
+        updates.updatedAt = new Date().toISOString();
+
+        // ⚠️ Si tu veux réserver la MÀJ de 'active' à un rôle précis, décommente et adapte :
+        // if (typeof updates.active !== "undefined" && decodedToken.role !== "admin") {
+        //   delete updates.active;
+        // }
+
         const updatedUser = await UserModel.findByIdAndUpdate(
           id,
-          updates,
-          { new: true, runValidators: true }
+          { $set: updates },
+          { new: true, runValidators: true, context: "query" }
         );
 
         if (!updatedUser) {
           logger.warn({ msg: "user.update.notFound", id });
-          return res.status(404).json({ message: "Utilisateur non trouvé 666" });
+          return res.status(404).json({ message: "Utilisateur non trouvé" });
         }
 
         logger.info({ msg: "user.update.success", id });
-        res.json(updatedUser);
+        return res.json(updatedUser);
       }
     );
   } catch (error: any) {
-    logger.error({ msg: "user.update.error", id: req?.params?.id, errorMessage: error?.message, stack: error?.stack });
-    console.error(error);
-    res.status(500).json({ message: "Erreur serveur lors de la mise à jour" });
+    logger.error({
+      msg: "user.update.error",
+      id: req?.params?.id,
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({ message: "Erreur serveur lors de la mise à jour" });
   }
 };
 
@@ -942,85 +1233,6 @@ export const updateUserFavorites = async (req: any, res: express.Response) => {
     logger.error({ msg: "user.updateFavorites.error", id: req?.params?.id, errorMessage: error?.message, stack: error?.stack });
     console.error(error);
     res.status(500).json({ message: "Erreur lors de la mise à jour des favoris" });
-  }
-};
-
-const connectToBluesky = async (req: express.Request, res: express.Response) => {
-  const { handle, password } = (req as any).body;
-  const userId = (req as any).params.userId;
-
-  try {
-    logger.info({ msg: "bluesky.connect.start", userId });
-    const response = await axios.post('https://bsky.social/xrpc/com.atproto.server.createSession', {
-      identifier: handle,
-      password: password,
-    });
-
-    const accessToken = response.data.accessJwt;
-    const refreshToken = response.data.refreshJwt || null;
-
-    await UserModel.findByIdAndUpdate(userId, {
-      'bluesky.accessToken': accessToken,
-      'bluesky.tokenExpiresAt': new Date(Date.now() + 3600 * 1000),
-      ...(refreshToken && { 'bluesky.refreshToken': refreshToken }),
-    });
-
-    logger.info({ msg: "bluesky.connect.success", userId });
-    return res.status(200).json({
-      message: 'Connexion réussie et jeton sauvegardé.',
-      accessToken,
-      tokenExpiresAt: new Date(Date.now() + 3600 * 1000),
-    });
-  } catch (error: any) {
-    logger.error({ msg: "bluesky.connect.error", userId, errorMessage: error?.message, stack: error?.stack });
-    console.error('Erreur lors de la connexion à Bluesky :', error);
-    return res.status(500).json({ error: 'Connexion échouée.' });
-  }
-};
-
-const postToBluesky = async (req: express.Request, res: express.Response) => {
-  const { content } = (req as any).body;
-  const userId = (req as any).params.userId;
-
-  try {
-    logger.info({ msg: "bluesky.post.start", userId });
-    const user = await UserModel.findById(userId);
-    if (!user || !user.bluesky || !user.bluesky.accessToken) {
-      logger.warn({ msg: "bluesky.post.notConnected", userId });
-      return res.status(401).json({ error: 'Utilisateur non connecté à Bluesky.' });
-    }
-
-    const response = await axios.post(
-      'https://bsky.social/xrpc/com.atproto.repo.createRecord',
-      {
-        repo: user.bluesky.userId,
-        collection: 'app.bsky.feed.post',
-        record: { text: content, createdAt: new Date().toISOString() },
-      },
-      { headers: { Authorization: `Bearer ${user.bluesky.accessToken}` } }
-    );
-
-    logger.info({ msg: "bluesky.post.success", userId });
-    return res.status(200).json({ message: 'Post publié avec succès.', data: response.data });
-  } catch (error: any) {
-    logger.error({ msg: "bluesky.post.error", userId, errorMessage: error?.message, stack: error?.stack });
-    console.error('Erreur lors de la publication sur Bluesky :', error);
-    return res.status(500).json({ error: 'Impossible de publier le post.' });
-  }
-};
-
-const revokeBlueskyAccess = async (req: express.Request, res: express.Response) => {
-  const userId = (req as any).params.userId;
-
-  try {
-    logger.info({ msg: "bluesky.revoke.start", userId });
-    await UserModel.findByIdAndUpdate(userId, { $unset: { bluesky: '' } });
-    logger.info({ msg: "bluesky.revoke.success", userId });
-    return res.status(200).json({ message: 'Accès Bluesky révoqué.' });
-  } catch (error: any) {
-    logger.error({ msg: "bluesky.revoke.error", userId, errorMessage: error?.message, stack: error?.stack });
-    console.error('Erreur lors de la révocation :', error);
-    return res.status(500).json({ error: 'Impossible de révoquer l\'accès.' });
   }
 };
 
@@ -1281,11 +1493,168 @@ const subscribeToPlan = async (req: any, res: express.Response) => {
   }
 };
 
+/**
+ * POST /users/:id/pro-client-notes
+ * Body: { comment: string, shopId?: string, bookingId?: string }
+ * -> Ajoute une note interne écrite par un pro sur un client.
+ *
+ * + BLOQUE si un pro a déjà commenté CE booking (booking.proCommentAdded = true)
+ */
+/**
+ * POST /users/:id/pro-client-notes
+ * Body: { comment: string, shopId?: string, bookingId: string }
+ *
+ * Ajoute une note interne écrite par un pro sur un client.
+ * 🔒 Un seul commentaire pro possible par booking (proCommentAdded).
+ */
+const addProClientNoteToClient = async (req: any, res: express.Response) => {
+  try {
+    const clientId = String(req.params.id || "").trim();
+    const author = req.user; // posé par authMiddleware
+    const { comment, shopId, bookingId } = req.body || {};
+
+    logger.info({
+      msg: "user.addProClientNote.start",
+      clientId,
+      authorId: author?._id?.toString(),
+      authorRole: author?.role,
+      bookingId,
+    });
+
+    /* ------------------ Sécurité de base ------------------ */
+
+    const allowedRoles = ["professionnel", "boss", "admin"];
+    if (!allowedRoles.includes(author.role)) {
+      return res.status(403).json({ message: "Accès refusé." });
+    }
+
+    if (!clientId) {
+      return res.status(400).json({ message: "clientId manquant dans l’URL." });
+    }
+
+    const cleanComment = String(comment || "").trim();
+    if (!cleanComment || cleanComment.length < 2) {
+      return res.status(400).json({ message: "Commentaire invalide." });
+    }
+
+    const safeBookingId = String(bookingId || "").trim();
+    if (!safeBookingId) {
+      return res.status(400).json({
+        message: "bookingId manquant : impossible de garantir un seul commentaire par réservation.",
+      });
+    }
+
+    /* ------------------ Récupération client ------------------ */
+
+    const clientUser = await UserModel.findById(clientId);
+    if (!clientUser) {
+      return res.status(404).json({ message: "Client introuvable." });
+    }
+
+    if (String(clientUser._id) === String(author._id)) {
+      return res.status(400).json({ message: "Impossible de commenter votre propre compte." });
+    }
+
+    /* ------------------ Lock booking (anti doublon) ------------------ */
+
+    const lockedBooking = await bookingModel.findOneAndUpdate(
+      { _id: safeBookingId, proCommentAdded: false },
+      { $set: { proCommentAdded: true } },
+      { new: true }
+    );
+
+    if (!lockedBooking) {
+      const exists = await bookingModel
+        .findById(safeBookingId)
+        .select("_id proCommentAdded");
+
+      if (!exists) {
+        return res.status(404).json({ message: "Réservation introuvable." });
+      }
+
+      return res.status(409).json({
+        message: "Un commentaire prestataire a déjà été ajouté pour cette réservation.",
+      });
+    }
+
+    /* ------------------ Vérifications métier ------------------ */
+
+    const authorId = String(author._id);
+
+    if (String(lockedBooking.userProId) !== authorId && author.role !== "admin") {
+      await bookingModel.updateOne(
+        { _id: safeBookingId },
+        { $set: { proCommentAdded: false } }
+      );
+      return res.status(403).json({
+        message: "Accès refusé : réservation non associée à ce prestataire.",
+      });
+    }
+
+    if (String(lockedBooking.clientId) !== String(clientId)) {
+      await bookingModel.updateOne(
+        { _id: safeBookingId },
+        { $set: { proCommentAdded: false } }
+      );
+      return res.status(400).json({
+        message: "Le client ne correspond pas à cette réservation.",
+      });
+    }
+
+    if (shopId && String(lockedBooking.shopId) !== String(shopId)) {
+      await bookingModel.updateOne(
+        { _id: safeBookingId },
+        { $set: { proCommentAdded: false } }
+      );
+      return res.status(400).json({
+        message: "Le shopId ne correspond pas à cette réservation.",
+      });
+    }
+
+    /* ------------------ Enregistrement note ------------------ */
+
+    const note = {
+      authorId: author._id,
+      shopId: shopId || lockedBooking.shopId,
+      bookingId: safeBookingId,
+      comment: cleanComment,
+      createdAt: new Date(),
+    };
+
+    clientUser.proClientNotes = clientUser.proClientNotes || [];
+    clientUser.proClientNotes.push(note as any);
+
+    clientUser.updatedAt = new Date().toISOString();
+    await clientUser.save();
+
+    logger.info({
+      msg: "user.addProClientNote.success",
+      clientId,
+      bookingId: safeBookingId,
+      notesCount: clientUser.proClientNotes.length,
+    });
+
+    return res.status(201).json({
+      message: "Commentaire enregistré.",
+      note,
+    });
+  } catch (error: any) {
+    logger.error({
+      msg: "user.addProClientNote.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+    return res.status(500).json({
+      message: "Erreur serveur.",
+      error: error?.message,
+    });
+  }
+};
+
+
+
 module.exports = {
   getAllByAdminOptions,
-  revokeBlueskyAccess,
-  connectToBluesky,
-  postToBluesky,
   getUsersAllCount,
   getUsersByCompanyId,
   getUserInfo,
@@ -1313,7 +1682,13 @@ module.exports = {
   subscribeToPlan,
   getSubscriptionInfo,
   removeEmployeeFromBoss,
+<<<<<<< HEAD
+=======
+  updateUserCountryById,
+  resetEmployeePasswordFromCompany,
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
   verifyEmail,
   resendVerificationEmail,
+  addProClientNoteToClient,
   createAndAddEmployeeToBoss,
 };

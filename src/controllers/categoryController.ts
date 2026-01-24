@@ -22,6 +22,13 @@ function sanitize(obj: any) {
   return clone;
 }
 
+function normalizeServiceMode(input: any): "SALON" | "DOMICILE" | null {
+  const raw = String(input ?? "").toUpperCase().trim();
+  if (raw === "SALON") return "SALON";
+  if (raw === "DOMICILE") return "DOMICILE";
+  return null;
+}
+
 // Créer une nouvelle catégorie
 const createCategory = async (req: Request, res: Response) => {
   try {
@@ -73,15 +80,95 @@ const calculateDistance = (
   return R * c;
 };
 
+<<<<<<< HEAD
 // Catégories disponibles en fonction des shops filtrés (geo OU codes postaux)
 const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
   try {
     const { lat, lon, codes } = req.query;
+=======
+const normalizeCountry = (v: any): string | undefined =>
+  typeof v === 'string' && v.trim() ? v.trim().toUpperCase() : undefined;
+
+
+// Helpers
+function toSlug(value?: any): string | null {
+  if (!value) return null;
+  return String(value).trim().toLowerCase();
+}
+
+// SHOPTYPE.X -> x
+function slugFromTrad(trad?: string | null): string | null {
+  if (!trad) return null;
+  const m = String(trad).match(/^[A-Z_]+\.(.+)$/i);
+  if (!m || !m[1]) return null;
+  return toSlug(m[1]);
+}
+
+// Parse "codes" (string "75001,75002" | array)
+function parsePostalCodes(codesParam: unknown): string[] {
+  if (!codesParam) return [];
+  if (typeof codesParam === "string") {
+    return codesParam.split(",").map(c => c.trim()).filter(Boolean);
+  }
+  if (Array.isArray(codesParam)) {
+    return (codesParam as string[]).map(c => c.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+export const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
+  try {
+    const { lat, lon, codes, country, mode } = req.query;
+    const hasGeo = lat != null && lon != null;
+    const postalCodes = parsePostalCodes(codes);
+
+    const rawMode = mode as string | undefined;
+    const normalizedMode = normalizeServiceMode(rawMode); // "SALON" | "DOMICILE" | null
+    if (!normalizedMode) {
+      return res.status(400).json({ message: "Mode requis (SALON ou DOMICILE)" });
+    }
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
 
     let shops = await ShopModel.find();
 
+<<<<<<< HEAD
     // Filtrage géo
     if (lat && lon) {
+=======
+    // 1) Pré-check pays (cohérent prod)
+    if (countryQuery) {
+      const countryCount = await ShopModel.countDocuments({
+        ...countryQuery,
+        active: true,
+        status: "approved",
+        serviceMode: { $in: [normalizedMode, null] },
+      });
+      if (countryCount === 0) {
+        return res.json([]);
+      }
+    }
+
+    // 2) Base query (cohérente prod) + filtre mode
+    const baseQuery: any = {
+      ...(countryQuery ?? {}),
+      active: true,
+      status: "approved",
+      serviceMode: { $in: [normalizedMode, null] },
+    };
+
+    // 3) Si filtres "codes" (et PAS de géoloc), on laisse Mongo pré-filtrer
+    if (!hasGeo && postalCodes.length > 0) {
+      baseQuery.deliveryPostalCodes = { $in: postalCodes };
+    }
+
+    // 4) Sélection minimale
+    let shops = await ShopModel.find(baseQuery)
+      .select("filter type trad serviceMode location.maxDistance location.latitude location.longitude deliveryPostalCodes")
+      .lean();
+
+    // 5) Filtre géographique OU filtre strict par codes (comme avant)
+    if (hasGeo) {
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
       const clientLatitude = parseFloat(lat as string);
       const clientLongitude = parseFloat(lon as string);
 
@@ -96,6 +183,7 @@ const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
         );
         return typeof shop.maxDistance === "number" && distance <= shop.maxDistance;
       });
+<<<<<<< HEAD
 
       logger.info({
         msg: "getCategoriesWithAvailableShops geo filter",
@@ -115,9 +203,12 @@ const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
       else if (Array.isArray(codes)) postalCodes = (codes as string[]).map((c) => c.trim());
 
       const before = shops.length;
+=======
+    } else if (postalCodes.length > 0) {
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
       shops = shops.filter((shop: any) => {
         if (!Array.isArray(shop.deliveryPostalCodes)) return false;
-        return shop.deliveryPostalCodes.some((deliveryCode: string) => postalCodes.includes(deliveryCode));
+        return shop.deliveryPostalCodes.some((d: string) => postalCodes.includes(d));
       });
 
       logger.info({
@@ -139,10 +230,24 @@ const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
       });
     }
 
+<<<<<<< HEAD
     // On collecte les clés de trad présentes dans les shops filtrées
     const tradKeys = [...new Set(shops.map((s: any) => s.trad).filter(Boolean))];
+=======
+    // 6) Slugs catégories depuis shops
+    const slugSet = new Set<string>();
+    for (const s of shops) {
+      const slug = toSlug(s.filter) || toSlug(s.type) || slugFromTrad(s.trad);
+      if (slug) slugSet.add(slug);
+    }
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
 
+    const slugs = [...slugSet];
+    if (slugs.length === 0) return res.json([]);
+
+    // 7) Catégories correspondantes
     const categories = await CategoryModel.find({
+<<<<<<< HEAD
       trad: { $in: tradKeys },
       // active: true, // décommente si tu veux filtrer que les actives
     });
@@ -155,6 +260,13 @@ const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
       categories: categories.length,
       tradKeys: tradKeys.length,
     });
+=======
+      filter: { $in: slugs },
+      active: true,
+    })
+      .sort({ position: 1 })
+      .lean();
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
 
     return res.json(categories);
   } catch (error: any) {
@@ -169,12 +281,21 @@ const getCategoriesWithAvailableShops = async (req: Request, res: Response) => {
       errorMessage: error?.message,
       stack: error?.stack,
     });
+<<<<<<< HEAD
     res.status(500).json({
       message: "Erreur lors de la récupération des catégories disponibles",
     });
   }
 };
 
+=======
+    return res.status(500).json({ message: "Erreur lors de la récupération des catégories disponibles" });
+  }
+};
+
+
+
+>>>>>>> 77a6b31adbc8eb4911b1f6592bb3df3481d198e7
 // Récupérer toutes les catégories triées par position
 const getAllCategories = async (req: Request, res: Response) => {
   try {

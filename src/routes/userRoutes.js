@@ -7,7 +7,12 @@ const router = express.Router();
 // Forgot password functionality
 router.post("/forgot-password", usersController.forgotPassword);
 router.post("/reset-password", usersController.resetPassword);
-
+// ✅ Nouvelle route : reset mot de passe employé par l’entreprise/admin
+router.post(
+  "/users/:id/reset-company-password",
+  authMiddleware,
+  usersController.resetEmployeePasswordFromCompany
+);
 // Route to update the user's abonnement
 router.post("/update-abonnement", usersController.updateAbonnement);
 
@@ -79,18 +84,8 @@ router.put("/update-user-favs/:id", authMiddleware, usersController.updateUserFa
 // Route pour mettre à jour les favoris de l'utilisateur
 router.get("/geolocation", usersController.geolocation);
 
-// Routes pour Bluesky
-router.post('/bluesky/connect/:userId', usersController.connectToBluesky); // Connexion à Bluesky
-router.post('/bluesky/post/:userId', authMiddleware, usersController.postToBluesky); // Publier un post sur Bluesky
-router.delete('/bluesky/revoke/:userId', authMiddleware, usersController.revokeBlueskyAccess); // Révoquer l'accès à Bluesky
-
-
-
-
-
-
-
-
+// ✅ Notes internes pro -> client (visibles aux pros ensuite)
+router.post("/users-pro-notation/:id/pro-client-notes", authMiddleware, usersController.addProClientNoteToClient);
 
 
 // 👑 Récupérer les employés d’un boss
