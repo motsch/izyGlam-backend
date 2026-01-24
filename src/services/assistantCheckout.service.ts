@@ -1,18 +1,17 @@
+// src/services/assistantCheckout.service.ts
 import Stripe from "stripe";
 import moment from "moment-timezone";
+import { randomBytes } from "crypto";
 
 import bookingModel from "../models/booking";
 import ServiceModel from "../models/service";
 import ShopModel from "../models/shop";
 import AdminSettingsModel from "../models/adminSettings";
+import UserModel from "../models/user";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) || undefined,
 });
-
-function guestClientId(phoneE164: string) {
-  return `guest:${phoneE164}`;
-}
 
 function formatHuman(startUtc: Date, tz: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -25,24 +24,78 @@ function formatHuman(startUtc: Date, tz: string) {
   }).format(startUtc);
 }
 
-/**
- * ✅ Code NUMERIQUE 6 chiffres (100000..999999)
- * - simple à dicter au téléphone
- * - simple à taper pour le pro
- */
+/** ✅ Code NUMERIQUE 6 chiffres (100000..999999) */
 function generate6DigitCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 function normalizePhone(phone: string) {
-  const p = (phone || "").trim();
-  return p.startsWith("+") ? p : p;
+  // Twilio renvoie en général déjà du E.164 (+33...)
+  // On fait juste un trim + garde tel quel pour éviter de casser ton existant.
+  return String(phone || "").trim();
+}
+
+function makeGuestEmail(phoneE164: string) {
+  const safe = normalizePhone(phoneE164).replace(/[^\d+]/g, "");
+  return `guest+${safe}@izyglam.invalid`;
+}
+
+/**
+ * ✅ Get-or-Create client par téléphone
+ * Règles:
+ * 1) Si un user NON-guest existe déjà avec ce phone => on le réutilise
+ * 2) Sinon => upsert d’un guest (role: "guest") sur { phone, role: "guest" }
+ */
+async function getOrCreateClientUserByPhone(phoneRaw: string) {
+  const phone = normalizePhone(phoneRaw);
+  if (!phone) throw new Error("PHONE_REQUIRED");
+
+  // 1) vrai user existant ?
+  const existingReal = await UserModel.findOne({
+    phone,
+    role: { $ne: "guest" },
+  }).exec();
+
+  if (existingReal) return existingReal;
+
+  // 2) upsert guest
+  const email = makeGuestEmail(phone);
+  const guestPassword = randomBytes(24).toString("hex");
+
+  const guest = await UserModel.findOneAndUpdate(
+    { phone, role: "guest" },
+    {
+      $setOnInsert: {
+        firstname: "Invité",
+        lastname: "IzyGlam",
+        phone,
+        email,
+        password: guestPassword,
+        sex: "female",
+        role: "guest",
+        active: true,
+
+        credit: 0,
+        favoriteShops: [],
+        fidelity: { stars: 0, card_expiration: new Date(), rewards_history: [] },
+
+        createdAt: new Date().toISOString(),
+      },
+      $set: {
+        updatedAt: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+      },
+    },
+    { new: true, upsert: true }
+  ).exec();
+
+  if (!guest) throw new Error("USER_UPSERT_FAILED");
+  return guest;
 }
 
 function toRate(v: any): number {
   const n = Number(v);
   if (!Number.isFinite(n)) return 0;
-  // si on reçoit 15 => 0.15 ; si on reçoit 0.15 => 0.15
   return n > 1 ? n / 100 : n;
 }
 
@@ -58,23 +111,13 @@ function centsToEuro(c: number) {
   return round2(c / 100);
 }
 
-/**
- * Pricing:
- * - base = prix service (HT ou “prix catalogue”)
- * - commission = base * commissionRate
- * - serviceFee = fixe
- * - TVA appliquée sur (base + commission + fee)
- *
- * Retour en € + centimes
- */
 function computePricing(params: {
   baseEuro: number;
-  commissionRate: number; // 0.15 ou 15 => géré par toRate
+  commissionRate: number;
   serviceFeeEuro: number;
-  taxRate: number; // 20 ou 0.2 => géré par toRate
+  taxRate: number;
 }) {
   const base = Math.max(0, Number(params.baseEuro) || 0);
-
   const commissionRate = toRate(params.commissionRate);
   const taxRate = toRate(params.taxRate);
 
@@ -85,10 +128,7 @@ function computePricing(params: {
   const tva = subtotal * taxRate;
   const total = subtotal + tva;
 
-  // arrondi centimes (source de vérité)
   const totalCents = euroToCents(total);
-
-  // recalcul “propre” depuis centimes (évite les micro-écarts)
   const totalEuro = centsToEuro(totalCents);
 
   return {
@@ -106,7 +146,7 @@ export async function createBookingAndCheckout(params: {
   serviceId: string;
   fromPhone: string;
   slot: { date: string; start: string; end: string }; // local shop time
-  clientAddress?: string; // ✅ optionnel: si tu veux l’ajouter depuis SMS flow
+  clientAddress?: string;
 }) {
   const { shopId, serviceId, fromPhone, slot, clientAddress } = params;
 
@@ -116,10 +156,8 @@ export async function createBookingAndCheckout(params: {
   const service: any = await ServiceModel.findById(serviceId).lean();
   if (!service || service.blocked) throw new Error("Service not found");
 
-  // ✅ tu n’as pas timeZone dans Shop -> fallback Paris (ok)
   const tz: string = "Europe/Paris";
 
-  // slot local -> UTC
   const startUtc = moment.tz(`${slot.date} ${slot.start}`, "YYYY-MM-DD HH:mm", tz).utc().toDate();
   const endUtc = moment.tz(`${slot.date} ${slot.end}`, "YYYY-MM-DD HH:mm", tz).utc().toDate();
 
@@ -127,11 +165,10 @@ export async function createBookingAndCheckout(params: {
     throw new Error("Invalid slot start/end");
   }
 
-  // ✅ settings admin
   const settings: any = await AdminSettingsModel.findOne({}).lean();
-  const commissionRate = settings?.commissionRate ?? 0; // ex: 15
-  const serviceFeeEuro = settings?.serviceFee ?? 0; // ex: 2.9
-  const taxRate = settings?.taxRate ?? 20; // ex: 20
+  const commissionRate = settings?.commissionRate ?? 0;
+  const serviceFeeEuro = settings?.serviceFee ?? 0;
+  const taxRate = settings?.taxRate ?? 20;
 
   const baseEuro = Number(service.price || 0);
   if (!Number.isFinite(baseEuro) || baseEuro <= 0) throw new Error("Invalid base price");
@@ -143,19 +180,16 @@ export async function createBookingAndCheckout(params: {
     taxRate,
   });
 
-  // ✅ ce que le client paie (TTC)
   const priceEuroTtc = pricing.totalEuro;
-
-  // ✅ ce que tu stockes dans Booking (strings comme ton model)
   const commissionEuro = pricing.commissionEuro;
   const feeEuro = pricing.serviceFeeEuro;
-
-  // Shop earnings = total - commission - fee
   const shopEarningsEuro = round2(priceEuroTtc - commissionEuro - feeEuro);
 
   const phone = normalizePhone(fromPhone);
 
-  // ✅ générer le code au moment de la création booking
+  // ✅ CLIENT: get-or-create
+  const clientUser: any = await getOrCreateClientUserByPhone(phone);
+
   const generatedCode = generate6DigitCode();
 
   const booking = await bookingModel.create({
@@ -163,21 +197,20 @@ export async function createBookingAndCheckout(params: {
     establishmentName: shop.name || "IzyGlam",
     productName: service.name,
 
-    // ✅ adresse client si fournie
     address: clientAddress || "Adresse à confirmer",
     phoneNumber: phone,
 
-    // ✅ NOUVEAU : categoryId stocké dans booking (pratique pour stats/filtre)
     categoryId: service.categoryId ? String(service.categoryId) : undefined,
 
-    clientId: guestClientId(phone),
+    // ✅ IMPORTANT: vrai userId
+    clientId: String(clientUser._id),
+
     userProId: String(shop.idUser),
     serviceId: String(service._id),
     shopId: String(shop._id),
 
     status: "pending",
 
-    // TTC + détails
     price: String(priceEuroTtc),
     serviceFee: String(feeEuro),
     commission: String(commissionEuro),
@@ -192,22 +225,30 @@ export async function createBookingAndCheckout(params: {
     color: service.color || "#ff4081",
     image: service.image || "",
 
-    // ✅ CODE 6 chiffres
     generatedCode,
     proCodeConfirmed: false,
 
     reviewAdded: false,
+    proCommentAdded: false,
     closed: false,
   });
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
+
+    // ✅ Stripe collect
+    customer_creation: "always",
+    billing_address_collection: "auto",
+
+    // ✅ pré-rempli
+    customer_email: clientUser.email,
+
     line_items: [
       {
         quantity: 1,
         price_data: {
           currency: "eur",
-          unit_amount: pricing.totalCents, // ✅ centimes TTC
+          unit_amount: pricing.totalCents,
           product_data: { name: service.name },
         },
       },
@@ -217,12 +258,13 @@ export async function createBookingAndCheckout(params: {
       shopId: String(shop._id),
       serviceId: String(service._id),
       proId: String(shop.idUser),
+
+      // ✅ super important pour webhook / debug
+      clientId: String(clientUser._id),
       clientPhone: phone,
 
-      // ✅ utile pour le SMS post-paiement (webhook)
       generatedCode: generatedCode,
 
-      // bonus debug pricing (optionnel)
       baseEuro: String(pricing.baseEuro),
       commissionEuro: String(pricing.commissionEuro),
       serviceFeeEuro: String(pricing.serviceFeeEuro),

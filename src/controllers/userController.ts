@@ -516,8 +516,11 @@ export const updateUserCountryById = async (req: express.Request, res: express.R
     return res.status(500).json({ message: 'Erreur serveur.', error: err?.message });
   }
 };
+
 /* --------------------------
    Create user (send verify)
+   - création "classique" web
+   - ne touche pas aux guests créés via Twilio
 --------------------------- */
 export const createUser = async (req: express.Request, res: express.Response) => {
   try {
@@ -526,35 +529,69 @@ export const createUser = async (req: express.Request, res: express.Response) =>
     const payload = { ...req.body };
     const lang = resolveLang(req);
 
-    // ne jamais faire confiance au client pour ces champs
+    // ✅ ne jamais faire confiance au client
     delete (payload as any).active;
+    delete (payload as any).role;
     delete (payload as any).emailVerificationToken;
     delete (payload as any).emailVerificationExpires;
+    delete (payload as any).customerId; // si tu veux éviter injection
+    delete (payload as any).subscription; // idem
+    delete (payload as any).stripe; // idem
 
-    // user inactif tant qu'il n'a pas validé l'email
-    const newUser = new UserModel({ ...payload, active: false });
+    const email = String(payload.email || "").trim().toLowerCase();
+    const phone = String(payload.phone || "").trim();
 
-    // token de vérification valable 1h
+    if (!email) return res.status(400).json({ message: "Email manquant." });
+    if (!phone) return res.status(400).json({ message: "Téléphone manquant." });
+
+    // ✅ email unique
+    const emailExists = await UserModel.findOne({ email }).select({ _id: 1, role: 1 }).lean();
+    if (emailExists) {
+      return res.status(409).json({ message: "Cet email est déjà utilisé." });
+    }
+
+    // ✅ phone unique (si tu as mis unique index sur phone)
+    const phoneExists: any = await UserModel.findOne({ phone }).select({ _id: 1, role: 1 }).lean();
+    if (phoneExists) {
+      if (phoneExists.role === "guest") {
+        // 🔒 IMPORTANT : on ne "convertit" PAS automatiquement un guest en user ici
+        // (sinon prise de contrôle du guest possible)
+        return res.status(409).json({
+          message:
+            "Un compte invité existe déjà avec ce numéro. Veuillez vous connecter ou finaliser la conversion via un parcours dédié.",
+          code: "GUEST_PHONE_EXISTS",
+        });
+      }
+
+      return res.status(409).json({ message: "Ce numéro est déjà utilisé." });
+    }
+
+    // ✅ rôle forcé : création web => user
+    const newUser = new UserModel({
+      ...payload,
+      email,
+      phone,
+      role: "user",
+      active: false, // inactif tant que non vérifié
+      createdAt: new Date().toString(),
+      updatedAt: new Date().toString(),
+      lastSeen: new Date().toString(),
+    });
+
+    // token vérif valable 1h
     const token = randomBytes(32).toString("hex");
     newUser.emailVerificationToken = token;
     newUser.emailVerificationExpires = new Date(Date.now() + 3600000);
-    newUser.createdAt = new Date().toString();
+
     await newUser.save();
 
     // lien d’activation
     const verifyLink = `${FRONTEND_URL}/verify-email?token=${token}`;
 
-    // rendu i18n de l’email (HTML + subject)
-    const { subject, html } = renderEmailHTML(
-      "verify",
-      lang,
-      verifyLink,
-      new Date().getFullYear()
-    );
+    const { subject, html } = renderEmailHTML("verify", lang, verifyLink, new Date().getFullYear());
 
     const transporter = makeTransport();
 
-    // ✅ Chemin robuste depuis la racine du projet (dev & prod)
     const logoPath = path.join(__dirname, "../../uploads/images/logo/logo.png");
     const attachments: Array<{ filename: string; path: string; cid: string }> = [];
 
@@ -569,26 +606,36 @@ export const createUser = async (req: express.Request, res: express.Response) =>
       to: newUser.email,
       subject,
       html,
-      attachments, // seulement si le logo existe
+      attachments,
     });
 
-    // renvoyer un user "safe" (pas de secrets)
     const safeUser = newUser.toObject();
     delete (safeUser as any).password;
     delete (safeUser as any).emailVerificationToken;
     delete (safeUser as any).emailVerificationExpires;
 
     logger.info({ msg: "user.create.success", userId: newUser._id?.toString() });
-    res.status(201).json(safeUser);
+    return res.status(201).json(safeUser);
   } catch (error: any) {
-    logger.error({ msg: "user.create.error", errorMessage: error?.message, stack: error?.stack });
-    console.error("Erreur création user:", error);
-    res.status(500).json({
+    logger.error({
+      msg: "user.create.error",
+      errorMessage: error?.message,
+      stack: error?.stack,
+    });
+
+    // bonus : gestion unique index propre
+    if (error?.code === 11000) {
+      const key = Object.keys(error?.keyPattern || {})[0] || "field";
+      return res.status(409).json({ message: `Conflit d'unicité sur ${key}.` });
+    }
+
+    return res.status(500).json({
       message: "Impossible de créer l'utilisateur",
-      error: (error as any)?.message || error,
+      error: error?.message || error,
     });
   }
 };
+
 
 export const resendVerificationEmail = async (req: express.Request, res: express.Response) => {
   try {

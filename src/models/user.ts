@@ -108,7 +108,7 @@ export interface iUser extends Document {
   updatedAt: string;
   lastSeen: string;
 
-  role: "user" | "entreprise" | "professionnel" | "admin" | "boss";
+  role: "user" | "guest" | "entreprise" | "professionnel" | "admin" | "boss";
   managerId?: string;
   employeesIds?: string[];
 
@@ -242,7 +242,7 @@ const userSchema = new Schema<iUser>({
   firstname: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  phone: { type: String, required: true },
+  phone: { type: String, required: true, unique: true, index: true },
 
   bank: { type: BankInformationSchema, required: false },
 
@@ -324,7 +324,7 @@ const userSchema = new Schema<iUser>({
   role: {
     type: String,
     required: true,
-    enum: ["user", "entreprise", "professionnel", "admin", "boss"],
+    enum: ["user", "guest", "entreprise", "professionnel", "admin", "boss"],
   },
 
   managerId: { type: String, required: false },

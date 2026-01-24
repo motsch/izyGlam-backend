@@ -57,7 +57,7 @@ async function resolveClientPhone(booking: any): Promise<string> {
   const direct = normalizeE164(booking?.phoneNumber);
   if (direct) return direct;
 
-  // 2) guest:<phone>
+  // 2) guest:<phone> (legacy)
   const guestPhone = normalizeE164(extractGuestPhone(booking?.clientId));
   if (guestPhone) return guestPhone;
 
@@ -190,18 +190,12 @@ async function setShopPremiumForUser(userId: string, isPremium: boolean) {
 
     // 1) assistantShopId
     if (mongoose.isValidObjectId(assistantShopId)) {
-      await shopModel.updateOne(
-        { _id: assistantShopId },
-        { $set: { isPremium } }
-      );
+      await shopModel.updateOne({ _id: assistantShopId }, { $set: { isPremium } });
       return;
     }
 
     // 2) fallback via idUser (chez toi c’est une string)
-    await shopModel.updateOne(
-      { idUser: String(userId) },
-      { $set: { isPremium } }
-    );
+    await shopModel.updateOne({ idUser: String(userId) }, { $set: { isPremium } });
   } catch (e: any) {
     logger.error({
       msg: "shop.premium.sync.failed",
@@ -213,7 +207,126 @@ async function setShopPremiumForUser(userId: string, isPremium: boolean) {
   }
 }
 
-const SHOULD_DEPROVISION_ON_PAST_DUE = String(process.env.TWILIO_DEPROVISION_ON_PAST_DUE || "false") === "true";
+/**
+ * ✅ Sync user "guest" avec ce que Stripe a collecté pendant Checkout
+ * - customerId => user.customerId (legacy)
+ * - email => remplace guest email si dispo ET unique
+ * - name => remplace "Invité IzyGlam" si dispo
+ * - address => push user.address[0] si vide
+ */
+function isGuestEmail(email: string) {
+  const e = safeStr(email).toLowerCase().trim();
+  return e.includes("@izyglam.invalid") && e.startsWith("guest+");
+}
+
+function splitName(fullName: string): { firstname: string; lastname: string } {
+  const n = safeStr(fullName).trim().replace(/\s+/g, " ");
+  if (!n) return { firstname: "", lastname: "" };
+  const parts = n.split(" ");
+  const firstname = parts.shift() || "";
+  const lastname = parts.join(" ") || "";
+  return { firstname, lastname };
+}
+
+async function syncGuestUserFromCheckoutSession(params: {
+  booking: any;
+  session: Stripe.Checkout.Session;
+}) {
+  const { booking, session } = params;
+
+  const clientId = safeStr(booking?.clientId).trim();
+  if (!mongoose.isValidObjectId(clientId)) return;
+
+  const customerId = safeStr(session.customer).trim();
+
+  // customer_details dispo sur checkout.session.completed
+  const details = session.customer_details as any;
+  const email = safeStr(details?.email).trim();
+  const name = safeStr(details?.name).trim();
+  const address = details?.address || null;
+
+  if (!customerId && !email && !name && !address) return;
+
+  const user: any = await UserModel.findById(clientId);
+  if (!user) return;
+
+  // 1) CustomerId (legacy)
+  if (customerId && !safeStr(user.customerId).trim()) {
+    user.customerId = customerId;
+  }
+
+  // 2) Email : remplace uniquement si guest email (et unique)
+  if (email) {
+    const currentEmail = safeStr(user.email).trim();
+    const shouldReplace = !currentEmail || isGuestEmail(currentEmail);
+
+    if (shouldReplace) {
+      const existing = await UserModel.findOne({ email, _id: { $ne: user._id } })
+        .select({ _id: 1 })
+        .lean();
+
+      if (!existing) {
+        user.email = email;
+      } else {
+        logger.warn({
+          msg: "stripe.webhook.guest_email_conflict_skip",
+          userId: String(user._id),
+          email,
+        });
+      }
+    }
+  }
+
+  // 3) Nom : remplace uniquement si encore "Invité IzyGlam"
+  if (name) {
+    const isStillGuestName =
+      safeStr(user.firstname).trim() === "Invité" && safeStr(user.lastname).trim() === "IzyGlam";
+
+    if (isStillGuestName) {
+      const parts = splitName(name);
+      if (parts.firstname) user.firstname = parts.firstname;
+      if (parts.lastname) user.lastname = parts.lastname;
+    }
+  }
+
+  // 4) Adresse : si vide côté user et Stripe a une adresse
+  if (address && Array.isArray(user.address) && user.address.length === 0) {
+    const line1 = safeStr(address.line1).trim();
+    const city = safeStr(address.city).trim();
+    const postalCode = safeStr(address.postal_code).trim();
+    const country = safeStr(address.country).trim() || "FR";
+
+    if (line1 || city || postalCode) {
+      user.address.push({
+        street: [line1, safeStr(address.line2).trim()].filter(Boolean).join(" "),
+        city,
+        code_postal: postalCode,
+        country,
+        floor: "",
+        main: true,
+      });
+    }
+  }
+
+  // Dates string (compat ton modèle)
+  user.updatedAt = new Date().toISOString();
+  user.lastSeen = new Date().toISOString();
+
+  await user.save();
+
+  logger.info({
+    msg: "stripe.webhook.guest_user_synced_from_checkout",
+    userId: String(user._id),
+    hasCustomerId: !!safeStr(user.customerId),
+    email: safeStr(user.email),
+    firstname: safeStr(user.firstname),
+    lastname: safeStr(user.lastname),
+    addressCount: Array.isArray(user.address) ? user.address.length : 0,
+  });
+}
+
+const SHOULD_DEPROVISION_ON_PAST_DUE =
+  String(process.env.TWILIO_DEPROVISION_ON_PAST_DUE || "false") === "true";
 
 export const stripeWebhook = async (req: Request, res: Response) => {
   const startedAt = Date.now();
@@ -447,6 +560,18 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         paymentIntentId: safeStr(booking.paymentIntentId),
       });
 
+      // ✅ NOUVEAU : sync user invité depuis Checkout (email/nom/adresse/customerId si dispo)
+      try {
+        await syncGuestUserFromCheckoutSession({ booking, session });
+      } catch (e: any) {
+        logger.error({
+          msg: "stripe.webhook.guest_user_sync_failed",
+          bookingId: String(booking._id),
+          errorMessage: e?.message,
+          stack: e?.stack,
+        });
+      }
+
       // Charger shop & service
       let shop: any = null;
       let service: any = null;
@@ -673,7 +798,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       /**
        * ✅ TWILIO
        * - Provision si premium actif
-       * - Deprovision seulement si plus premium actif (canceled/incomplete/unpaid/etc.)
+       * - Deprovision si plus premium actif
        *   (si cancel_at_period_end = true mais status active => on garde le numéro)
        */
       if (isActiveLike && isPremiumPlan) {
@@ -689,7 +814,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         }
       } else {
         try {
-          // si pas premium actif => on coupe Twilio (fin abonnement réel)
           await deprovisionTwilioNumberForUser(String(user._id));
         } catch (e: any) {
           logger.error({
