@@ -88,7 +88,7 @@ router.put("/update-user-favs/:id", authMiddleware, usersController.updateUserFa
 router.get("/geolocation", usersController.geolocation);
 
 // ✅ Notes internes pro -> client (visibles aux pros ensuite)
-router.post("/users/:id/pro-client-notes", authMiddleware, usersController.addProClientNoteToClient);
+router.post("/users-pro-notation/:id/pro-client-notes", authMiddleware, usersController.addProClientNoteToClient);
 
 
 // 👑 Récupérer les employés d’un boss
